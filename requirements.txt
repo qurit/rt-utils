@@ -1,0 +1,3 @@
+pydicom
+numpy
+cv2
