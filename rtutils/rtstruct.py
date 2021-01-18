@@ -9,7 +9,8 @@ class RTStruct:
     def __init__(self, dicom_series_path: str):
         self.series_data = self.get_series_data_from_path(dicom_series_path)
         self.ds = ds_helper.generate_base_dataset(self.get_file_name())
-
+        ds_helper.add_refd_frame_of_ref_sequence(self.ds, self.series_data)
+        
     def __del__(self):
         self.save()
 
