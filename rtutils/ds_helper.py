@@ -35,7 +35,6 @@ def add_sequence_lists_to_ds(ds: FileDataset):
     ds.ROIContourSequence = Sequence()
     ds.RTROIObservationsSequence = Sequence()
     
-# TODO add type for series_data
 def add_refd_frame_of_ref_sequence(ds: FileDataset, series_data):
     refd_frame_of_ref = Dataset()
     # TODO somehow generate this UID
@@ -64,25 +63,30 @@ def create_frame_of_ref_study_sequence(series_data):
     return rt_refd_study_sequence
 
 def create_contour_image_sequence(series_data):
-    # Contour Image Sequence
     contour_image_sequence = Sequence()
 
     # Add each referenced image
     for series in series_data:
-        # Skip non images
-        if not series.file_meta.MediaStorageSOPClassUID == '1.2.840.10008.5.1.4.1.1.2': # CT Image Storage
-            continue
         contour_image = Dataset()
         contour_image.ReferencedSOPClassUID = series.file_meta.MediaStorageSOPClassUID
         contour_image.ReferencedSOPInstanceUID = series.file_meta.MediaStorageSOPInstanceUID
         contour_image_sequence.append(contour_image)
     return contour_image_sequence
 
-
-def create_rtroi_observation(observation_number: int) -> Dataset:
+def create_structure_set_roi(roi_number, frame_of_reference_uid):
+    # Structure Set ROI Sequence: Structure Set ROI 1
+    structure_set_roi = Dataset()
+    structure_set_roi.ROINumber = str(roi_number)
+    structure_set_roi.ReferencedFrameOfReferenceUID = frame_of_reference_uid
+    structure_set_roi.ROIName = f'ROI-{roi_number}'
+    structure_set_roi.ROIDescription = ''
+    structure_set_roi.ROIGenerationAlgorithm = 'AUTOMATIC'
+    return structure_set_roi
+    
+def create_rtroi_observation(roi_number: int) -> Dataset:
     rtroi_observation = Dataset()
-    rtroi_observation.ObservationNumber = str(observation_number)
-    rtroi_observation.ReferencedROINumber = str(observation_number)
+    rtroi_observation.ObservationNumber = str(roi_number)
+    rtroi_observation.ReferencedROINumber = str(roi_number)
     rtroi_observation.ROIObservationDescription = 'Type:Soft,Range:*/*,Fill:0,Opacity:0.0,Thickness:1,LineThickness:2,read-only:false'
     rtroi_observation.RTROIInterpretedType = ''
     rtroi_observation.ROIInterpreter = ''

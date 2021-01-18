@@ -7,19 +7,23 @@ from . import ds_helper
 # TODO handle overwriting existing file
 class RTStruct:
     def __init__(self, dicom_series_path: str):
-        self.series_data = self.get_series_data_from_path(dicom_series_path)
+        self.series_data = self.get_series_image_data_from_path(dicom_series_path)
         self.ds = ds_helper.generate_base_dataset(self.get_file_name())
         ds_helper.add_refd_frame_of_ref_sequence(self.ds, self.series_data)
-        
+        self.frame_of_reference_uid = self.ds.ReferencedFrameOfReferenceSequence[0].FrameOfReferenceUID # Use first strucitured set ROI
+
     def __del__(self):
         self.save()
 
-    def get_series_data_from_path(self, dicom_series_path: str):
+    def get_series_image_data_from_path(self, dicom_series_path: str):
         series_data = []
         for root, _, files in os.walk(dicom_series_path):
             for file in files:
                 if file.endswith('.dcm'):
-                    series_data.append(dcmread(os.path.join(root, file)))
+                    dc = dcmread(os.path.join(root, file))
+                    # Only add CT images
+                    if dc.file_meta.MediaStorageSOPClassUID == '1.2.840.10008.5.1.4.1.1.2': # CT Image Storage
+                        series_data.append(dc)
 
         if len(series_data) == 0:
             raise Exception("No DICOM data found in input path")
@@ -36,15 +40,13 @@ class RTStruct:
         if len(self.series_data) != len(roi_mask):
             raise Exception(f"Mask must have the save number of layers as input series. Expected {len(self.series_data)}")
         
-        contour_number = len(self.ds.StructureSetROISequence) + 1
+        roi_number = len(self.ds.StructureSetROISequence) + 1
         roi = ROIContour(roi_mask)
         # TODO change data to X, Y, Z array
-        # TODO handle Referenced Frame of Reference Sequence
-        # TODO handle structure set ROI sequence
         # TODO handle contour image sequence
         # TODO handle contour within sequence
-        # TODO handle RT ROI observation sequence
-        self.ds.RTROIObservationsSequence.append(ds_helper.create_rtroi_observation(contour_number))
+        self.ds.StructureSetROISequence.append(ds_helper.create_structure_set_roi(roi_number, self.frame_of_reference_uid))
+        self.ds.RTROIObservationsSequence.append(ds_helper.create_rtroi_observation(roi_number))
         pass
 
     def save(self):
