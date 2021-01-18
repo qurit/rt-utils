@@ -1,4 +1,5 @@
 import datetime
+import numpy as np
 from pydicom.dataset import Dataset, FileDataset, FileMetaDataset
 from pydicom.sequence import Sequence
 
@@ -29,6 +30,7 @@ def add_required_elements_to_ds(ds: FileDataset):
     # Set creation date/time
     dt = datetime.datetime.now()
     ds.ContentDate = dt.strftime('%Y%m%d')
+    # TODO add structure set time
 
 def add_sequence_lists_to_ds(ds: FileDataset):
     ds.StructureSetROISequence = Sequence()
@@ -82,7 +84,39 @@ def create_structure_set_roi(roi_number, frame_of_reference_uid):
     structure_set_roi.ROIDescription = ''
     structure_set_roi.ROIGenerationAlgorithm = 'AUTOMATIC'
     return structure_set_roi
-    
+
+def create_roi_contour_sequence(roi_mask: np.ndarray, series_data):
+    contour_sequence = Sequence()
+    for series, i in enumerate(series_data):
+        # Do not add ROI's for blank slices
+        if np.sum(roi_mask[i]) == 0:
+            continue
+        contour = create_contour(roi_mask, series)
+        contour_sequence.append(contour)
+
+    # Wrap in ROI contour
+    roi_contour = Dataset()
+    roi_contour.ROIDisplayColor = [255, 0, 255] # TODO random colour per ROI / add your own colour?
+    roi_contour.ContourSequence = contour_sequence
+    return roi_contour
+
+def create_contour(roi_mask, series):
+    contour_image = Dataset()
+    contour_image.ReferencedSOPClassUID = series.file_meta.MediaStorageSOPClassUID
+    contour_image.ReferencedSOPInstanceUID = series.series.file_meta.MediaStorageSOPInstanceUID
+
+    # Contour Image Sequence
+    contour_image_sequence = Sequence()
+    contour_image_sequence.append(contour_image)
+
+    contour = Dataset()
+    contour.ContourImageSequence = contour_image_sequence
+    contour.ContourGeometricType = 'CLOSED_PLANAR' # TODO figure out how to get this value
+    contour.NumberOfContourPoints = "0" # TODO, figure out how to get this value
+    contour.ContourData = roi_mask # TODO format mask for contour
+    return contour
+
+
 def create_rtroi_observation(roi_number: int) -> Dataset:
     rtroi_observation = Dataset()
     rtroi_observation.ObservationNumber = str(roi_number)

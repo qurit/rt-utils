@@ -1,3 +1,4 @@
+import numpy as np
 from pydicom import dcmread
 from pydicom.dataset import Dataset
 from pydicom.sequence import Sequence
@@ -28,6 +29,8 @@ class RTStruct:
         if len(series_data) == 0:
             raise Exception("No DICOM data found in input path")
 
+        # TODO sort series
+
         return series_data
 
     def get_file_name(self):
@@ -36,23 +39,15 @@ class RTStruct:
         suffix = '.dcm'
         return name + suffix
 
-    def add_roi(self, roi_mask):
+    def add_roi(self, roi_mask: np.ndarray):
         if len(self.series_data) != len(roi_mask):
             raise Exception(f"Mask must have the save number of layers as input series. Expected {len(self.series_data)}")
         
         roi_number = len(self.ds.StructureSetROISequence) + 1
-        roi = ROIContour(roi_mask)
-        # TODO change data to X, Y, Z array
-        # TODO handle contour image sequence
-        # TODO handle contour within sequence
+        # self.ds.ROIContourSequence.append(ds_helper.create_roi_contour_sequence(roi_mask, self.series_data))
         self.ds.StructureSetROISequence.append(ds_helper.create_structure_set_roi(roi_number, self.frame_of_reference_uid))
         self.ds.RTROIObservationsSequence.append(ds_helper.create_rtroi_observation(roi_number))
-        pass
 
     def save(self):
         print("Writing file name to", self.get_file_name())
         self.ds.save_as(self.get_file_name())
-
-class ROIContour:
-    def __init__(self, mask):
-        self.mask = mask
