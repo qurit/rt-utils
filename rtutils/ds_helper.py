@@ -1,4 +1,5 @@
 import datetime
+from rtutils.image_helper import get_contours_coords
 import numpy as np
 from pydicom.dataset import Dataset, FileDataset, FileMetaDataset
 from pydicom.sequence import Sequence
@@ -36,7 +37,17 @@ def add_sequence_lists_to_ds(ds: FileDataset):
     ds.StructureSetROISequence = Sequence()
     ds.ROIContourSequence = Sequence()
     ds.RTROIObservationsSequence = Sequence()
-    
+
+def add_patient_information(ds: FileDataset, series_data):
+    reference_ds = series_data[0] # All elements in series should have the same data
+    ds.PatientName = reference_ds.PatientName
+    ds.PatientID = reference_ds.PatientID
+    ds.PatientBirthDate = reference_ds.PatientBirthDate
+    ds.PatientSex = reference_ds.PatientSex
+    ds.PatientAge = reference_ds.PatientAge
+    ds.PatientSize = reference_ds.PatientSize
+    ds.PatientWeight = reference_ds.PatientWeight
+
 def add_refd_frame_of_ref_sequence(ds: FileDataset, series_data):
     refd_frame_of_ref = Dataset()
     # TODO somehow generate this UID
@@ -87,11 +98,14 @@ def create_structure_set_roi(roi_number, frame_of_reference_uid):
 
 def create_roi_contour_sequence(roi_mask: np.ndarray, series_data):
     contour_sequence = Sequence()
-    for series, i in enumerate(series_data):
+    for i, series in enumerate(series_data):
+        roi_mask_slice = roi_mask[:,:,i]
         # Do not add ROI's for blank slices
-        if np.sum(roi_mask[i]) == 0:
+        if np.sum(roi_mask_slice) == 0:
+            print("Skipping empty mask layer")
             continue
-        contour = create_contour(roi_mask, series)
+
+        contour = create_contour(roi_mask_slice, series)
         contour_sequence.append(contour)
 
     # Wrap in ROI contour
@@ -100,10 +114,10 @@ def create_roi_contour_sequence(roi_mask: np.ndarray, series_data):
     roi_contour.ContourSequence = contour_sequence
     return roi_contour
 
-def create_contour(roi_mask, series):
+def create_contour(roi_mask_slice: np.ndarray, series):
     contour_image = Dataset()
     contour_image.ReferencedSOPClassUID = series.file_meta.MediaStorageSOPClassUID
-    contour_image.ReferencedSOPInstanceUID = series.series.file_meta.MediaStorageSOPInstanceUID
+    contour_image.ReferencedSOPInstanceUID = series.file_meta.MediaStorageSOPInstanceUID
 
     # Contour Image Sequence
     contour_image_sequence = Sequence()
@@ -113,7 +127,11 @@ def create_contour(roi_mask, series):
     contour.ContourImageSequence = contour_image_sequence
     contour.ContourGeometricType = 'CLOSED_PLANAR' # TODO figure out how to get this value
     contour.NumberOfContourPoints = "0" # TODO, figure out how to get this value
-    contour.ContourData = roi_mask # TODO format mask for contour
+    contour_coords = get_contours_coords(roi_mask_slice)
+    print("CONTOUR DATA", contour_coords)
+    contour_coords = [1, 2, 3, 1, 3, 3]
+    contour.ContourData = contour_coords # TODO format mask for contour
+    contour.NumberOfContourPoints = len(contour_coords) / 3  # Each point has an x, y, and z value
     return contour
 
 
