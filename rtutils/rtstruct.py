@@ -19,6 +19,15 @@ class RTStruct:
         suffix = '.dcm'
         return name + suffix
 
+    def get_roi_names(self):
+        if not self.ds.StructureSetROISequence:
+            return []
+
+        roi_names = []
+        for structure_roi in self.ds.StructureSetROISequence:
+            roi_names.append(structure_roi.ROIName)
+        return roi_names
+
     def add_roi(self, roi_mask: np.ndarray):
         self.validate_mask(roi_mask)
         if np.sum(roi_mask) == 0:
