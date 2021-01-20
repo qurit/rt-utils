@@ -6,13 +6,13 @@ from rtutils.utils import ROIData
 class RTStruct:
     def __init__(self, dicom_series_path: str):
         self.series_data = image_helper.load_sorted_image_series(dicom_series_path)
-        self.ds = ds_helper.generate_base_dataset(self.get_file_name())
-        ds_helper.add_patient_information(self.ds, self.series_data)
-        ds_helper.add_refd_frame_of_ref_sequence(self.ds, self.series_data)
+        self.ds = ds_helper.create_new_rts_dataset(self.get_file_name(), self.series_data)
         self.frame_of_reference_uid = self.ds.ReferencedFrameOfReferenceSequence[0].FrameOfReferenceUID # Use first strucitured set ROI
 
     def __del__(self):
-        self.save()
+        # Will not save if an exception occured before generating the dataset
+        if hasattr(self, 'ds'):
+            self.save()
 
     def get_file_name(self):
         # Generates file name based on series data

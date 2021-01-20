@@ -5,6 +5,13 @@ import numpy as np
 from pydicom.dataset import Dataset, FileDataset, FileMetaDataset
 from pydicom.sequence import Sequence
 
+def create_new_rts_dataset(file_name: str, series_data):
+    ds = generate_base_dataset(file_name)
+    add_series_information(ds, series_data)
+    add_patient_information(ds, series_data)
+    add_refd_frame_of_ref_sequence(ds, series_data)
+    return ds
+
 def generate_base_dataset(file_name: str) -> FileDataset:
     file_meta = get_file_meta()
     ds = FileDataset(file_name, {}, file_meta=file_meta, preamble=b"\0" * 128)
@@ -79,6 +86,9 @@ def add_sequence_lists_to_ds(ds: FileDataset):
     ds.StructureSetROISequence = Sequence()
     ds.ROIContourSequence = Sequence()
     ds.RTROIObservationsSequence = Sequence()
+
+def add_series_information(ds: FileDataset, series_data):
+    pass
 
 def add_patient_information(ds: FileDataset, series_data):
     reference_ds = series_data[0] # All elements in series should have the same data
