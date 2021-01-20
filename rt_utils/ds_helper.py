@@ -6,14 +6,15 @@ from pydicom.uid import generate_uid, PYDICOM_ROOT_UID
 from pydicom.dataset import Dataset, FileDataset, FileMetaDataset
 from pydicom.sequence import Sequence
 
-def create_rtstruct_dataset(file_name: str, series_data):
-    ds = generate_base_dataset(file_name)
+def create_rtstruct_dataset(series_data):
+    ds = generate_base_dataset()
     add_study_and_series_information(ds, series_data)
     add_patient_information(ds, series_data)
     add_refd_frame_of_ref_sequence(ds, series_data)
     return ds
 
-def generate_base_dataset(file_name: str) -> FileDataset:
+def generate_base_dataset() -> FileDataset:
+    file_name = 'rt-utils-struct'
     file_meta = get_file_meta()
     ds = FileDataset(file_name, {}, file_meta=file_meta, preamble=b"\0" * 128)
     add_required_elements_to_ds(ds)

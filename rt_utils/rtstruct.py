@@ -1,4 +1,5 @@
 import numpy as np
+import os
 from . import ds_helper, image_helper
 from rt_utils.utils import ROIData
 
@@ -6,19 +7,9 @@ from rt_utils.utils import ROIData
 class RTStruct:
     def __init__(self, dicom_series_path: str):
         self.series_data = image_helper.load_sorted_image_series(dicom_series_path)
-        self.ds = ds_helper.create_rtstruct_dataset(self.get_file_name(), self.series_data)
+        self.ds = ds_helper.create_rtstruct_dataset(self.series_data)
         self.frame_of_reference_uid = self.ds.ReferencedFrameOfReferenceSequence[0].FrameOfReferenceUID # Use first strucitured set ROI
 
-    def __del__(self):
-        # Will not save if an exception occured before generating the dataset
-        if hasattr(self, 'ds'):
-            self.save()
-
-    def get_file_name(self):
-        # Generates file name based on series data
-        name = 'test'
-        suffix = '.dcm'
-        return name + suffix
 
     def get_roi_names(self):
         if not self.ds.StructureSetROISequence:
@@ -52,6 +43,11 @@ class RTStruct:
         if np.sum(mask) == 0:
             raise Exception("Mask cannot be empty")
 
-    def save(self):
-        print("Writing file to", self.get_file_name())
-        self.ds.save_as(self.get_file_name())
+    def save(self, file_path):
+        try:
+            open(file_path, 'w')
+            # Opening worked, we should have a valid file_path
+            print("Writing file to", file_path)
+            self.ds.save_as(file_path)
+        except OSError:
+            raise Exception(f"Cannot write to file path '{file_path}'")
