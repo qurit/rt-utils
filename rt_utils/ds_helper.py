@@ -2,6 +2,7 @@ import datetime
 from rt_utils.image_helper import get_contours_coords
 from rt_utils.utils import ROIData
 import numpy as np
+from pydicom.uid import generate_uid, PYDICOM_ROOT_UID
 from pydicom.dataset import Dataset, FileDataset, FileMetaDataset
 from pydicom.sequence import Sequence
 
@@ -23,9 +24,9 @@ def get_file_meta() -> FileMetaDataset:
     file_meta = FileMetaDataset()
     file_meta.FileMetaInformationGroupLength = 202
     file_meta.FileMetaInformationVersion = b'\x00\x01'
-    file_meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3'
-    file_meta.MediaStorageSOPInstanceUID = "2.16.840.1.114362.1.11940992.23790159890.563423606.667.93"
-    file_meta.ImplementationClassUID = "2.16.840.1.114362.1"
+    file_meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3' # RT Struct class
+    file_meta.MediaStorageSOPInstanceUID = generate_uid() # TODO find out random generation is fine
+    file_meta.ImplementationClassUID = PYDICOM_ROOT_UID # TODO find out if this is ok
     return file_meta
     
 def add_required_elements_to_ds(ds: FileDataset):
@@ -35,11 +36,8 @@ def add_required_elements_to_ds(ds: FileDataset):
     ds.InstanceCreationDate = dt.strftime('%Y%m%d')
     ds.InstanceCreationTime = dt.strftime('%H%M%S.%f')
     ds.StructureSetLabel = 'RTstruct'
-    # ds.StructureSetName = ''
     ds.StructureSetDate = dt.strftime('%Y%m%d')
     ds.StructureSetTime = dt.strftime('%H%M%S.%f')
-    ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3' # RT Struct class
-    ds.SOPInstanceUID = '2.16.840.1.114362.1.11940992.23790159890.563423606.667.93' # TODO Generate
     ds.Modality = 'RTSTRUCT'
     ds.Manufacturer = 'Qurit Lab'
     ds.ManufacturerModelName = 'rt-utils'
@@ -47,6 +45,10 @@ def add_required_elements_to_ds(ds: FileDataset):
     # Set the transfer syntax
     ds.is_little_endian = True
     ds.is_implicit_VR = True
+    # Set values already defined in the file meta
+    ds.SOPClassUID = ds.file_meta.MediaStorageSOPClassUID
+    ds.SOPInstanceUID = ds.file_meta.MediaStorageSOPInstanceUID
+
     ds.ApprovalStatus = 'UNAPPROVED'
 
 def add_sequence_lists_to_ds(ds: FileDataset):
@@ -55,16 +57,17 @@ def add_sequence_lists_to_ds(ds: FileDataset):
     ds.RTROIObservationsSequence = Sequence()
 
 def add_study_and_series_information(ds: FileDataset, series_data):
-    ds.StudyDate = '20201112'
-    ds.SeriesDate = '20201117'
-    ds.StudyTime = '085023'
-    ds.SeriesTime = '112805.6168'
-    ds.StudyDescription = ''
-    ds.SeriesDescription = ''
-    ds.StudyInstanceUID = '1.2.840.113619.2.405.3.84541899.902.1605198123.910'
-    ds.SeriesInstanceUID = '2.16.840.1.114362.1.11940992.23790159890.563423606.667.93'
-    ds.StudyID = '637'
-    ds.SeriesNumber = "1"
+    reference_ds = series_data[0] # All elements in series should have the same data
+    ds.StudyDate = reference_ds.StudyDate
+    ds.SeriesDate = reference_ds.SeriesDate
+    ds.StudyTime = reference_ds.StudyTime
+    ds.SeriesTime = reference_ds.SeriesTime
+    ds.StudyDescription = reference_ds.StudyDescription
+    ds.SeriesDescription = reference_ds.SeriesDescription
+    ds.StudyInstanceUID = reference_ds.StudyInstanceUID
+    ds.SeriesInstanceUID = generate_uid() # TODO find out if random generation is ok
+    ds.StudyID = reference_ds.StudyID
+    ds.SeriesNumber = "1" # TODO find out if we can just use 1
     pass
 
 def add_patient_information(ds: FileDataset, series_data):
@@ -79,8 +82,7 @@ def add_patient_information(ds: FileDataset, series_data):
 
 def add_refd_frame_of_ref_sequence(ds: FileDataset, series_data):
     refd_frame_of_ref = Dataset()
-    # TODO somehow generate this UID
-    refd_frame_of_ref.FrameOfReferenceUID = '1.2.840.113619.2.405.3.84541899.902.1605198123.912.6060.1'
+    refd_frame_of_ref.FrameOfReferenceUID = generate_uid() # TODO Find out if random generation is ok
     refd_frame_of_ref.RTReferencedStudySequence = create_frame_of_ref_study_sequence(series_data)
 
     # Add to sequence
@@ -88,8 +90,9 @@ def add_refd_frame_of_ref_sequence(ds: FileDataset, series_data):
     ds.ReferencedFrameOfReferenceSequence.append(refd_frame_of_ref)
 
 def create_frame_of_ref_study_sequence(series_data):
+    reference_ds = series_data[0] # All elements in series should have the same data
     rt_refd_series = Dataset()
-    rt_refd_series.SeriesInstanceUID = '2.16.840.1.114362.1.11940992.23790159890.563423471.893.88'
+    rt_refd_series.SeriesInstanceUID = reference_ds.SeriesInstanceUID
     rt_refd_series.ContourImageSequence = create_contour_image_sequence(series_data)
 
     rt_refd_series_sequence = Sequence()
@@ -97,7 +100,7 @@ def create_frame_of_ref_study_sequence(series_data):
 
     rt_refd_study = Dataset()
     rt_refd_study.ReferencedSOPClassUID = '1.2.840.10008.3.1.2.3.1' # Detached Study Management SOP Class
-    rt_refd_study.ReferencedSOPInstanceUID = '1.2.840.113619.2.405.3.84541899.902.1605198123.910' # TODO generate dynamically
+    rt_refd_study.ReferencedSOPInstanceUID = reference_ds.StudyInstanceUID
     rt_refd_study.RTReferencedSeriesSequence = rt_refd_series_sequence
 
     rt_refd_study_sequence = Sequence()
