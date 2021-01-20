@@ -1,6 +1,6 @@
 import numpy as np
 from . import ds_helper, image_helper
-from rtutils.utils import ROIData
+from rt_utils.utils import ROIData
 
 # TODO handle overwriting existing file
 class RTStruct:

@@ -1,6 +1,6 @@
 import datetime
-from rtutils.image_helper import get_contours_coords
-from rtutils.utils import ROIData
+from rt_utils.image_helper import get_contours_coords
+from rt_utils.utils import ROIData
 import numpy as np
 from pydicom.dataset import Dataset, FileDataset, FileMetaDataset
 from pydicom.sequence import Sequence

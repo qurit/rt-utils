@@ -7,7 +7,7 @@ with open('requirements.txt') as f:
 version = '0.0.1'
 
 setuptools.setup(
-    name="rtutils", 
+    name="rt-utils", 
     version=version,
     author="Asim Shrestha",
     author_email="asim.shrestha@hotmail.com",
