@@ -11,7 +11,7 @@ setuptools.setup(
     version=version,
     author="Asim Shrestha",
     author_email="asim.shrestha@hotmail.com",
-    description="A small package for handling masks and RT-Structs",
+    description="A small library for handling masks and RT-Structs",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/qurit/rtutils",

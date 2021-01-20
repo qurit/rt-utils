@@ -1,24 +1,16 @@
 import numpy as np
 import os
+
+from pydicom.dataset import FileDataset
 from . import ds_helper, image_helper
 from rt_utils.utils import ROIData
 
 # TODO handle overwriting existing file
 class RTStruct:
-    def __init__(self, dicom_series_path: str):
-        self.series_data = image_helper.load_sorted_image_series(dicom_series_path)
-        self.ds = ds_helper.create_rtstruct_dataset(self.series_data)
-        self.frame_of_reference_uid = self.ds.ReferencedFrameOfReferenceSequence[0].FrameOfReferenceUID # Use first strucitured set ROI
-
-
-    def get_roi_names(self):
-        if not self.ds.StructureSetROISequence:
-            return []
-
-        roi_names = []
-        for structure_roi in self.ds.StructureSetROISequence:
-            roi_names.append(structure_roi.ROIName)
-        return roi_names
+    def __init__(self, series_data, ds: FileDataset):
+        self.series_data = series_data
+        self.ds = ds
+        self.frame_of_reference_uid = ds.ReferencedFrameOfReferenceSequence[-1].FrameOfReferenceUID # Use last strucitured set ROI
 
     def add_roi(self, mask: np.ndarray, color=None, name=None):
         self.validate_mask(mask)
@@ -42,6 +34,15 @@ class RTStruct:
                 
         if np.sum(mask) == 0:
             raise Exception("Mask cannot be empty")
+
+    def get_roi_names(self):
+        if not self.ds.StructureSetROISequence:
+            return []
+
+        roi_names = []
+        for structure_roi in self.ds.StructureSetROISequence:
+            roi_names.append(structure_roi.ROIName)
+        return roi_names
 
     def save(self, file_path):
         try:
