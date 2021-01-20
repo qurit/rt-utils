@@ -25,9 +25,9 @@ def load_sorted_image_series(dicom_series_path: str):
 
         return series_data
 
-def get_contours_coords(roi_mask_slice: np.ndarray, series_slice):
+def get_contours_coords(mask_slice: np.ndarray, series_slice):
     # Method will find multiple contours if possible. Ensure only one is found
-    contours = find_contours(roi_mask_slice)
+    contours = find_contours(mask_slice)
     if len(contours) != 1:
         print(
             "ERROR: unexpected number of counters in slice. " +

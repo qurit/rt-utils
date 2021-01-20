@@ -1,5 +1,6 @@
 import datetime
 from rtutils.image_helper import get_contours_coords
+from rtutils.utils import ROIData
 import numpy as np
 from pydicom.dataset import Dataset, FileDataset, FileMetaDataset
 from pydicom.sequence import Sequence
@@ -127,37 +128,37 @@ def create_contour_image_sequence(series_data):
         contour_image_sequence.append(contour_image)
     return contour_image_sequence
 
-def create_structure_set_roi(roi_data):
+def create_structure_set_roi(roi_data: ROIData):
     # Structure Set ROI Sequence: Structure Set ROI 1
     structure_set_roi = Dataset()
-    structure_set_roi.ROINumber = roi_data.roi_number
+    structure_set_roi.ROINumber = roi_data.number
     structure_set_roi.ReferencedFrameOfReferenceUID = roi_data.frame_of_reference_uid
-    structure_set_roi.ROIName = roi_data.roi_number
-    structure_set_roi.ROIDescription = ''
+    structure_set_roi.ROIName = roi_data.name
+    structure_set_roi.ROIDescription = roi_data.description
     structure_set_roi.ROIGenerationAlgorithm = 'MANUAL'
     return structure_set_roi
 
-def create_roi_contour_sequence(roi_data, series_data):
+def create_roi_contour_sequence(roi_data: ROIData, series_data):
     roi_contour = Dataset()
-    roi_contour.ROIDisplayColor = color
+    roi_contour.ROIDisplayColor = roi_data.color
     roi_contour.ContourSequence = create_contour_sequence(roi_data, series_data)
-    roi_contour.ReferencedROINumber = str(roi_data.roi_number)
+    roi_contour.ReferencedROINumber = str(roi_data.number)
     return roi_contour
 
-def create_contour_sequence(roi_data, series_data):
+def create_contour_sequence(roi_data: ROIData, series_data):
     contour_sequence = Sequence()
     for i, series_slice in enumerate(series_data):
-        roi_mask_slice = roi_data.roi_mask[:,:,i]
+        mask_slice = roi_data.mask[:,:,i]
         # Do not add ROI's for blank slices
-        if np.sum(roi_mask_slice) == 0:
+        if np.sum(mask_slice) == 0:
             print("Skipping empty mask layer")
             continue
 
-        contour = create_contour(roi_mask_slice, series_slice)
+        contour = create_contour(mask_slice, series_slice)
         contour_sequence.append(contour)
     return contour_sequence
 
-def create_contour(roi_mask_slice: np.ndarray, series_slice):
+def create_contour(mask_slice: np.ndarray, series_slice):
     contour_image = Dataset()
     contour_image.ReferencedSOPClassUID = series_slice.file_meta.MediaStorageSOPClassUID
     contour_image.ReferencedSOPInstanceUID = series_slice.file_meta.MediaStorageSOPInstanceUID
@@ -169,20 +170,19 @@ def create_contour(roi_mask_slice: np.ndarray, series_slice):
     contour = Dataset()
     contour.ContourImageSequence = contour_image_sequence
     contour.ContourGeometricType = 'CLOSED_PLANAR' # TODO figure out how to get this value
-    contour_coords = get_contours_coords(roi_mask_slice, series_slice)
-    # print(contour_coords)
-    # contour_coords = [-50.049, -42.481, 70, -49.805, -42.725, 70, -47.852, -42.725, 70, -47.607, -42.481, 70, -47.363, -42.236, 70, -46.875, -42.236, 70, -46.631, -41.992, 70, -46.387, -41.748, 70, -46.143, -41.504, 70, -45.898, -41.26, 70, -45.654, -41.016, 70, -45.41, -40.772, 70, -45.166, -40.527, 70, -45.166, -40.039, 70, -44.922, -39.795, 70, -44.678, -39.551, 70, -44.678, -36.133, 70, -44.922, -35.889, 70, -45.166, -35.645, 70, -45.166, -30.762, 70, -44.922, -30.518, 70, -44.678, -30.273, 70, -44.678, -26.856, 70, -44.922, -26.611, 70, -45.166, -26.367, 70, -45.166, -25.879, 70, -45.41, -25.635, 70, -45.654, -25.391, 70, -45.898, -25.147, 70, -46.387, -25.147, 70, -46.631, -24.902, 70, -46.875, -24.658, 70, -48.828, -24.658, 70, -49.072, -24.902, 70, -49.316, -25.147, 70, -49.805, -25.147, 70, -50.049, -25.391, 70, -50.293, -25.635, 70, -50.537, -25.879, 70, -50.781, -26.123, 70, -51.025, -26.367, 70, -51.025, -27.832, 70, -51.27, -28.076, 70, -51.514, -28.32, 70, -51.514, -29.785, 70, -51.758, -30.029, 70, -52.002, -30.273, 70, -52.002, -40.527, 70, -51.758, -40.772, 70, -51.514, -41.016, 70, -51.27, -41.26, 70, -51.025, -41.504, 70, -50.781, -41.748, 70, -50.537, -41.992, 70, -50.293, -42.236, 70]
+    contour_coords = get_contours_coords(mask_slice, series_slice)
     contour.NumberOfContourPoints = len(contour_coords) / 3  # Each point has an x, y, and z value
     contour.ContourData = contour_coords
     return contour
 
 
-def create_rtroi_observation(roi_number: int) -> Dataset:
+def create_rtroi_observation(roi_data: ROIData) -> Dataset:
     rtroi_observation = Dataset()
-    rtroi_observation.ObservationNumber = str(roi_number)
-    rtroi_observation.ReferencedROINumber = str(roi_number)
+    rtroi_observation.ObservationNumber = roi_data.number
+    rtroi_observation.ReferencedROINumber = roi_data.number
+    # TODO figure out how to get observation description
     rtroi_observation.ROIObservationDescription = 'Type:Soft,Range:*/*,Fill:0,Opacity:0.0,Thickness:1,LineThickness:2,read-only:false'
-    rtroi_observation.private_creators = 'Test'
+    rtroi_observation.private_creators = 'Qurit Lab'
     rtroi_observation.RTROIInterpretedType = ''
     rtroi_observation.ROIInterpreter = ''
     return rtroi_observation
