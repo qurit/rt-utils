@@ -11,9 +11,9 @@ setuptools.setup(
     author="Asim Shrestha",
     author_email="asim.shrestha@hotmail.com",
     description="A small example package",
+    license='MIT',
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/pypa/sampleproject",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
