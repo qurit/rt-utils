@@ -7,7 +7,7 @@ from pydicom.sequence import Sequence
 
 def create_rtstruct_dataset(file_name: str, series_data):
     ds = generate_base_dataset(file_name)
-    add_series_information(ds, series_data)
+    add_study_and_series_information(ds, series_data)
     add_patient_information(ds, series_data)
     add_refd_frame_of_ref_sequence(ds, series_data)
     return ds
@@ -29,30 +29,17 @@ def get_file_meta() -> FileMetaDataset:
     return file_meta
     
 def add_required_elements_to_ds(ds: FileDataset):
+    dt = datetime.datetime.now()
     # Append data elements required by the DICOM standarad
     ds.SpecificCharacterSet = 'ISO_IR 100'
-    ds.InstanceCreationDate = '20201117'
-    ds.InstanceCreationTime = '112805.668'
-    ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3'
-    ds.SOPInstanceUID = '2.16.840.1.114362.1.11940992.23790159890.563423606.667.93'
-    ds.StudyDate = '20201112'
-    ds.SeriesDate = '20201117'
-    ds.StudyTime = '085023'
-    ds.SeriesTime = '112805.668'
-    ds.StudyDescription = ''
-    ds.SeriesDescription = ''
-    ds.SoftwareVersions = '7.0.3'
-    ds.StudyInstanceUID = '1.2.840.113619.2.405.3.84541899.902.1605198123.910'
-    ds.SeriesInstanceUID = '2.16.840.1.114362.1.11940992.23790159890.563423606.667.93'
-    ds.StudyID = '637'
-    ds.SeriesNumber = "1"
+    ds.InstanceCreationDate = dt.strftime('%Y%m%d')
+    ds.InstanceCreationTime = dt.strftime('%H%M%S.%f')
     ds.StructureSetLabel = 'RTstruct'
-    ds.StructureSetName = ''
-    ds.StructureSetDate = '20201117'
-    ds.StructureSetTime = '112805.668'
-    ds.SpecificCharacterSet = 'ISO_IR 100'
-    ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3'
-    ds.SOPInstanceUID = '2.16.840.1.114362.1.11940992.23790159890.563423606.667.93'
+    # ds.StructureSetName = ''
+    ds.StructureSetDate = dt.strftime('%Y%m%d')
+    ds.StructureSetTime = dt.strftime('%H%M%S.%f')
+    ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3' # RT Struct class
+    ds.SOPInstanceUID = '2.16.840.1.114362.1.11940992.23790159890.563423606.667.93' # TODO Generate
     ds.Modality = 'RTSTRUCT'
     ds.Manufacturer = 'Qurit Lab'
     ds.ManufacturerModelName = 'rt-utils'
@@ -60,18 +47,24 @@ def add_required_elements_to_ds(ds: FileDataset):
     # Set the transfer syntax
     ds.is_little_endian = True
     ds.is_implicit_VR = True
-    # Set creation date/time
-    dt = datetime.datetime.now()
-    # ds.ContentDate = dt.strftime('%Y%m%d')
     ds.ApprovalStatus = 'UNAPPROVED'
-    # TODO add structure set time
 
 def add_sequence_lists_to_ds(ds: FileDataset):
     ds.StructureSetROISequence = Sequence()
     ds.ROIContourSequence = Sequence()
     ds.RTROIObservationsSequence = Sequence()
 
-def add_series_information(ds: FileDataset, series_data):
+def add_study_and_series_information(ds: FileDataset, series_data):
+    ds.StudyDate = '20201112'
+    ds.SeriesDate = '20201117'
+    ds.StudyTime = '085023'
+    ds.SeriesTime = '112805.6168'
+    ds.StudyDescription = ''
+    ds.SeriesDescription = ''
+    ds.StudyInstanceUID = '1.2.840.113619.2.405.3.84541899.902.1605198123.910'
+    ds.SeriesInstanceUID = '2.16.840.1.114362.1.11940992.23790159890.563423606.667.93'
+    ds.StudyID = '637'
+    ds.SeriesNumber = "1"
     pass
 
 def add_patient_information(ds: FileDataset, series_data):
