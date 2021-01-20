@@ -50,5 +50,5 @@ class RTStruct:
             raise Exception("Mask cannot be empty")
 
     def save(self):
-        print("Writing file name to", self.get_file_name())
+        print("Writing file to", self.get_file_name())
         self.ds.save_as(self.get_file_name())

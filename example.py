@@ -13,7 +13,7 @@ img[150:180,150:180,2] = img[150:180,150:180,2] + 1
 img[150:180,160:170,4] = img[150:180,160:170,3] + 1
 
 mask = img.astype(bool)
-rtstruct.add_roi(mask)
+rtstruct.add_roi(mask, color=[255, 255, 255], name="Test ROI")
 # rtstruct.add_roi(mask)
 # rtstruct.add_roi(mask)
 # rtstruct.add_roi(mask)
