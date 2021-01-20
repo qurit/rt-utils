@@ -1,4 +1,4 @@
 pydicom==2.1.2
 numpy
-cv2
 scikit-image
+matplotlib==3.2

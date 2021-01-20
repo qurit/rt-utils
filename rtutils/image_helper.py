@@ -12,6 +12,8 @@ def load_sorted_image_series(dicom_series_path: str):
                 if file.endswith('.dcm'):
                     ds = dcmread(os.path.join(root, file))
                     # Only add CT images
+                    if not hasattr(ds.file_meta, 'MediaStorageSOPClassUID'):
+                        continue
                     if ds.file_meta.MediaStorageSOPClassUID == '1.2.840.10008.5.1.4.1.1.2': # CT Image Storage
                         series_data.append(ds)
 

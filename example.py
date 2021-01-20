@@ -5,11 +5,18 @@ from rtutils import RTStruct
 rtstruct = RTStruct('D:\Projects\Mask-to-RTStruct\sample')
 ConstPixelDims = (int(rtstruct.series_data[0].Columns), int(rtstruct.series_data[0].Rows), len(rtstruct.series_data))
 
-# Create image with ROI in once slice
+# Create image with ROI in two slices
 img = np.zeros(ConstPixelDims)
-img[10:20,10:20,1] = img[10:20,10:20,1] + 1
+img[150:180,160:170,0] = img[150:180,160:170,0] + 1
+img[150:180,150:180,1] = img[150:180,150:180,1] + 1
+img[150:180,150:180,2] = img[150:180,150:180,2] + 1
+img[150:180,160:170,4] = img[150:180,160:170,3] + 1
+
 mask = img.astype(bool)
 rtstruct.add_roi(mask)
+# rtstruct.add_roi(mask)
+# rtstruct.add_roi(mask)
+# rtstruct.add_roi(mask)
 
 # Save and load
 rtstruct.save()
