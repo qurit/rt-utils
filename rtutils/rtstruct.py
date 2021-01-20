@@ -6,7 +6,7 @@ from rtutils.utils import ROIData
 class RTStruct:
     def __init__(self, dicom_series_path: str):
         self.series_data = image_helper.load_sorted_image_series(dicom_series_path)
-        self.ds = ds_helper.create_new_rts_dataset(self.get_file_name(), self.series_data)
+        self.ds = ds_helper.create_rtstruct_dataset(self.get_file_name(), self.series_data)
         self.frame_of_reference_uid = self.ds.ReferencedFrameOfReferenceSequence[0].FrameOfReferenceUID # Use first strucitured set ROI
 
     def __del__(self):
@@ -41,11 +41,14 @@ class RTStruct:
     def validate_mask(self, mask: np.ndarray):
         if mask.dtype != bool:
             raise Exception(f"Mask data type must be boolean. Got {mask.dtype}")
+        
         if mask.ndim != 3:
             raise Exception(f"Mask must be 3 dimensional. Got {mask.ndim}")
+
         if len(self.series_data) != np.shape(mask)[2]:
             raise Exception("Mask must have the save number of layers as input series. " +
                 f"Expected {len(self.series_data)}, got {np.shape(mask)[2]}")
+                
         if np.sum(mask) == 0:
             raise Exception("Mask cannot be empty")
 

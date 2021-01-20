@@ -5,7 +5,7 @@ import numpy as np
 from pydicom.dataset import Dataset, FileDataset, FileMetaDataset
 from pydicom.sequence import Sequence
 
-def create_new_rts_dataset(file_name: str, series_data):
+def create_rtstruct_dataset(file_name: str, series_data):
     ds = generate_base_dataset(file_name)
     add_series_information(ds, series_data)
     add_patient_information(ds, series_data)
@@ -39,23 +39,8 @@ def add_required_elements_to_ds(ds: FileDataset):
     ds.SeriesDate = '20201117'
     ds.StudyTime = '085023'
     ds.SeriesTime = '112805.668'
-    ds.AccessionNumber = ''
-    ds.Modality = 'RTSTRUCT'
-    ds.Manufacturer = 'MIM Software Inc.'
-    ds.InstitutionName = 'BC Cancer Research Centre'
-    ds.ReferringPhysicianName = ''
-    ds.StationName = ''
     ds.StudyDescription = ''
     ds.SeriesDescription = ''
-    ds.OperatorsName = ''
-    ds.ManufacturerModelName = 'MIM'
-    ds.PatientName = 'PHANTOM_EXAMPLE'
-    ds.PatientID = 'PHANTOM_EXAMPLE'
-    ds.PatientBirthDate = ''
-    ds.PatientSex = 'M'
-    ds.PatientAge = '000Y'
-    ds.PatientSize = "0.30000001192092"
-    ds.PatientWeight = "1.0"
     ds.SoftwareVersions = '7.0.3'
     ds.StudyInstanceUID = '1.2.840.113619.2.405.3.84541899.902.1605198123.910'
     ds.SeriesInstanceUID = '2.16.840.1.114362.1.11940992.23790159890.563423606.667.93'
@@ -68,10 +53,9 @@ def add_required_elements_to_ds(ds: FileDataset):
     ds.SpecificCharacterSet = 'ISO_IR 100'
     ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3'
     ds.SOPInstanceUID = '2.16.840.1.114362.1.11940992.23790159890.563423606.667.93'
-    ds.PatientName = "Test^Firstname"
-    ds.PatientID = "123456"
     ds.Modality = 'RTSTRUCT'
     ds.Manufacturer = 'Qurit Lab'
+    ds.ManufacturerModelName = 'rt-utils'
     ds.InstitutionName = 'BC Cancer Research Center'
     # Set the transfer syntax
     ds.is_little_endian = True
