@@ -1,5 +1,4 @@
 import numpy as np
-import os
 
 from pydicom.dataset import FileDataset
 from . import ds_helper, image_helper
@@ -43,6 +42,14 @@ class RTStruct:
         for structure_roi in self.ds.StructureSetROISequence:
             roi_names.append(structure_roi.ROIName)
         return roi_names
+    
+    def get_roi_mask_by_name(self, name):
+        for structure_roi in self.ds.StructureSetROISequence:
+            if structure_roi.ROIName == name:
+                contour_sequence = ds_helper.get_contour_by_roi_number(self.ds, structure_roi.ROINumber)
+                return image_helper.create_mask_from_contour_sequence(contour_sequence, self.series_data)
+
+        raise Exception(f"ROI of name `{name}` does not exist in RTStruct")
 
     def save(self, file_path):
         try:
