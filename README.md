@@ -39,7 +39,6 @@ rtstruct = RTStructBuilder.create_from(dicom_series_path="./testlocation", rt_st
 rtstruct.add_roi(mask=MASK_FROM_ML_MODEL, color=[255, 0, 255], name="RT-Utils ROI!")
 rtstruct.save("updated-rt-struct.dcm")
 ```
-This is the main motivation of the project. Wanted to allow physicians to be able to view 
 
 ## Results
 <p align="center">
