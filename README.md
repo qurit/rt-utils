@@ -10,12 +10,12 @@
  
 ---
  
-Motivated to allow physicians and other users to view the results of ML segmentation, rt-utils allows you to create new RTStructs, easily add one or more regions of interest, and save the resulting RTStruct in just a few lines! There will also be support 
+RT-Utils is motivated to allow physicians and other users to view the results of segmentation performed on a series of DICOM images. RT-Utils allows you to create new RTStructs, easily add one or more regions of interest, and save the resulting RTStruct in just a few lines! Through RT-Utils, you will also be able to load masks from existing RTStruct files.
 
 ## How it works
-RT-Utils provides a builder class to faciliate the creation or loading of an RTStruct. From there you can add ROIs through masks and optinally input the colour of the region along with the name.
+RT-Utils provides a builder class to faciliate the creation and loading of an RTStruct. From there, you can add ROIs through binary masks and optionally input the colour of the region along with the region name.
 
-The format for the ROI mask is an nd numpy array. We expect an array of 2d binary masks, one plane for each slice location within the DICOM series. The slices should be sorted in ascending order within the mask. Through these masks, we extract the contours of the regions of interest and place them within the RTStruct file. Note that there is currently only support for the use of one frame of reference UID and structered set ROI sequence. Also note that holes within the ROI may be handled poorly.
+The format for the ROI mask is an nd numpy array of type bool. It is an array of 2d binary masks, one plane for each slice location within the DICOM series. The slices should be sorted in ascending order within the mask. Through these masks, we extract the contours of the regions of interest and place them within the RTStruct file. Note that there is currently only support for the use of one frame of reference UID and structered set ROI sequence. Also note that holes within the ROI may be handled poorly.
 
 ## Installation
 ```
