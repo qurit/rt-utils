@@ -29,20 +29,20 @@ def load_CT_images_from_path(dicom_series_path):
     return series_data
 
 def get_contours_coords(mask_slice: np.ndarray, series_slice):
-    # Method will find multiple contours if possible. Ensure only one is found
     contours = find_contours(mask_slice)
     validate_contours(contours)
     contour = contours[0] # Expect only 1 contour so take first one found
     translated_contour = translate_contour_to_data_coordinants(contour, series_slice)
-    formated_contour = format_contour_for_dicom(translated_contour, series_slice)
+    dicom_formatted_contour = format_contour_for_dicom(translated_contour, series_slice)
 
-    return formated_contour # Data is located in first index
+    return dicom_formatted_contour 
 
 def validate_contours(contours):
     if len(contours) == 0:
         raise Exception("Unable to find contour in non empty mask, please check your mask formatting"
     )
 
+    # Method will find multiple contours if possible. Ensure only one is found
     if len(contours) > 1:
         print(
             "ERROR: unexpected number of counters in slice. " +

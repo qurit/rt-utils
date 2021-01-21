@@ -12,6 +12,9 @@ class ROIData:
     description: str = ''
 
     def __post_init__(self):
+        self.add_default_values()
+
+    def add_default_values(self):
         if self.color == None:
             self.color = self.get_random_colour()
 
