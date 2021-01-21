@@ -1,11 +1,13 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/qurit/rt-utils/main/src/logo.png" width="700"/>
+  <img src="https://raw.githubusercontent.com/qurit/rt-utils/main/src/logo.png" height="150"/>
 </p>
 <p align="center">
-  <sub>A minimal Python library for RTStruct manipulation</sub>
+  <em>A minimal Python library for RTStruct manipulation</em>
 </p>
 <p align="center">
+    <img src="https://img.shields.io/pypi/pyversions/rt-utils" alt="Python version" height="18">
     <a href="https://badge.fury.io/py/rt-utils"><img src="https://badge.fury.io/py/rt-utils.svg" alt="PyPI version" height="18"></a>  
+    <img alt="PyPI - License" src="https://img.shields.io/pypi/l/rt-utils" height="18" />
 </p>
  
 ---
