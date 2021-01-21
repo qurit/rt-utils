@@ -4,7 +4,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 with open('requirements.txt') as f:
     required = f.read().splitlines()
-version = '0.0.3'
+version = '0.0.4'
 
 setuptools.setup(
     name="rt-utils", 
