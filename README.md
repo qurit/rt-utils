@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="src/logo.png" width="700"/>
+  <img src="https://raw.githubusercontent.com/qurit/rt-utils/main/src/logo.png" width="700"/>
 </p>
 <p align="center">
   <sub>A minimal Python library for RTStruct manipulation</sub>
@@ -42,7 +42,7 @@ rtstruct.save("updated-rt-struct.dcm")
 
 ## Results
 <p align="center">
-  <img src="src/contour.png" width="700"/>
+  <img src="https://raw.githubusercontent.com/qurit/rt-utils/main/src/contour.png" width="700"/>
 </p>
 <p align="center">
   The results of a generated ROI with a dummy mask, as viewed in Slicer.
