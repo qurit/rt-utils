@@ -134,7 +134,7 @@ def create_structure_set_roi(roi_data: ROIData):
     structure_set_roi.ROIGenerationAlgorithm = 'MANUAL'
     return structure_set_roi
 
-def create_roi_contour_sequence(roi_data: ROIData, series_data):
+def create_roi_contour(roi_data: ROIData, series_data):
     roi_contour = Dataset()
     roi_contour.ROIDisplayColor = roi_data.color
     roi_contour.ContourSequence = create_contour_sequence(roi_data, series_data)

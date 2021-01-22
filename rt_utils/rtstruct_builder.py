@@ -1,3 +1,4 @@
+from rt_utils.utils import SOPClassUID
 from pydicom.filereader import dcmread
 from .rtstruct import RTStruct
 from . import ds_helper, image_helper
@@ -22,5 +23,8 @@ class RTStructBuilder():
 
     @staticmethod
     def validate_rtstruct(ds):
-        # TODO validate existing
-        pass
+        if ds.SOPClassUID != SOPClassUID.RTSTRUCT or \
+            not hasattr(ds, 'ROIContourSequence') or \
+            not hasattr(ds, 'StructureSetROISequence') or \
+            not hasattr(ds, 'RTROIObservationsSequence'):
+                raise Exception("Please check that the existing RTStruct is valid")

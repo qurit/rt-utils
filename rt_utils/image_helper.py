@@ -1,5 +1,6 @@
 
 from pydicom import dcmread
+from rt_utils.utils import SOPClassUID
 import os
 from skimage.measure import find_contours
 import numpy as np
@@ -25,9 +26,7 @@ def load_CT_images_from_path(dicom_series_path):
             if file.endswith('.dcm'):
                 ds = dcmread(os.path.join(root, file))
                 # Only add CT images
-                if not hasattr(ds.file_meta, 'MediaStorageSOPClassUID'):
-                    continue
-                if ds.file_meta.MediaStorageSOPClassUID == '1.2.840.10008.5.1.4.1.1.2': # CT Image Storage
+                if ds.SOPClassUID == SOPClassUID.CT_IMAGE_STORAGE:
                     series_data.append(ds)
     return series_data
 

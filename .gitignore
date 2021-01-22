@@ -52,3 +52,6 @@ docs/_build/
 # For local testing
 testdata/
 localtest.py
+
+# VSCode
+.vscode/settings.json

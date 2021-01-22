@@ -14,27 +14,28 @@ class RTStruct:
         self.frame_of_reference_uid = ds.ReferencedFrameOfReferenceSequence[-1].FrameOfReferenceUID # Use last strucitured set ROI
 
     def add_roi(self, mask: np.ndarray, color=None, name=None):
+        # TODO test if name already exists
         self.validate_mask(mask)
         roi_number = len(self.ds.StructureSetROISequence) + 1
         roi_data = ROIData(mask, color, roi_number, name, self.frame_of_reference_uid)
 
-        self.ds.ROIContourSequence.append(ds_helper.create_roi_contour_sequence(roi_data, self.series_data))
+        self.ds.ROIContourSequence.append(ds_helper.create_roi_contour(roi_data, self.series_data))
         self.ds.StructureSetROISequence.append(ds_helper.create_structure_set_roi(roi_data))
         self.ds.RTROIObservationsSequence.append(ds_helper.create_rtroi_observation(roi_data))
 
     def validate_mask(self, mask: np.ndarray):
         if mask.dtype != bool:
-            raise Exception(f"Mask data type must be boolean. Got {mask.dtype}")
+            raise RTStruct.ROIException(f"Mask data type must be boolean. Got {mask.dtype}")
         
         if mask.ndim != 3:
-            raise Exception(f"Mask must be 3 dimensional. Got {mask.ndim}")
+            raise RTStruct.ROIException(f"Mask must be 3 dimensional. Got {mask.ndim}")
 
         if len(self.series_data) != np.shape(mask)[2]:
-            raise Exception("Mask must have the save number of layers as input series. " +
+            raise RTStruct.ROIException("Mask must have the save number of layers as input series. " +
                 f"Expected {len(self.series_data)}, got {np.shape(mask)[2]}")
                 
         if np.sum(mask) == 0:
-            raise Exception("Mask cannot be empty")
+            raise RTStruct.ROIException("Mask cannot be empty")
 
     def get_roi_names(self):
         if not self.ds.StructureSetROISequence:
@@ -51,7 +52,7 @@ class RTStruct:
                 contour_sequence = ds_helper.get_contour_by_roi_number(self.ds, structure_roi.ROINumber)
                 return image_helper.create_mask_from_contour_sequence(contour_sequence, self.series_data)
 
-        raise Exception(f"ROI of name `{name}` does not exist in RTStruct")
+        raise RTStruct.ROIException(f"ROI of name `{name}` does not exist in RTStruct")
 
     def save(self, file_path):
         try:
@@ -61,3 +62,9 @@ class RTStruct:
             self.ds.save_as(file_path)
         except OSError:
             raise Exception(f"Cannot write to file path '{file_path}'")
+
+    class ROIException(Exception):
+        """
+        Exception class for invalid ROI masks
+        """
+        pass
