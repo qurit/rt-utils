@@ -1,8 +1,8 @@
 import datetime
 from rt_utils.image_helper import get_contours_coords
-from rt_utils.utils import ROIData
+from rt_utils.utils import ROIData, SOPClassUID
 import numpy as np
-from pydicom.uid import generate_uid, PYDICOM_ROOT_UID
+from pydicom.uid import generate_uid
 from pydicom.dataset import Dataset, FileDataset, FileMetaDataset
 from pydicom.sequence import Sequence
 
@@ -28,9 +28,9 @@ def get_file_meta() -> FileMetaDataset:
     file_meta = FileMetaDataset()
     file_meta.FileMetaInformationGroupLength = 202
     file_meta.FileMetaInformationVersion = b'\x00\x01'
-    file_meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3' # RT Struct class
+    file_meta.MediaStorageSOPClassUID = SOPClassUID.RTSTRUCT
     file_meta.MediaStorageSOPInstanceUID = generate_uid() # TODO find out random generation is fine
-    file_meta.ImplementationClassUID = PYDICOM_ROOT_UID # TODO find out if this is ok
+    file_meta.ImplementationClassUID = SOPClassUID.RTSTRUCT_IMPLEMENTATION_CLASS
     return file_meta
     
 def add_required_elements_to_ds(ds: FileDataset):
@@ -71,7 +71,7 @@ def add_study_and_series_information(ds: FileDataset, series_data):
     ds.StudyInstanceUID = reference_ds.StudyInstanceUID
     ds.SeriesInstanceUID = generate_uid() # TODO find out if random generation is ok
     ds.StudyID = reference_ds.StudyID
-    ds.SeriesNumber = "1" # TODO find out if we can just use 1
+    ds.SeriesNumber = "1" # TODO find out if we can just use 1 (Should be fine since its a new series)
     pass
 
 def add_patient_information(ds: FileDataset, series_data):
@@ -103,7 +103,7 @@ def create_frame_of_ref_study_sequence(series_data):
     rt_refd_series_sequence.append(rt_refd_series)
 
     rt_refd_study = Dataset()
-    rt_refd_study.ReferencedSOPClassUID = '1.2.840.10008.3.1.2.3.1' # Detached Study Management SOP Class
+    rt_refd_study.ReferencedSOPClassUID = SOPClassUID.DETACHED_STUDY_MANAGEMENT
     rt_refd_study.ReferencedSOPInstanceUID = reference_ds.StudyInstanceUID
     rt_refd_study.RTReferencedSeriesSequence = rt_refd_series_sequence
 

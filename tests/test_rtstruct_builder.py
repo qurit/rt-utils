@@ -2,6 +2,7 @@ from rt_utils.rtstruct import RTStruct
 import pytest
 import os
 from rt_utils import RTStructBuilder
+from rt_utils.utils import SOPClassUID
 from pydicom.dataset import validate_file_meta
 import numpy as np
 
@@ -14,7 +15,7 @@ def test_create_from_empty_series_dir():
 def test_only_images_loaded_into_series_data(new_rtstruct: RTStruct):
     assert len(new_rtstruct.series_data) > 0
     for ds in new_rtstruct.series_data:
-        assert ds.file_meta.MediaStorageSOPClassUID == '1.2.840.10008.5.1.4.1.1.2' # CT Image Storage
+        assert ds.file_meta.MediaStorageSOPClassUID == SOPClassUID.CT_IMAGE_STORAGE
 
 def test_valid_filemeta(new_rtstruct: RTStruct):
     # TODO, get test working
@@ -58,13 +59,15 @@ def test_add_valid_roi(new_rtstruct: RTStruct):
     assert new_rtstruct.get_roi_names() == [NAME]
 
 
+def test_loading_rt_struct():
+    pass
+
 def get_empty_mask(rtstruct) -> np.ndarray:
     ref_dicom_image = rtstruct.series_data[0]
     ConstPixelDims = (int(ref_dicom_image.Columns), int(ref_dicom_image.Rows), len(rtstruct.series_data))
     mask = np.zeros(ConstPixelDims)
     return mask.astype(bool)
     
-
 @pytest.fixture
 def new_rtstruct() -> RTStruct:
     assert os.path.exists(series_path := os.path.join(os.path.dirname(__file__), 'mock_data'))

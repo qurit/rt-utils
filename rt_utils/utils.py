@@ -1,5 +1,13 @@
-from dataclasses import dataclass
+from enum import Enum
 from random import randrange
+from pydicom.uid import PYDICOM_ROOT_UID
+from dataclasses import dataclass
+
+class SOPClassUID(Enum):
+    RTSTRUCT_IMPLEMENTATION_CLASS = PYDICOM_ROOT_UID # TODO find out if this is ok
+    CT_IMAGE_STORAGE = '1.2.840.10008.5.1.4.1.1.2'
+    DETACHED_STUDY_MANAGEMENT = '1.2.840.10008.3.1.2.3.1'
+    RTSTRUCT = '1.2.840.10008.5.1.4.1.1.481.3'
 
 @dataclass
 class ROIData:
