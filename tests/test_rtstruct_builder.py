@@ -18,10 +18,8 @@ def test_only_images_loaded_into_series_data(new_rtstruct: RTStruct):
         assert ds.file_meta.MediaStorageSOPClassUID == SOPClassUID.CT_IMAGE_STORAGE
 
 def test_valid_filemeta(new_rtstruct: RTStruct):
-    # TODO, get test working
-    return
     try:
-        validate_file_meta(new_rtstruct.ds)
+        validate_file_meta(new_rtstruct.ds.file_meta)
     except Exception:
         pytest.fail("Invalid file meta in RTStruct dataset")
 

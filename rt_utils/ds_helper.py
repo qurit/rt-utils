@@ -5,6 +5,7 @@ import numpy as np
 from pydicom.uid import generate_uid
 from pydicom.dataset import Dataset, FileDataset, FileMetaDataset
 from pydicom.sequence import Sequence
+from pydicom.uid import ImplicitVRLittleEndian
 
 """
 File contians helper methods that handles DICOM header creation/formatting
@@ -28,6 +29,7 @@ def get_file_meta() -> FileMetaDataset:
     file_meta = FileMetaDataset()
     file_meta.FileMetaInformationGroupLength = 202
     file_meta.FileMetaInformationVersion = b'\x00\x01'
+    file_meta.TransferSyntaxUID = ImplicitVRLittleEndian
     file_meta.MediaStorageSOPClassUID = SOPClassUID.RTSTRUCT
     file_meta.MediaStorageSOPInstanceUID = generate_uid() # TODO find out random generation is fine
     file_meta.ImplementationClassUID = SOPClassUID.RTSTRUCT_IMPLEMENTATION_CLASS
