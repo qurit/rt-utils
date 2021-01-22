@@ -4,6 +4,9 @@ import os
 from skimage.measure import find_contours
 import numpy as np
 
+"""
+File contians helper methods that loading / formatting DICOM images and contours
+"""
 def load_sorted_image_series(dicom_series_path: str):
         series_data = load_CT_images_from_path(dicom_series_path)
 

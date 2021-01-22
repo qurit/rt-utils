@@ -4,7 +4,9 @@ from pydicom.dataset import FileDataset
 from . import ds_helper, image_helper
 from rt_utils.utils import ROIData
 
-# TODO handle overwriting existing file
+"""
+Wrapper class to facilitate appending and extracting ROI's within an RTStruct
+"""
 class RTStruct:
     def __init__(self, series_data, ds: FileDataset):
         self.series_data = series_data

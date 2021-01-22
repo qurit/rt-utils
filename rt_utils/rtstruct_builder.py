@@ -2,7 +2,9 @@ from pydicom.filereader import dcmread
 from .rtstruct import RTStruct
 from . import ds_helper, image_helper
 
-# Class to help facilitate the two ways in which you can instantiate the RTStruct wrapper
+"""
+Class to help facilitate the two ways in one can instantiate the RTStruct wrapper
+"""
 class RTStructBuilder():
     @staticmethod
     def create_new(dicom_series_path: str):

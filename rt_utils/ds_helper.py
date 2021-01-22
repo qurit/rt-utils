@@ -6,6 +6,9 @@ from pydicom.uid import generate_uid, PYDICOM_ROOT_UID
 from pydicom.dataset import Dataset, FileDataset, FileMetaDataset
 from pydicom.sequence import Sequence
 
+"""
+File contians helper methods that handles DICOM header creation/formatting
+"""
 def create_rtstruct_dataset(series_data):
     ds = generate_base_dataset()
     add_study_and_series_information(ds, series_data)
