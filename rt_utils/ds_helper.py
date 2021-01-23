@@ -183,7 +183,7 @@ def create_rtroi_observation(roi_data: ROIData) -> Dataset:
     rtroi_observation.ROIInterpreter = ''
     return rtroi_observation
 
-def get_contour_by_roi_number(ds, roi_number):
+def get_contour_sequence_by_roi_number(ds, roi_number):
     for roi_contour in ds.ROIContourSequence:
         if str(roi_contour.ReferencedROINumber) == str(roi_number): # Ensure same type
             return roi_contour.ContourSequence

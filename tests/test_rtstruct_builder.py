@@ -1,4 +1,3 @@
-from build.lib.rt_utils import rtstruct
 from rt_utils.rtstruct import RTStruct
 import pytest
 import os
@@ -13,10 +12,12 @@ def test_create_from_empty_series_dir():
     with pytest.raises(Exception):
         RTStructBuilder.create_new(empty_dir_path)
 
+
 def test_only_images_loaded_into_series_data(new_rtstruct: RTStruct):
     assert len(new_rtstruct.series_data) > 0
     for ds in new_rtstruct.series_data:
-        assert ds.file_meta.MediaStorageSOPClassUID == SOPClassUID.CT_IMAGE_STORAGE
+        assert ds.SOPInstanceUID == SOPClassUID.CT_IMAGE_STORAGE
+
 
 def test_valid_filemeta(new_rtstruct: RTStruct):
     try:
@@ -24,11 +25,13 @@ def test_valid_filemeta(new_rtstruct: RTStruct):
     except Exception:
         pytest.fail("Invalid file meta in RTStruct dataset")
 
+
 def test_add_non_binary_roi(new_rtstruct: RTStruct):
     mask = get_empty_mask(new_rtstruct)
     mask.astype(float)
     with pytest.raises(RTStruct.ROIException):
         new_rtstruct.add_roi(mask)
+
 
 def test_add_empty_roi(new_rtstruct: RTStruct):
     mask = get_empty_mask(new_rtstruct)
@@ -36,11 +39,13 @@ def test_add_empty_roi(new_rtstruct: RTStruct):
     with pytest.raises(RTStruct.ROIException):
         new_rtstruct.add_roi(mask)
 
+
 def test_add_invalid_sized_roi(new_rtstruct: RTStruct):
     mask = get_empty_mask(new_rtstruct)
     with pytest.raises(RTStruct.ROIException):
         new_rtstruct.add_roi(mask)
     # Create ROI
+
 
 def test_add_valid_roi(new_rtstruct: RTStruct):
     assert new_rtstruct.get_roi_names() == []
@@ -62,16 +67,19 @@ def test_add_valid_roi(new_rtstruct: RTStruct):
     assert new_rtstruct.ds.ROIContourSequence[0].ROIDisplayColor == COLOR
     assert new_rtstruct.get_roi_names() == [NAME]
 
+
 def test_get_invalid_roi_mask_by_name(new_rtstruct: RTStruct):
     assert new_rtstruct.get_roi_names() == []
     with pytest.raises(RTStruct.ROIException):
         new_rtstruct.get_roi_mask_by_name("FAKE_NAME")
+
 
 def test_loading_invalid_rt_struct():
     assert os.path.exists(series_path := os.path.join(os.path.dirname(__file__), 'mock_data'))
     assert os.path.exists(invalid_rt_struct_path := os.path.join(series_path, 'ct_1.dcm'))
     with pytest.raises(Exception):
         RTStructBuilder.create_from(series_path, invalid_rt_struct_path)
+
 
 def test_loading_valid_rt_struct():
     assert os.path.exists(series_path := os.path.join(os.path.dirname(__file__), 'mock_data'))
@@ -97,11 +105,13 @@ def test_loading_valid_rt_struct():
     new_roi = rtstruct.ds.StructureSetROISequence[-1]
     assert new_roi.ROIName == 'ROI-5'
 
+
 def get_empty_mask(rtstruct) -> np.ndarray:
     ref_dicom_image = rtstruct.series_data[0]
-    ConstPixelDims = (int(ref_dicom_image.Columns), int(ref_dicom_image.Rows), len(rtstruct.series_data))
-    mask = np.zeros(ConstPixelDims)
+    mask_dims = (int(ref_dicom_image.Columns), int(ref_dicom_image.Rows), len(rtstruct.series_data))
+    mask = np.zeros(mask_dims)
     return mask.astype(bool)
+    
     
 @pytest.fixture
 def new_rtstruct() -> RTStruct:
