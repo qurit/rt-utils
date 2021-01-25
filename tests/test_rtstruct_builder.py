@@ -56,7 +56,7 @@ def test_add_valid_roi(new_rtstruct: RTStruct):
     NAME = "Test ROI"
     COLOR = [123, 321, 456]
     mask = get_empty_mask(new_rtstruct)
-    mask[50:100,50:100,0] = 1
+    mask[50:100, 50:100, 0] = 1
     
     new_rtstruct.add_roi(mask, color=COLOR, name=NAME)
 
@@ -104,6 +104,25 @@ def test_loading_valid_rt_struct():
     assert len(rtstruct.ds.RTROIObservationsSequence) == 5 # 1 should be added
     new_roi = rtstruct.ds.StructureSetROISequence[-1]
     assert new_roi.ROIName == 'ROI-5'
+
+
+def test_correctly_load_mask(new_rtstruct: RTStruct):
+    # Put weird shape in mask
+    created_mask = get_empty_mask(new_rtstruct)
+    created_mask[50:100, 50:100, 0] = 1
+    created_mask[60:150, 40:120, 0] = 1
+
+    # Save and load mask
+    mask_name = "test"
+    new_rtstruct.add_roi(created_mask, name=mask_name)
+    loaded_mask = new_rtstruct.get_roi_mask_by_name(mask_name)
+
+    # Use IOU to test accuracy of loaded mask
+    IOU_threshold = 0.95 # Expect 95% accuracy for this mask 
+    numerator = np.logical_and(created_mask, loaded_mask)
+    denominator = np.logical_or(created_mask, loaded_mask)
+    IOU =  np.sum(numerator) / np.sum(denominator) 
+    assert IOU >= IOU_threshold
 
 
 def get_empty_mask(rtstruct) -> np.ndarray:
