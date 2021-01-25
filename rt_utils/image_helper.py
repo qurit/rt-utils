@@ -5,10 +5,8 @@ from pydicom.sequence import Sequence
 from rt_utils.utils import SOPClassUID
 import os
 from skimage.measure import find_contours
+from skimage.draw import polygon
 import numpy as np
-
-
-import matplotlib.pyplot as plt
 
 """
 File contians helper methods for loading / formatting DICOM images and contours
@@ -63,6 +61,14 @@ def translate_contour_to_data_coordinants(contour, series_slice: Dataset):
     contour[:, 1] = (contour[:, 1]) * spacing[1] + offset[1]
     return contour
 
+def translate_contour_to_pixel_coordinants(contour, series_slice: Dataset):
+    offset = series_slice.ImagePositionPatient
+    spacing = series_slice.PixelSpacing
+    contour[:, 0] = (contour[:, 0] - offset[0]) / spacing[0]
+    contour[:, 1] = (contour[:, 1] - + offset[1]) / spacing[1] 
+
+    return contour
+
 def format_contour_for_dicom(contour, series_slice: Dataset):
     # DICOM uses a 1d array of x, y, z coords
     z_indicies = np.ones((contour.shape[0], 1)) * series_slice.SliceLocation
@@ -94,13 +100,18 @@ def get_slice_contour_data(series_slice: Dataset, contour_sequence: Sequence):
 
 def get_slice_mask_from_slice_contour_data(series_slice: Dataset, slice_contour_data):
     slice_mask = create_empty_slice_mask(series_slice)
-    for contour_coords in slice_contour_data:
-        print(contour_coords)
-        reshaped_contour_data = np.reshape(contour_coords, [len(contour_coords) // 3, 3]).astype(int)
-        cols = reshaped_contour_data[:,0]
-        rows = reshaped_contour_data[:,1]
-        slice_mask[cols, rows] = True # Note the order of indices (cols before rows)
+    for contour_coords in slice_contour_data:    
+        cols, rows = get_contour_cols_and_rows(series_slice, contour_coords) 
+        fill_row_coords, fill_col_coords = polygon(rows, cols, slice_mask.shape)
+        slice_mask[fill_col_coords, fill_row_coords] = True # Note the order of indices (cols before rows)
     return slice_mask
+
+def get_contour_cols_and_rows(series_slice: Dataset, contour_coords):
+    reshaped_contour_data = np.reshape(contour_coords, [len(contour_coords) // 3, 3]).astype(int)
+    translated_contour_data  = translate_contour_to_pixel_coordinants(reshaped_contour_data, series_slice)
+    cols = translated_contour_data[:,0]
+    rows = translated_contour_data[:,1]
+    return cols, rows
 
 def create_empty_series_mask(series_data):
     ref_dicom_image = series_data[0]
