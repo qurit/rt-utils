@@ -56,10 +56,11 @@ class RTStruct:
 
     def save(self, file_path):
         try:
-            open(file_path, 'w')
+            file = open(file_path, 'w')
             # Opening worked, we should have a valid file_path
             print("Writing file to", file_path)
             self.ds.save_as(file_path)
+            file.close()
         except OSError:
             raise Exception(f"Cannot write to file path '{file_path}'")
 
