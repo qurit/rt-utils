@@ -16,7 +16,7 @@ def test_create_from_empty_series_dir():
 def test_only_images_loaded_into_series_data(new_rtstruct: RTStruct):
     assert len(new_rtstruct.series_data) > 0
     for ds in new_rtstruct.series_data:
-        assert ds.SOPInstanceUID == SOPClassUID.CT_IMAGE_STORAGE
+        assert ds.SOPClassUID == SOPClassUID.CT_IMAGE_STORAGE
 
 
 def test_valid_filemeta(new_rtstruct: RTStruct):
