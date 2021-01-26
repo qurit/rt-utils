@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/qurit/rt-utils/main/rt_cover.png" height="300"/>
+  <img src="https://raw.githubusercontent.com/qurit/rt-utils/main/src/rt-utils-logo.png" height="300"/>
 </p>
 <p align="center">
   <em>A minimal Python library for RTStruct manipulation</em>
