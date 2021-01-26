@@ -30,7 +30,11 @@ pip install rt_utils
 from rt_utils import RTStructBuilder
 
 rtstruct = RTStructBuilder.create_new(dicom_series_path="./testlocation")
-rtstruct.add_roi(mask=MASK_FROM_ML_MODEL, color=[255, 0, 255], name="RT-Utils ROI!")
+rtstruct.add_roi(
+  mask=MASK_FROM_ML_MODEL, 
+  color=[255, 0, 255], 
+  name="RT-Utils ROI!"
+)
 rtstruct.save("test-rt-struct.dcm")
 ```
 
@@ -38,8 +42,15 @@ rtstruct.save("test-rt-struct.dcm")
 ```Python
 from rt_utils import RTStructBuilder
 
-rtstruct = RTStructBuilder.create_from(dicom_series_path="./testlocation", rt_struct_path="./testlocation/rt-struct.dcm")
-rtstruct.add_roi(mask=MASK_FROM_ML_MODEL, color=[255, 0, 255], name="RT-Utils ROI!")
+rtstruct = RTStructBuilder.create_from(
+  dicom_series_path="./testlocation", 
+  rt_struct_path="./testlocation/rt-struct.dcm"
+)
+rtstruct.add_roi(
+  mask=MASK_FROM_ML_MODEL, 
+  color=[255, 0, 255], 
+  name="RT-Utils ROI!"
+)
 rtstruct.save("updated-rt-struct.dcm")
 ```
 
