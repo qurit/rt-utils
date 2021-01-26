@@ -53,6 +53,7 @@ docs/_build/
 testdata/
 localtest.py
 test.dcm
+old/
 
 # VSCode
 .vscode/settings.json
