@@ -2,3 +2,5 @@ pydicom==2.1.2
 numpy
 scikit-image
 matplotlib==3.2
+Pillow
+opencv-python

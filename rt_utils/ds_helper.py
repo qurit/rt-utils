@@ -8,7 +8,7 @@ from pydicom.sequence import Sequence
 from pydicom.uid import ImplicitVRLittleEndian
 
 """
-File contians helper methods that handles DICOM header creation/formatting
+File contains helper methods that handles DICOM header creation/formatting
 """
 def create_rtstruct_dataset(series_data):
     ds = generate_base_dataset()

@@ -106,24 +106,49 @@ def test_loading_valid_rt_struct():
     assert new_roi.ROIName == 'ROI-5'
 
 
-def test_correctly_load_mask(new_rtstruct: RTStruct):
+def test_loaded_mask_iou(new_rtstruct: RTStruct):
     # Put weird shape in mask
-    created_mask = get_empty_mask(new_rtstruct)
-    created_mask[50:100, 50:100, 0] = 1
-    created_mask[60:150, 40:120, 0] = 1
+    mask = get_empty_mask(new_rtstruct)
+    mask[50:100, 50:100, 0] = 1
+    mask[60:150, 40:120, 0] = 1
 
+    IOU_threshold = 0.95 # Expect 95% accuracy for this mask 
+    run_mask_iou_test(new_rtstruct, mask, IOU_threshold)
+
+
+def test_mask_with_holes_iou(new_rtstruct: RTStruct):
+    # Create square mask with hole
+    mask = get_empty_mask(new_rtstruct)
+    mask[50:100, 50:100, 0] = 1
+    mask[65:85, 65:85, 0] = 0
+
+    IOU_threshold = 0.85 # Expect lower accuracy holes lose information
+    run_mask_iou_test(new_rtstruct, mask,  IOU_threshold)
+
+
+def test_pin_hole_iou(new_rtstruct: RTStruct):
+    # Create square mask with hole
+    mask = get_empty_mask(new_rtstruct)
+    mask[50:100, 50:100, 0] = 1
+    mask[65:85, 65:85, 0] = 0
+
+    IOU_threshold = 0.85 # Expect lower accuracy holes lose information
+    run_mask_iou_test(new_rtstruct, mask,  IOU_threshold, True)
+    
+
+def run_mask_iou_test(rtstruct:RTStruct, mask, IOU_threshold, use_pin_hole=False):
     # Save and load mask
     mask_name = "test"
-    new_rtstruct.add_roi(created_mask, name=mask_name)
-    loaded_mask = new_rtstruct.get_roi_mask_by_name(mask_name)
+    rtstruct.add_roi(mask, name=mask_name, use_pin_hole=use_pin_hole)
+    loaded_mask = rtstruct.get_roi_mask_by_name(mask_name)
 
     # Use IOU to test accuracy of loaded mask
-    IOU_threshold = 0.95 # Expect 95% accuracy for this mask 
-    numerator = np.logical_and(created_mask, loaded_mask)
-    denominator = np.logical_or(created_mask, loaded_mask)
+    print(np.sum(mask))
+    print(np.sum(loaded_mask))
+    numerator = np.logical_and(mask, loaded_mask)
+    denominator = np.logical_or(mask, loaded_mask)
     IOU =  np.sum(numerator) / np.sum(denominator) 
     assert IOU >= IOU_threshold
-
 
 def get_empty_mask(rtstruct) -> np.ndarray:
     ref_dicom_image = rtstruct.series_data[0]

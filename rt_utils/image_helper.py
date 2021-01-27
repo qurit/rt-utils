@@ -104,7 +104,7 @@ def draw_line_upwards_from_point(mask: np.ndarray, start, fill_value: int) -> np
 def validate_contours(contours: list):
     if len(contours) == 0:
         raise Exception ("Unable to find contour in non empty mask, please check your mask formatting"
-    )
+    ) 
 
 def translate_contour_to_data_coordinants(contour, series_slice: Dataset):
     offset = series_slice.ImagePositionPatient
@@ -153,9 +153,9 @@ def get_slice_contour_data(series_slice: Dataset, contour_sequence: Sequence):
 def get_slice_mask_from_slice_contour_data(series_slice: Dataset, slice_contour_data):
     slice_mask = create_empty_slice_mask(series_slice)
     for contour_coords in slice_contour_data:    
-        cols, rows = get_contour_cols_and_rows(series_slice, contour_coords) 
+        cols, rows = get_contour_cols_and_rows(series_slice, contour_coords)
         fill_row_coords, fill_col_coords = polygon(rows, cols, slice_mask.shape)
-        slice_mask[fill_row_coords, fill_col_coords] = True
+        slice_mask[fill_row_coords, fill_col_coords] = np.invert(slice_mask[fill_row_coords, fill_col_coords])
     return slice_mask
 
 def get_contour_cols_and_rows(series_slice: Dataset, contour_coords):
@@ -168,12 +168,12 @@ def get_contour_cols_and_rows(series_slice: Dataset, contour_coords):
 def create_empty_series_mask(series_data):
     ref_dicom_image = series_data[0]
     mask_dims = (int(ref_dicom_image.Columns), int(ref_dicom_image.Rows), len(series_data))
-    mask = np.zeros(mask_dims)
+    mask = np.zeros(mask_dims).astype(bool)
     return mask
 
 def create_empty_slice_mask(series_slice):
     mask_dims = (int(series_slice.Columns), int(series_slice.Rows))
-    mask = np.zeros(mask_dims)
+    mask = np.zeros(mask_dims).astype(bool)
     return mask
 
 """
