@@ -17,7 +17,7 @@ class ROIData:
     name: str
     frame_of_reference_uid: int
     description: str = ''
-    pin_hole: bool = False
+    use_pin_hole: bool = False
 
     def __post_init__(self):
         self.add_default_values()
