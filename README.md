@@ -8,7 +8,7 @@
     <img src="https://github.com/qurit/rt-utils/workflows/Python%20application/badge.svg" height="18">
     <img src="https://img.shields.io/pypi/pyversions/rt-utils" alt="Python version" height="18">
     <a href="https://pypi.org/project/rt-utils"><img src="https://badge.fury.io/py/rt-utils.svg" alt="PyPI version" height="18"></a>  
-    <img alt="PyPI - License" src="https://img.shields.io/pypi/l/rt-utils" height="18" />
+    <img alt="PyPI - License" src="https://img.shields.io/github/license/qurit/rt-utils?color=g" height="18" />
 </p>
  
 ---
