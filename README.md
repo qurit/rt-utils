@@ -84,5 +84,5 @@ rtstruct.save("updated-rt-struct.dcm")
   <img src="https://raw.githubusercontent.com/qurit/rt-utils/main/src/loaded-mask.png" height="300"/>
 </p>
 <p align="center">
-  The results of a loading an exisiting ROI as a dummy mask, as viewed in Python.
+  The results of a loading an exisiting ROI as a mask, as viewed in Python.
 </p>
