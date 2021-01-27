@@ -54,10 +54,35 @@ rtstruct.add_roi(
 rtstruct.save("updated-rt-struct.dcm")
 ```
 
-## Results
+## Creation Results
 <p align="center">
   <img src="https://raw.githubusercontent.com/qurit/rt-utils/main/src/contour.png" width="1000"/>
 </p>
 <p align="center">
   The results of a generated ROI with a dummy mask, as viewed in Slicer.
+</p>
+
+## Loading an existing RTStruct contour as a mask
+```Python
+import matplotlib.pyplot as plt
+from rt_utils import RTStructBuilder
+
+rtstruct = RTStructBuilder.create_from(
+  dicom_series_path="./testlocation", 
+  rt_struct_path="./testlocation/rt-struct.dcm"
+)
+
+mask_3d = rtstruct.get_roi_mask_by_name("ROI NAME")
+first_mask_slice = mask_3d[:, :, 0]
+plt.imshow(first_mask_slice) # View one slice within the mask
+plt.show()
+rtstruct.save("updated-rt-struct.dcm")
+```
+
+## Loading Results
+<p align="center">
+  <img src="https://raw.githubusercontent.com/qurit/rt-utils/main/src/loaded-mask.png" height="300"/>
+</p>
+<p align="center">
+  The results of a loading an exisiting ROI as a dummy mask, as viewed in Python.
 </p>
