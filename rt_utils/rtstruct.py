@@ -18,11 +18,11 @@ class RTStruct:
     Optionally input a color or name for the ROI
     If pin_hole is set to true, will cut a pinhole through ROI's with holes in them so that they are represented with one contour
     """
-    def add_roi(self, mask: np.ndarray, color=None, name=None, use_pin_hole=False):
+    def add_roi(self, mask: np.ndarray, color=None, name=None, description='', use_pin_hole=False):
         # TODO test if name already exists
         self.validate_mask(mask)
         roi_number = len(self.ds.StructureSetROISequence) + 1
-        roi_data = ROIData(mask, color, roi_number, name, self.frame_of_reference_uid, use_pin_hole)
+        roi_data = ROIData(mask, color, roi_number, name, self.frame_of_reference_uid, description, use_pin_hole)
 
         self.ds.ROIContourSequence.append(ds_helper.create_roi_contour(roi_data, self.series_data))
         self.ds.StructureSetROISequence.append(ds_helper.create_structure_set_roi(roi_data))
