@@ -18,9 +18,22 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     keywords=["RTStruct", "Dicom", "Pydicom"],
     classifiers=[
-        "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
+        "Programming Language :: Python :: 3 :: Only",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Typing :: Typed",
+        "License :: OSI Approved :: MIT License",
+        "Topic :: Software Development :: Libraries",
+        "Topic :: Utilities"
+        "Topic :: Scientific/Engineering :: Medical Science Apps."
+        "Topic :: Scientific/Engineering :: Image Processing"
+        "Topic :: Scientific/Engineering :: Artificial Intelligence"
+        "Intended Audience :: Healthcare Industry"
+        "Intended Audience :: Science/Research"
+        "Intended Audience :: Developers"
     ],
     python_requires='>=3.6',
     install_requires=required,
