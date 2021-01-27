@@ -14,6 +14,12 @@ class RTStruct:
         self.frame_of_reference_uid = ds.ReferencedFrameOfReferenceSequence[-1].FrameOfReferenceUID # Use last strucitured set ROI
 
     """
+    Set the series description for the RTStruct dataset
+    """
+    def set_series_description(self, description: str):
+        self.ds.SeriesDescription = description
+        
+    """
     Add a ROI to the rtstruct given a 3D binary mask for the ROI's at each slice
     Optionally input a color or name for the ROI
     If pin_hole is set to true, will cut a pinhole through ROI's with holes in them so that they are represented with one contour
