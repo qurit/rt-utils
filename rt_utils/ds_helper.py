@@ -141,6 +141,10 @@ def create_roi_contour(roi_data: ROIData, series_data):
     roi_contour.ReferencedROINumber = str(roi_data.number)
     return roi_contour
 
+"""
+Iterate through each slice of the mask
+For each connected segment within a slice, create a contour
+"""
 def create_contour_sequence(roi_data: ROIData, series_data):
     contour_sequence = Sequence()
     for i, series_slice in enumerate(series_data):
@@ -150,11 +154,13 @@ def create_contour_sequence(roi_data: ROIData, series_data):
             print("Skipping empty mask layer")
             continue
 
-        contour = create_contour(mask_slice, series_slice)
-        contour_sequence.append(contour)
+        contour_coords = get_contours_coords(mask_slice, series_slice, roi_data.use_pin_hole)
+        for contour_data in contour_coords:
+            contour = create_contour(series_slice, contour_data)
+            contour_sequence.append(contour)
     return contour_sequence
 
-def create_contour(mask_slice: np.ndarray, series_slice):
+def create_contour(series_slice: Dataset, contour_data: np.ndarray):
     contour_image = Dataset()
     contour_image.ReferencedSOPClassUID = series_slice.file_meta.MediaStorageSOPClassUID
     contour_image.ReferencedSOPInstanceUID = series_slice.file_meta.MediaStorageSOPInstanceUID
@@ -166,9 +172,8 @@ def create_contour(mask_slice: np.ndarray, series_slice):
     contour = Dataset()
     contour.ContourImageSequence = contour_image_sequence
     contour.ContourGeometricType = 'CLOSED_PLANAR' # TODO figure out how to get this value
-    contour_coords = get_contours_coords(mask_slice, series_slice)
-    contour.NumberOfContourPoints = len(contour_coords) / 3  # Each point has an x, y, and z value
-    contour.ContourData = contour_coords
+    contour.NumberOfContourPoints = len(contour_data) / 3  # Each point has an x, y, and z value
+    contour.ContourData = contour_data
     return contour
 
 
