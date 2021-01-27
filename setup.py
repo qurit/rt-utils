@@ -31,6 +31,7 @@ setuptools.setup(
         "Topic :: Scientific/Engineering :: Medical Science Apps."
         "Topic :: Scientific/Engineering :: Image Processing"
         "Topic :: Scientific/Engineering :: Artificial Intelligence"
+        "Topic :: Scientific/Engineering :: Physics"
         "Intended Audience :: Healthcare Industry"
         "Intended Audience :: Science/Research"
         "Intended Audience :: Developers"
