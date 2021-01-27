@@ -86,7 +86,7 @@ def create_pin_hole_mask(mask):
     return pin_hole_mask
 
 def draw_line_upwards_from_point(mask: np.ndarray, start, fill_value: int) -> np.ndarray:
-    line_width = 1
+    line_width = 2
     img = Image.fromarray(mask)
     draw = ImageDraw.Draw(img)
     end = (start[0], start[1] - 1)
