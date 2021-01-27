@@ -7,12 +7,18 @@ from . import ds_helper, image_helper
 Class to help facilitate the two ways in one can instantiate the RTStruct wrapper
 """
 class RTStructBuilder():
+    """
+    Method to generate a new rt struct from a DICOM series 
+    """
     @staticmethod
     def create_new(dicom_series_path: str):
         series_data = image_helper.load_sorted_image_series(dicom_series_path)
         ds = ds_helper.create_rtstruct_dataset(series_data)
         return RTStruct(series_data, ds)
 
+    """
+    Method to load an existing rt struct, given related DICOM series and existing rt struct
+    """
     @staticmethod
     def create_from(dicom_series_path: str, rt_struct_path: str):
         series_data = image_helper.load_sorted_image_series(dicom_series_path)

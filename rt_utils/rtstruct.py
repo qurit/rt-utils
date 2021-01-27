@@ -13,6 +13,10 @@ class RTStruct:
         self.ds = ds
         self.frame_of_reference_uid = ds.ReferencedFrameOfReferenceSequence[-1].FrameOfReferenceUID # Use last strucitured set ROI
 
+    """
+    Add a ROI to the rtstruct given a 3D binary mask for the ROI's at each slice
+    Optionally input a color or name for the ROI
+    """
     def add_roi(self, mask: np.ndarray, color=None, name=None):
         # TODO test if name already exists
         self.validate_mask(mask)
@@ -37,6 +41,9 @@ class RTStruct:
         if np.sum(mask) == 0:
             raise RTStruct.ROIException("Mask cannot be empty")
 
+    """
+    Returns a list of the names of all ROI within the RTStruct
+    """
     def get_roi_names(self):
         if not self.ds.StructureSetROISequence:
             return []
@@ -46,6 +53,9 @@ class RTStruct:
             roi_names.append(structure_roi.ROIName)
         return roi_names
     
+    """
+    Returns the 3D binary mask of the ROI with the given input name
+    """
     def get_roi_mask_by_name(self, name):
         for structure_roi in self.ds.StructureSetROISequence:
             if structure_roi.ROIName == name:
@@ -54,7 +64,14 @@ class RTStruct:
 
         raise RTStruct.ROIException(f"ROI of name `{name}` does not exist in RTStruct")
 
-    def save(self, file_path):
+    """
+    Saves the RTStruct with the specified name / location
+    Automatically adds '.dcm' as a suffix
+    """
+    def save(self, file_path: str):
+        # Add .dcm if needed
+        file_path = file_path if file_path.endswith('.dcm') else file_path + '.dcm'
+
         try:
             file = open(file_path, 'w')
             # Opening worked, we should have a valid file_path
