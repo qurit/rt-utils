@@ -8,7 +8,8 @@ import numpy as np
 
 
 def test_create_from_empty_series_dir():
-    assert os.path.exists(empty_dir_path := os.path.join(os.path.dirname(__file__), 'empty'))
+    empty_dir_path = os.path.join(os.path.dirname(__file__), 'empty')
+    assert os.path.exists(empty_dir_path)
     with pytest.raises(Exception):
         RTStructBuilder.create_new(empty_dir_path)
 
@@ -75,16 +76,16 @@ def test_get_invalid_roi_mask_by_name(new_rtstruct: RTStruct):
 
 
 def test_loading_invalid_rt_struct():
-    assert os.path.exists(series_path := os.path.join(os.path.dirname(__file__), 'mock_data'))
-    assert os.path.exists(invalid_rt_struct_path := os.path.join(series_path, 'ct_1.dcm'))
+    invalid_rt_struct_path = os.path.join(get_series_path(), 'ct_1.dcm')
+    assert os.path.exists(invalid_rt_struct_path)
     with pytest.raises(Exception):
-        RTStructBuilder.create_from(series_path, invalid_rt_struct_path)
+        RTStructBuilder.create_from(get_series_path(), invalid_rt_struct_path)
 
 
 def test_loading_valid_rt_struct():
-    assert os.path.exists(series_path := os.path.join(os.path.dirname(__file__), 'mock_data'))
-    assert os.path.exists(valid_rt_struct_path := os.path.join(series_path, 'rt.dcm'))
-    rtstruct = RTStructBuilder.create_from(series_path, valid_rt_struct_path)
+    valid_rt_struct_path = os.path.join(get_series_path(), 'rt.dcm')
+    assert os.path.exists(valid_rt_struct_path)
+    rtstruct = RTStructBuilder.create_from(get_series_path(), valid_rt_struct_path)
 
     # Tests existing values predefined in the file are found
     assert hasattr(rtstruct.ds, 'ROIContourSequence')
@@ -156,9 +157,13 @@ def get_empty_mask(rtstruct) -> np.ndarray:
     mask = np.zeros(mask_dims)
     return mask.astype(bool)
     
+def get_series_path():
+    series_path = os.path.join(os.path.dirname(__file__), 'mock_data')
+    assert os.path.exists(series_path)
+    return series_path
+
     
 @pytest.fixture
 def new_rtstruct() -> RTStruct:
-    assert os.path.exists(series_path := os.path.join(os.path.dirname(__file__), 'mock_data'))
-    rtstruct = RTStructBuilder.create_new(series_path)
+    rtstruct = RTStructBuilder.create_new(get_series_path())
     return rtstruct
