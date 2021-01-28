@@ -4,7 +4,6 @@ from pydicom.dataset import Dataset
 from pydicom.sequence import Sequence
 from rt_utils.utils import SOPClassUID
 import os
-from skimage.draw import polygon
 
 import numpy as np
 import cv2 as cv
@@ -149,17 +148,21 @@ def get_slice_contour_data(series_slice: Dataset, contour_sequence: Sequence):
 def get_slice_mask_from_slice_contour_data(series_slice: Dataset, slice_contour_data):
     slice_mask = create_empty_slice_mask(series_slice)
     for contour_coords in slice_contour_data:    
-        cols, rows = get_contour_cols_and_rows(series_slice, contour_coords)
-        fill_row_coords, fill_col_coords = polygon(rows, cols, slice_mask.shape)
-        slice_mask[fill_row_coords, fill_col_coords] = np.invert(slice_mask[fill_row_coords, fill_col_coords])
+        fill_mask = get_contour_fill_mask(series_slice, contour_coords)
+        # Invert values in the region to be filled. This will create holes where needed if contours are stacked on top of each other
+        slice_mask[fill_mask == 1] = np.invert(slice_mask[fill_mask == 1])
     return slice_mask
 
-def get_contour_cols_and_rows(series_slice: Dataset, contour_coords):
+def get_contour_fill_mask(series_slice: Dataset, contour_coords):
+    # Format data
     reshaped_contour_data = np.reshape(contour_coords, [len(contour_coords) // 3, 3]).astype(int)
     translated_contour_data  = translate_contour_to_pixel_coordinants(reshaped_contour_data, series_slice)
-    cols = translated_contour_data[:,0]
-    rows = translated_contour_data[:,1]
-    return cols, rows
+    polygon = [np.array([translated_contour_data[:, :2]], dtype=np.int32)]
+
+    # Create mask for the region. Fill with 1 for ROI
+    fill_mask = create_empty_slice_mask(series_slice).astype(np.uint8)
+    cv.fillPoly(img=fill_mask, pts=polygon, color=1)
+    return fill_mask
 
 def create_empty_series_mask(series_data):
     ref_dicom_image = series_data[0]

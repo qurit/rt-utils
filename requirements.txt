@@ -1,5 +1,4 @@
 pydicom==2.1.2
 numpy
-scikit-image
 opencv-python
 dataclasses
