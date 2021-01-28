@@ -1,6 +1,5 @@
 pydicom==2.1.2
 numpy
 scikit-image
-Pillow
 opencv-python
 dataclasses

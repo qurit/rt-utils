@@ -5,8 +5,6 @@ from pydicom.sequence import Sequence
 from rt_utils.utils import SOPClassUID
 import os
 from skimage.draw import polygon
-from PIL import Image
-from PIL import ImageDraw
 
 import numpy as np
 import cv2 as cv
@@ -87,18 +85,16 @@ def create_pin_hole_mask(mask):
 
 def draw_line_upwards_from_point(mask: np.ndarray, start, fill_value: int) -> np.ndarray:
     line_width = 2
-    img = Image.fromarray(mask)
-    draw = ImageDraw.Draw(img)
     end = (start[0], start[1] - 1)
-
+    mask = mask.astype(np.uint8) # Type that OpenCV expects
     # Draw one point at a time until we hit a point that already has the desired value
-    while np.array(img).astype(int)[end] != fill_value:
-        draw.line([start, end], fill=fill_value, width=line_width)
+    while mask[end] != fill_value:
+        cv.line(mask, start, end, fill_value, line_width)
 
         # Update start and end to the next positions
         start = end
         end = (start[0], start[1] - line_width)
-    return np.array(img)
+    return mask.astype(bool)
 
 
 def validate_contours(contours: list):
