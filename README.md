@@ -2,7 +2,7 @@
   <img src="https://raw.githubusercontent.com/qurit/rt-utils/main/src/rt-utils-logo.png" height="300"/>
 </p>
 <p align="center">
-  <em>A minimal Python library for RTStruct manipulation</em>
+  <em>A minimal Python library for RT Struct manipulation</em>
 </p>
 <p align="center">
     <img src="https://github.com/qurit/rt-utils/workflows/Python%20application/badge.svg" height="18">
@@ -13,45 +13,62 @@
  
 ---
  
-RT-Utils is motivated to allow physicians and other users to view the results of segmentation performed on a series of DICOM images. RT-Utils allows you to create new RTStructs, easily add one or more regions of interest, and save the resulting RTStruct in just a few lines! Through RT-Utils, you will also be able to load 3D masks from existing RTStruct files.
+RT-Utils is motivated to allow physicians and other users to view the results of segmentation performed on a series of DICOM images. RT-Utils allows you to create or load RT Structs, extract 3d masks from RT Struct ROIs, easily add one or more regions of interest, and save the resulting RT Struct in just a few lines!
 
 ## How it works
-RT-Utils provides a builder class to faciliate the creation and loading of an RTStruct. From there, you can add ROIs through binary masks and optionally input the colour of the region along with the region name.
+RT-Utils provides a builder class to faciliate the creation and loading of an RT Struct. From there, you can add ROIs through binary masks and optionally input the colour of the region along with the region name.
 
-The format for the ROI mask is an nd numpy array of type bool. It is an array of 2d binary masks, one plane for each slice location within the DICOM series. The slices should be sorted in ascending order within the mask. Through these masks, we extract the contours of the regions of interest and place them within the RTStruct file. Note that there is currently only support for the use of one frame of reference UID and structered set ROI sequence. Also note that holes within the ROI may be handled poorly.
+The format for the ROI mask is an nd numpy array of type bool. It is an array of 2d binary masks, one plane for each slice location within the DICOM series. The slices should be sorted in ascending order within the mask. Through these masks, we extract the contours of the regions of interest and place them within the RT Struct file. Note that there is currently only support for the use of one frame of reference UID and structered set ROI sequence. Also note that holes within the ROI may be handled poorly.
 
 ## Installation
 ```
 pip install rt_utils
 ```
 
-## Creating new RTStructs
+## Creating new RT Structs
 ```Python
 from rt_utils import RTStructBuilder
 
+# Create new RT Struct. Requires the DICOM series path for the RT Struct.
 rtstruct = RTStructBuilder.create_new(dicom_series_path="./testlocation")
+
+# ...
+# Create mask through means such as ML
+# ...
+
+# Add the 3D mask as an ROI.
+# The colour, description, and name will be auto generated
+rtstruct.add_roi(mask=MASK_FROM_ML_MODEL)
+
+# Add another ROI, this time setting the color, description, and name
 rtstruct.add_roi(
   mask=MASK_FROM_ML_MODEL, 
   color=[255, 0, 255], 
   name="RT-Utils ROI!"
 )
-rtstruct.save("test-rt-struct.dcm")
+
+rtstruct.save('new-rt-struct')
 ```
 
-## Loading existing RTStructs
+## Loading existing RT Structs
 ```Python
 from rt_utils import RTStructBuilder
+import matplotlib.pyplot as plt
 
+# Load existing RT Struct. Requires the series path and existing RT Struct path
 rtstruct = RTStructBuilder.create_from(
   dicom_series_path="./testlocation", 
   rt_struct_path="./testlocation/rt-struct.dcm"
 )
+
+# Add ROI. This is the same as the above example.
 rtstruct.add_roi(
   mask=MASK_FROM_ML_MODEL, 
   color=[255, 0, 255], 
   name="RT-Utils ROI!"
 )
-rtstruct.save("updated-rt-struct.dcm")
+
+rtstruct.save('new-rt-struct')
 ```
 
 ## Creation Results
@@ -62,21 +79,27 @@ rtstruct.save("updated-rt-struct.dcm")
   The results of a generated ROI with a dummy mask, as viewed in Slicer.
 </p>
 
-## Loading an existing RTStruct contour as a mask
+## Loading an existing RT Struct contour as a mask
 ```Python
-import matplotlib.pyplot as plt
 from rt_utils import RTStructBuilder
+import matplotlib.pyplot as plt
 
+# Load existing RT Struct. Requires the series path and existing RT Struct path
 rtstruct = RTStructBuilder.create_from(
   dicom_series_path="./testlocation", 
   rt_struct_path="./testlocation/rt-struct.dcm"
 )
 
+# View all of the ROI names from within the image
+print(rtstruct.get_roi_names())
+
+# Loading the 3D Mask from within the RT Struct
 mask_3d = rtstruct.get_roi_mask_by_name("ROI NAME")
+
+# Display one slice of the region
 first_mask_slice = mask_3d[:, :, 0]
-plt.imshow(first_mask_slice) # View one slice within the mask
+plt.imshow(first_mask_slice)
 plt.show()
-rtstruct.save("updated-rt-struct.dcm")
 ```
 
 ## Loading Results
