@@ -55,5 +55,13 @@ localtest.py
 test.dcm
 old/
 
+# Environments
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
 # VSCode
 .vscode/settings.json
