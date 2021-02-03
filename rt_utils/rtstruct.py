@@ -66,7 +66,7 @@ class RTStruct:
         if not self.ds.StructureSetROISequence:
             return []
 
-        return [structure_roi for structure_roi in self.ds.StructureSetROISequence]
+        return [structure_roi.ROIName for structure_roi in self.ds.StructureSetROISequence]
 
     def get_roi_mask_by_name(self, name) -> np.ndarray:
         """
