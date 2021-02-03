@@ -10,7 +10,7 @@ from pydicom.uid import ImplicitVRLittleEndian
 """
 File contains helper methods that handles DICOM header creation/formatting
 """
-def create_rtstruct_dataset(series_data):
+def create_rtstruct_dataset(series_data) -> FileDataset:
     ds = generate_base_dataset()
     add_study_and_series_information(ds, series_data)
     add_patient_information(ds, series_data)
@@ -71,10 +71,9 @@ def add_study_and_series_information(ds: FileDataset, series_data):
     ds.StudyDescription = reference_ds.StudyDescription
     ds.SeriesDescription = reference_ds.SeriesDescription
     ds.StudyInstanceUID = reference_ds.StudyInstanceUID
-    ds.SeriesInstanceUID = generate_uid() # TODO find out if random generation is ok
+    ds.SeriesInstanceUID = generate_uid() # TODO: find out if random generation is ok
     ds.StudyID = reference_ds.StudyID
-    ds.SeriesNumber = "1" # TODO find out if we can just use 1 (Should be fine since its a new series)
-    pass
+    ds.SeriesNumber = "1" # TODO: find out if we can just use 1 (Should be fine since its a new series)
 
 def add_patient_information(ds: FileDataset, series_data):
     reference_ds = series_data[0] # All elements in series should have the same data
@@ -86,6 +85,7 @@ def add_patient_information(ds: FileDataset, series_data):
     ds.PatientSize = reference_ds.PatientSize
     ds.PatientWeight = reference_ds.PatientWeight
 
+
 def add_refd_frame_of_ref_sequence(ds: FileDataset, series_data):
     refd_frame_of_ref = Dataset()
     refd_frame_of_ref.FrameOfReferenceUID = generate_uid() # TODO Find out if random generation is ok
@@ -95,7 +95,8 @@ def add_refd_frame_of_ref_sequence(ds: FileDataset, series_data):
     ds.ReferencedFrameOfReferenceSequence = Sequence()
     ds.ReferencedFrameOfReferenceSequence.append(refd_frame_of_ref)
 
-def create_frame_of_ref_study_sequence(series_data):
+
+def create_frame_of_ref_study_sequence(series_data) -> Sequence:
     reference_ds = series_data[0] # All elements in series should have the same data
     rt_refd_series = Dataset()
     rt_refd_series.SeriesInstanceUID = reference_ds.SeriesInstanceUID
@@ -113,7 +114,8 @@ def create_frame_of_ref_study_sequence(series_data):
     rt_refd_study_sequence.append(rt_refd_study)
     return rt_refd_study_sequence
 
-def create_contour_image_sequence(series_data):
+
+def create_contour_image_sequence(series_data) -> Sequence:
     contour_image_sequence = Sequence()
 
     # Add each referenced image
@@ -124,7 +126,8 @@ def create_contour_image_sequence(series_data):
         contour_image_sequence.append(contour_image)
     return contour_image_sequence
 
-def create_structure_set_roi(roi_data: ROIData):
+
+def create_structure_set_roi(roi_data: ROIData) -> Dataset:
     # Structure Set ROI Sequence: Structure Set ROI 1
     structure_set_roi = Dataset()
     structure_set_roi.ROINumber = roi_data.number
@@ -134,18 +137,21 @@ def create_structure_set_roi(roi_data: ROIData):
     structure_set_roi.ROIGenerationAlgorithm = 'MANUAL'
     return structure_set_roi
 
-def create_roi_contour(roi_data: ROIData, series_data):
+
+def create_roi_contour(roi_data: ROIData, series_data) -> Dataset:
     roi_contour = Dataset()
     roi_contour.ROIDisplayColor = roi_data.color
     roi_contour.ContourSequence = create_contour_sequence(roi_data, series_data)
     roi_contour.ReferencedROINumber = str(roi_data.number)
     return roi_contour
 
-"""
-Iterate through each slice of the mask
-For each connected segment within a slice, create a contour
-"""
-def create_contour_sequence(roi_data: ROIData, series_data):
+
+def create_contour_sequence(roi_data: ROIData, series_data) -> Sequence:
+    """
+    Iterate through each slice of the mask
+    For each connected segment within a slice, create a contour
+    """
+
     contour_sequence = Sequence()
     for i, series_slice in enumerate(series_data):
         mask_slice = roi_data.mask[:,:,i]
@@ -158,9 +164,11 @@ def create_contour_sequence(roi_data: ROIData, series_data):
         for contour_data in contour_coords:
             contour = create_contour(series_slice, contour_data)
             contour_sequence.append(contour)
+
     return contour_sequence
 
-def create_contour(series_slice: Dataset, contour_data: np.ndarray):
+
+def create_contour(series_slice: Dataset, contour_data: np.ndarray) -> Dataset:
     contour_image = Dataset()
     contour_image.ReferencedSOPClassUID = series_slice.file_meta.MediaStorageSOPClassUID
     contour_image.ReferencedSOPInstanceUID = series_slice.file_meta.MediaStorageSOPInstanceUID
@@ -174,6 +182,7 @@ def create_contour(series_slice: Dataset, contour_data: np.ndarray):
     contour.ContourGeometricType = 'CLOSED_PLANAR' # TODO figure out how to get this value
     contour.NumberOfContourPoints = len(contour_data) / 3  # Each point has an x, y, and z value
     contour.ContourData = contour_data
+
     return contour
 
 
@@ -188,8 +197,12 @@ def create_rtroi_observation(roi_data: ROIData) -> Dataset:
     rtroi_observation.ROIInterpreter = ''
     return rtroi_observation
 
+
 def get_contour_sequence_by_roi_number(ds, roi_number):
     for roi_contour in ds.ROIContourSequence:
-        if str(roi_contour.ReferencedROINumber) == str(roi_number): # Ensure same type
+
+        # Ensure same type
+        if str(roi_contour.ReferencedROINumber) == str(roi_number):
             return roi_contour.ContourSequence
+
     raise Exception(f"Referenced ROI number '{roi_number}' not found")
