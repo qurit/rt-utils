@@ -1,6 +1,6 @@
 import setuptools
 
-VERSION = '1.0.0'
+VERSION = '1.0.1'
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 with open('requirements.txt') as f:
