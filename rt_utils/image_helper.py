@@ -19,7 +19,7 @@ def load_sorted_image_series(dicom_series_path: str):
     series_data = load_dcm_images_from_path(dicom_series_path)
 
     if len(series_data) == 0:
-        raise Exception("No CT Images found in input path")
+        raise Exception("No DICOM Images found in input path")
 
     # Sort slices in ascending order
     series_data.sort(key=lambda ds: ds.SliceLocation, reverse=False)
