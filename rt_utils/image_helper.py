@@ -31,14 +31,14 @@ def load_dcm_images_from_path(dicom_series_path: str) -> List[Dataset]:
     series_data = []
     for root, _, files in os.walk(dicom_series_path):
         for file in files:
-            if file.endswith('.dcm'):
-
-                try:
-                    ds = dcmread(os.path.join(root, file))
-                    assert ds.pixel_array
+            try:
+                ds = dcmread(os.path.join(root, file))
+                if hasattr(ds, 'pixel_array'):
                     series_data.append(ds)
-                except Exception:
-                    pass
+
+            except Exception:
+                # Not a valid DICOM file
+                continue
 
     return series_data
 
