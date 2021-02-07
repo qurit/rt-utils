@@ -23,7 +23,6 @@ jobs:
       env:
         TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
         TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-      if: github.event.pusher.name == 'asim-shrestha' 
       run: |
         curl -s https://pypi.org/pypi/rt-utils/json | grep -Eo '"version":"[0-9].[0-9][0-9]?.[0-9][0-9]?"' | grep -Eo "[0-9].[0-9][0-9]?.[0-9][0-9]?" > old
         grep -Eo "VERSION = '[0-9].[0-9][0-9]?.[0-9][0-9]?'" setup.py | grep -Eo "[0-9].[0-9][0-9]?.[0-9][0-9]?" > new
