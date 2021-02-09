@@ -49,7 +49,7 @@ class RTStruct:
 
         if len(self.series_data) != np.shape(mask)[2]:
             raise RTStruct.ROIException(
-                "Mask must have the save number of layers as input series. " +
+                "Mask must have the save number of layers (In the 3rd dimension) as input series. " +
                 f"Expected {len(self.series_data)}, got {np.shape(mask)[2]}"
             )
 
