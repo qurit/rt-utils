@@ -50,7 +50,7 @@ rtstruct.add_roi(
 rtstruct.save('new-rt-struct')
 ```
 
-## Loading existing RT Structs
+## Adding to existing RT Structs
 ```Python
 from rt_utils import RTStructBuilder
 import matplotlib.pyplot as plt
@@ -77,6 +77,13 @@ rtstruct.save('new-rt-struct')
 </p>
 <p align="center">
   The results of a generated ROI with a dummy mask, as viewed in Slicer.
+</p>
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/qurit/RT-Utils/main/src/liver-contour.png" width="1000"/>
+</p>
+<p align="center">
+  The results of a generated ROI with a liver segmentation model, as viewed in Slicer. (Note the underlying patient data has been hidden)
 </p>
 
 ## Loading an existing RT Struct contour as a mask
