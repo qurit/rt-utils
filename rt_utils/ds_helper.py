@@ -71,7 +71,7 @@ def add_study_and_series_information(ds: FileDataset, series_data):
     ds.StudyDescription = getattr(reference_ds, 'StudyDescription', '')
     ds.SeriesDescription = getattr(reference_ds, 'SeriesDescription', '')
     ds.StudyInstanceUID = reference_ds.StudyInstanceUID
-    ds.SeriesInstanceUID = generate_uid()
+    ds.SeriesInstanceUID = generate_uid() # TODO: find out if random generation is ok
     ds.StudyID = reference_ds.StudyID
     ds.SeriesNumber = "1" # TODO: find out if we can just use 1 (Should be fine since its a new series)
 
