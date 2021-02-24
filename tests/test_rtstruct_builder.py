@@ -75,17 +75,17 @@ def test_get_invalid_roi_mask_by_name(new_rtstruct: RTStruct):
         new_rtstruct.get_roi_mask_by_name("FAKE_NAME")
 
 
-def test_loading_invalid_rt_struct():
-    invalid_rt_struct_path = os.path.join(get_series_path(), 'ct_1.dcm')
+def test_loading_invalid_rt_struct(series_path):
+    invalid_rt_struct_path = os.path.join(series_path, 'ct_1.dcm')
     assert os.path.exists(invalid_rt_struct_path)
     with pytest.raises(Exception):
-        RTStructBuilder.create_from(get_series_path(), invalid_rt_struct_path)
+        RTStructBuilder.create_from(series_path, invalid_rt_struct_path)
 
 
-def test_loading_valid_rt_struct():
-    valid_rt_struct_path = os.path.join(get_series_path(), 'rt.dcm')
+def test_loading_valid_rt_struct(series_path):
+    valid_rt_struct_path = os.path.join(series_path, 'rt.dcm')
     assert os.path.exists(valid_rt_struct_path)
-    rtstruct = RTStructBuilder.create_from(get_series_path(), valid_rt_struct_path)
+    rtstruct = RTStructBuilder.create_from(series_path, valid_rt_struct_path)
 
     # Tests existing values predefined in the file are found
     assert hasattr(rtstruct.ds, 'ROIContourSequence')
@@ -157,13 +157,3 @@ def get_empty_mask(rtstruct) -> np.ndarray:
     mask = np.zeros(mask_dims)
     return mask.astype(bool)
     
-def get_series_path():
-    series_path = os.path.join(os.path.dirname(__file__), 'mock_data')
-    assert os.path.exists(series_path)
-    return series_path
-
-    
-@pytest.fixture
-def new_rtstruct() -> RTStruct:
-    rtstruct = RTStructBuilder.create_new(get_series_path())
-    return rtstruct
