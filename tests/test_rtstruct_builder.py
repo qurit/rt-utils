@@ -156,3 +156,4 @@ def get_empty_mask(rtstruct) -> np.ndarray:
     mask_dims = (int(ref_dicom_image.Columns), int(ref_dicom_image.Rows), len(rtstruct.series_data))
     mask = np.zeros(mask_dims)
     return mask.astype(bool)
+    

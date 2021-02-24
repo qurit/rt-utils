@@ -17,3 +17,4 @@ def get_and_test_series_path() -> str:
     series_path = os.path.join(os.path.dirname(__file__), 'mock_data/')
     assert os.path.exists(series_path)
     return series_path
+    
