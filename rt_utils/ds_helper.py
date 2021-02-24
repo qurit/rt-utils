@@ -68,22 +68,22 @@ def add_study_and_series_information(ds: FileDataset, series_data):
     ds.SeriesDate = reference_ds.SeriesDate
     ds.StudyTime = reference_ds.StudyTime
     ds.SeriesTime = reference_ds.SeriesTime
-    ds.StudyDescription = reference_ds.StudyDescription
-    ds.SeriesDescription = reference_ds.SeriesDescription
+    ds.StudyDescription = getattr(reference_ds, 'StudyDescription', '')
+    ds.SeriesDescription = getattr(reference_ds, 'SeriesDescription', '')
     ds.StudyInstanceUID = reference_ds.StudyInstanceUID
-    ds.SeriesInstanceUID = generate_uid() # TODO: find out if random generation is ok
+    ds.SeriesInstanceUID = generate_uid()
     ds.StudyID = reference_ds.StudyID
     ds.SeriesNumber = "1" # TODO: find out if we can just use 1 (Should be fine since its a new series)
 
 def add_patient_information(ds: FileDataset, series_data):
     reference_ds = series_data[0] # All elements in series should have the same data
-    ds.PatientName = reference_ds.PatientName
-    ds.PatientID = reference_ds.PatientID
-    ds.PatientBirthDate = reference_ds.PatientBirthDate
-    ds.PatientSex = reference_ds.PatientSex
-    ds.PatientAge = reference_ds.PatientAge
-    ds.PatientSize = reference_ds.PatientSize
-    ds.PatientWeight = reference_ds.PatientWeight
+    ds.PatientName = getattr(reference_ds, 'PatientName', '')
+    ds.PatientID = getattr(reference_ds, 'PatientID', '')
+    ds.PatientBirthDate = getattr(reference_ds, 'PatientBirthDate', '')
+    ds.PatientSex = getattr(reference_ds, 'PatientSex', '')
+    ds.PatientAge = getattr(reference_ds, 'PatientAge', '')
+    ds.PatientSize = getattr(reference_ds, 'PatientSize', '')
+    ds.PatientWeight = getattr(reference_ds, 'PatientWeight', '')
 
 
 def add_refd_frame_of_ref_sequence(ds: FileDataset, series_data):
