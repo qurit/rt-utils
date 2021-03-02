@@ -53,7 +53,6 @@ class RTStructBuilder:
         """
         Method to validate RTStruct only references dicom images found within the input series_data
         """
-        # Blame DICOM for this nesting
         for refd_frame_of_ref in ds.ReferencedFrameOfReferenceSequence:
             for rt_refd_study in refd_frame_of_ref.RTReferencedStudySequence:
                 for rt_refd_series in rt_refd_study.RTReferencedSeriesSequence:
