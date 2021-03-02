@@ -55,7 +55,7 @@ def test_add_valid_roi(new_rtstruct: RTStruct):
     assert len(new_rtstruct.ds.RTROIObservationsSequence) == 0
 
     NAME = "Test ROI"
-    COLOR = [123, 321, 456]
+    COLOR = [123, 123, 232]
     mask = get_empty_mask(new_rtstruct)
     mask[50:100, 50:100, 0] = 1
     
@@ -151,9 +151,9 @@ def run_mask_iou_test(rtstruct:RTStruct, mask, IOU_threshold, use_pin_hole=False
     IOU =  np.sum(numerator) / np.sum(denominator) 
     assert IOU >= IOU_threshold
 
+
 def get_empty_mask(rtstruct) -> np.ndarray:
     ref_dicom_image = rtstruct.series_data[0]
     mask_dims = (int(ref_dicom_image.Columns), int(ref_dicom_image.Rows), len(rtstruct.series_data))
     mask = np.zeros(mask_dims)
     return mask.astype(bool)
-    
