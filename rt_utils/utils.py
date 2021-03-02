@@ -66,7 +66,6 @@ class ROIData:
                 raise ValueError(f'{self.color} is an invalid color for an ROI')
             for c in self.color:
                 try:
-                    print(0 <= c <= 255)
                     assert 0 <= c <= 255
                 except:
                     raise ValueError(f'{self.color} is an invalid color for an ROI')
