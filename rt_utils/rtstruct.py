@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Union
 
 import numpy as np
 from pydicom.dataset import FileDataset
@@ -24,7 +24,7 @@ class RTStruct:
 
         self.ds.SeriesDescription = description
 
-    def add_roi(self, mask: np.ndarray, color=None, name=None, description='', use_pin_hole=False):
+    def add_roi(self, mask: np.ndarray, color: Union[str, List[int]] = None, name: str = None, description: str = '', use_pin_hole: bool = False):
         """
         Add a ROI to the rtstruct given a 3D binary mask for the ROI's at each slice
         Optionally input a color or name for the ROI
