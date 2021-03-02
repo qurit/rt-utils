@@ -17,7 +17,7 @@ def test_create_from_empty_series_dir():
 def test_only_images_loaded_into_series_data(new_rtstruct: RTStruct):
     assert len(new_rtstruct.series_data) > 0
     for ds in new_rtstruct.series_data:
-        assert ds.SOPClassUID == SOPClassUID.CT_IMAGE_STORAGE
+        assert hasattr(ds, 'pixel_array')
 
 
 def test_valid_filemeta(new_rtstruct: RTStruct):
@@ -82,6 +82,14 @@ def test_loading_invalid_rt_struct(series_path):
         RTStructBuilder.create_from(series_path, invalid_rt_struct_path)
 
 
+def test_loading_invalid_reference_rt_struct(series_path):
+    # This RTStruct references images not found within the series path
+    invalid_reference_rt_struct_path = os.path.join(series_path, 'invalid_reference_rt.dcm')
+    assert os.path.exists(invalid_reference_rt_struct_path)
+    with pytest.raises(Exception):
+        RTStructBuilder.create_from(series_path, invalid_reference_rt_struct_path)
+
+
 def test_loading_valid_rt_struct(series_path):
     valid_rt_struct_path = os.path.join(series_path, 'rt.dcm')
     assert os.path.exists(valid_rt_struct_path)
@@ -91,20 +99,20 @@ def test_loading_valid_rt_struct(series_path):
     assert hasattr(rtstruct.ds, 'ROIContourSequence')
     assert hasattr(rtstruct.ds, 'StructureSetROISequence')
     assert hasattr(rtstruct.ds, 'RTROIObservationsSequence')
-    assert len(rtstruct.ds.ROIContourSequence) == 4
-    assert len(rtstruct.ds.StructureSetROISequence) == 4
-    assert len(rtstruct.ds.RTROIObservationsSequence) == 4
+    assert len(rtstruct.ds.ROIContourSequence) == 1
+    assert len(rtstruct.ds.StructureSetROISequence) == 1
+    assert len(rtstruct.ds.RTROIObservationsSequence) == 1
 
     # Test adding a new ROI
     mask = get_empty_mask(rtstruct)
     mask[50:100,50:100,0] = 1
     rtstruct.add_roi(mask)
 
-    assert len(rtstruct.ds.ROIContourSequence) == 5 # 1 should be added
-    assert len(rtstruct.ds.StructureSetROISequence) == 5 # 1 should be added
-    assert len(rtstruct.ds.RTROIObservationsSequence) == 5 # 1 should be added
+    assert len(rtstruct.ds.ROIContourSequence) == 2 # 1 should be added
+    assert len(rtstruct.ds.StructureSetROISequence) == 2 # 1 should be added
+    assert len(rtstruct.ds.RTROIObservationsSequence) == 2 # 1 should be added
     new_roi = rtstruct.ds.StructureSetROISequence[-1]
-    assert new_roi.ROIName == 'ROI-5'
+    assert new_roi.ROIName == 'ROI-2'
 
 
 def test_loaded_mask_iou(new_rtstruct: RTStruct):
@@ -144,8 +152,6 @@ def run_mask_iou_test(rtstruct:RTStruct, mask, IOU_threshold, use_pin_hole=False
     loaded_mask = rtstruct.get_roi_mask_by_name(mask_name)
 
     # Use IOU to test accuracy of loaded mask
-    print(np.sum(mask))
-    print(np.sum(loaded_mask))
     numerator = np.logical_and(mask, loaded_mask)
     denominator = np.logical_or(mask, loaded_mask)
     IOU =  np.sum(numerator) / np.sum(denominator) 
