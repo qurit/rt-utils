@@ -2,7 +2,7 @@ from random import randrange
 from pydicom.uid import PYDICOM_ROOT_UID
 from dataclasses import dataclass
 
-COLOR_PALLET = [
+COLOR_PALETTE= [
     [255, 0, 255],
     [0, 235, 235],
     [255, 255, 0],
@@ -51,7 +51,7 @@ class ROIData:
 
     def add_default_values(self):
         if self.color is None:
-            self.color = COLOR_PALLET[(self.number - 1) % len(COLOR_PALLET)]
+            self.color = COLOR_PALETTE[(self.number - 1) % len(COLOR_PALETTE)]
 
         if self.name is None:
             self.name = f"ROI-{self.number}"
