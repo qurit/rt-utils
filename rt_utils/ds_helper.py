@@ -45,9 +45,9 @@ def add_required_elements_to_ds(ds: FileDataset):
     ds.StructureSetDate = dt.strftime('%Y%m%d')
     ds.StructureSetTime = dt.strftime('%H%M%S.%f')
     ds.Modality = 'RTSTRUCT'
-    ds.Manufacturer = 'Qurit Lab'
+    ds.Manufacturer = 'Qurit'
     ds.ManufacturerModelName = 'rt-utils'
-    ds.InstitutionName = 'BC Cancer Research Center'
+    ds.InstitutionName = 'Qurit'
     # Set the transfer syntax
     ds.is_little_endian = True
     ds.is_implicit_VR = True
