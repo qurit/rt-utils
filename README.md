@@ -116,3 +116,11 @@ plt.show()
 <p align="center">
   The results of a loading an exisiting ROI as a mask, as viewed in Python.
 </p>
+
+## Additional Parameters
+The add_roi method of our RTStruct class has a multitude of optional parameters available. Below is a comprehensive list of all these parameters and what they do.
+- <b>color</b>: This parameter can either be a colour string such as '#ffffff' or a RGB value as a list such as '[255, 255, 255]'. This parameter will dictate the colour of your ROI when viewed in a viewing program. If no colour is provided, RT Utils will pick from our internal colour palette based on the ROI Number of the ROI.
+- <b>name</b>: A str value that defaults to none. Used to set the name of the ROI within the RT Struct. If the name is none, RT Utils will set a name of ROI-{ROI Number}.
+- <b>description</b>: A str value that sets the description of the ROI within the RT Struct. If no value is provided, the description is just left blank.
+- <b>use_pin_hole</b>: A boolean value that defaults to false. If set to true, lines will be erased through your mask such that each separate region within your image can be encapsulated via a single contour instead of contours nested within one another. Use this if your RT Struct viewer of choice does not support nested contours / contours with holes.
+- <b>approximate_contours</b>: A boolean value that defaults to True which defines whether or not approximations are made when extracting contours from the input mask. Setting this to false will lead to much larger contour data within your RT Struct so only use this if as much precision as possible is required.
