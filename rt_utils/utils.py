@@ -43,6 +43,7 @@ class ROIData:
     frame_of_reference_uid: int
     description: str = ''
     use_pin_hole: bool = False
+    approximate_contours: bool = True
 
     def __post_init__(self):
         self.validate_color()

@@ -121,7 +121,7 @@ def test_loaded_mask_iou(new_rtstruct: RTStruct):
     mask[50:100, 50:100, 0] = 1
     mask[60:150, 40:120, 0] = 1
 
-    IOU_threshold = 0.95 # Expect 95% accuracy for this mask 
+    IOU_threshold = 0.95 # Expected accuracy
     run_mask_iou_test(new_rtstruct, mask, IOU_threshold)
 
 
@@ -131,8 +131,8 @@ def test_mask_with_holes_iou(new_rtstruct: RTStruct):
     mask[50:100, 50:100, 0] = 1
     mask[65:85, 65:85, 0] = 0
 
-    IOU_threshold = 0.85 # Expect lower accuracy holes lose information
-    run_mask_iou_test(new_rtstruct, mask,  IOU_threshold)
+    IOU_threshold = 0.85 # Expect lower accuracy since holes lose information
+    run_mask_iou_test(new_rtstruct, mask, IOU_threshold)
 
 
 def test_pin_hole_iou(new_rtstruct: RTStruct):
@@ -142,13 +142,21 @@ def test_pin_hole_iou(new_rtstruct: RTStruct):
     mask[65:85, 65:85, 0] = 0
 
     IOU_threshold = 0.85 # Expect lower accuracy holes lose information
-    run_mask_iou_test(new_rtstruct, mask,  IOU_threshold, True)
+    run_mask_iou_test(new_rtstruct, mask, IOU_threshold, use_pin_hole=True)
     
+def test_no_approximation_iou(new_rtstruct: RTStruct):
+    mask = get_empty_mask(new_rtstruct)
+    mask[50:100, 50:100, 0] = 1
+    mask[60:150, 40:120, 0] = 1
 
-def run_mask_iou_test(rtstruct:RTStruct, mask, IOU_threshold, use_pin_hole=False):
+    IOU_threshold = 0.95 # Expected accuracy
+    run_mask_iou_test(new_rtstruct, mask, IOU_threshold, approximate_contours=False)
+
+
+def run_mask_iou_test(rtstruct:RTStruct, mask, IOU_threshold, use_pin_hole=False, approximate_contours=True):
     # Save and load mask
     mask_name = "test"
-    rtstruct.add_roi(mask, name=mask_name, use_pin_hole=use_pin_hole)
+    rtstruct.add_roi(mask, name=mask_name, use_pin_hole=use_pin_hole, approximate_contours=approximate_contours)
     loaded_mask = rtstruct.get_roi_mask_by_name(mask_name)
 
     # Use IOU to test accuracy of loaded mask

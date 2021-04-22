@@ -160,7 +160,7 @@ def create_contour_sequence(roi_data: ROIData, series_data) -> Sequence:
             print("Skipping empty mask layer")
             continue
 
-        contour_coords = get_contours_coords(mask_slice, series_slice, roi_data.use_pin_hole)
+        contour_coords = get_contours_coords(mask_slice, series_slice, roi_data)
         for contour_data in contour_coords:
             contour = create_contour(series_slice, contour_data)
             contour_sequence.append(contour)
