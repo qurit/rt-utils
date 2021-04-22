@@ -8,7 +8,7 @@ from pydicom import dcmread
 from pydicom.dataset import Dataset
 from pydicom.sequence import Sequence
 
-from rt_utils.utils import SOPClassUID
+from rt_utils.utils import ROIData, SOPClassUID
 
 
 def load_sorted_image_series(dicom_series_path: str):
@@ -43,13 +43,13 @@ def load_dcm_images_from_path(dicom_series_path: str) -> List[Dataset]:
     return series_data
 
 
-def get_contours_coords(mask_slice: np.ndarray, series_slice: Dataset, use_pin_hole: bool):
+def get_contours_coords(mask_slice: np.ndarray, series_slice: Dataset, roi_data: ROIData):
     # Create pin hole mask if specified
-    if use_pin_hole:
-        mask_slice = create_pin_hole_mask(mask_slice)
+    if roi_data.use_pin_hole:
+        mask_slice = create_pin_hole_mask(mask_slice, roi_data.approximate_contours)
 
     # Get contours from mask
-    contours, _ = find_mask_contours(mask_slice)
+    contours, _ = find_mask_contours(mask_slice, roi_data.approximate_contours)
     validate_contours(contours)
     
     # Format for DICOM
@@ -63,8 +63,9 @@ def get_contours_coords(mask_slice: np.ndarray, series_slice: Dataset, use_pin_h
     return formatted_contours 
 
 
-def find_mask_contours(mask):
-    contours, hierarchy = cv.findContours(mask.astype(np.uint8), cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+def find_mask_contours(mask: np.ndarray, approximate_contours: bool):
+    approximation_method = cv.CHAIN_APPROX_SIMPLE if approximate_contours else cv.CHAIN_APPROX_NONE 
+    contours, hierarchy = cv.findContours(mask.astype(np.uint8), cv.RETR_TREE, approximation_method)
     # Format extra array out of data
     for i, contour in enumerate(contours):
         contours[i] = [[pos[0][0], pos[0][1]] for pos in contour]
@@ -74,13 +75,13 @@ def find_mask_contours(mask):
 
 
 
-def create_pin_hole_mask(mask):
+def create_pin_hole_mask(mask: np.ndarray, approximate_contours: bool):
     """
     Creates masks with pin holes added to contour regions with holes.
     This is done so that a given region can be represented by a single contour.
     """
 
-    contours, hierarchy = find_mask_contours(mask)
+    contours, hierarchy = find_mask_contours(mask, approximate_contours)
     pin_hole_mask = mask.copy()
 
     # Iterate through the hierarchy, for child nodes, draw a line upwards from the first point

@@ -24,7 +24,15 @@ class RTStruct:
 
         self.ds.SeriesDescription = description
 
-    def add_roi(self, mask: np.ndarray, color: Union[str, List[int]] = None, name: str = None, description: str = '', use_pin_hole: bool = False):
+    def add_roi(
+        self,
+        mask: np.ndarray,
+        color: Union[str, List[int]] = None,
+        name: str = None,
+        description: str = '', 
+        use_pin_hole: bool = False,
+        approximate_contours: bool = True,
+        ):
         """
         Add a ROI to the rtstruct given a 3D binary mask for the ROI's at each slice
         Optionally input a color or name for the ROI
@@ -34,7 +42,16 @@ class RTStruct:
         # TODO test if name already exists
         self.validate_mask(mask)
         roi_number = len(self.ds.StructureSetROISequence) + 1
-        roi_data = ROIData(mask, color, roi_number, name, self.frame_of_reference_uid, description, use_pin_hole)
+        roi_data = ROIData(
+            mask,
+            color,
+            roi_number,
+            name,
+            self.frame_of_reference_uid,
+            description,
+            use_pin_hole,
+            approximate_contours
+            )
 
         self.ds.ROIContourSequence.append(ds_helper.create_roi_contour(roi_data, self.series_data))
         self.ds.StructureSetROISequence.append(ds_helper.create_structure_set_roi(roi_data))

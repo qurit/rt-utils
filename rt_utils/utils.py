@@ -1,3 +1,4 @@
+from typing import List, Union
 from random import randrange
 from pydicom.uid import PYDICOM_IMPLEMENTATION_UID 
 from dataclasses import dataclass
@@ -37,12 +38,13 @@ class SOPClassUID:
 class ROIData:
     """Data class to easily pass ROI data to helper methods."""
     mask: str
-    color: list
+    color: Union[str, List[int]]
     number: int
     name: str
     frame_of_reference_uid: int
     description: str = ''
     use_pin_hole: bool = False
+    approximate_contours: bool = True
 
     def __post_init__(self):
         self.validate_color()
