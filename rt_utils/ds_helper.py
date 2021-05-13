@@ -65,9 +65,9 @@ def add_sequence_lists_to_ds(ds: FileDataset):
 def add_study_and_series_information(ds: FileDataset, series_data):
     reference_ds = series_data[0] # All elements in series should have the same data
     ds.StudyDate = reference_ds.StudyDate
-    ds.SeriesDate = reference_ds.SeriesDate
+    ds.SeriesDate = getattr(reference_ds, 'SeriesDate', '')
     ds.StudyTime = reference_ds.StudyTime
-    ds.SeriesTime = reference_ds.SeriesTime
+    ds.SeriesTime = getattr(reference_ds, 'SeriesTime', '')
     ds.StudyDescription = getattr(reference_ds, 'StudyDescription', '')
     ds.SeriesDescription = getattr(reference_ds, 'SeriesDescription', '')
     ds.StudyInstanceUID = reference_ds.StudyInstanceUID
