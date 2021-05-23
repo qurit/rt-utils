@@ -36,7 +36,8 @@ class RTStruct:
         """
         Add a ROI to the rtstruct given a 3D binary mask for the ROI's at each slice
         Optionally input a color or name for the ROI
-        If pin_hole is set to true, will cut a pinhole through ROI's with holes in them so that they are represented with one contour
+        If use_pin_hole is set to true, will cut a pinhole through ROI's with holes in them so that they are represented with one contour
+        If approximate_contours is set to False, no approximation will be done when generating contour data, leading to much larger amount of contour data
         """
 
         # TODO test if name already exists
