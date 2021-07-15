@@ -43,7 +43,7 @@ def load_dcm_images_from_path(dicom_series_path: str) -> List[Dataset]:
     return series_data
 
 
-def get_contours_coords(mask_slice: np.ndarray, series_slice: Dataset, roi_data: ROIData):
+def get_contours_coords(mask_slice: np.ndarray, z_index, roi_data: ROIData, transformation_matrix: np.ndarray):
     # Create pin hole mask if specified
     if roi_data.use_pin_hole:
         mask_slice = create_pin_hole_mask(mask_slice, roi_data.approximate_contours)
@@ -56,11 +56,15 @@ def get_contours_coords(mask_slice: np.ndarray, series_slice: Dataset, roi_data:
     formatted_contours = []
     for contour in contours:
         contour = np.array(contour) # Type cannot be a list
-        translated_contour = translate_contour_to_data_coordinants(contour, series_slice)
-        dicom_formatted_contour = format_contour_for_dicom(translated_contour, series_slice)
+        contour = np.concatenate((
+            contour,
+            np.full((contour.shape[0], 1), z_index)
+        ), axis=1)
+        translated_contour = apply_transformation_to_contour(contour, transformation_matrix)
+        dicom_formatted_contour = np.ravel(translated_contour).tolist()
         formatted_contours.append(dicom_formatted_contour)
 
-    return formatted_contours 
+    return formatted_contours
 
 
 def find_mask_contours(mask: np.ndarray, approximate_contours: bool):
@@ -115,41 +119,60 @@ def validate_contours(contours: list):
     if len(contours) == 0:
         raise Exception("Unable to find contour in non empty mask, please check your mask formatting")
 
+def get_pixel_to_patient_transformation_matrix(series_data):
+    """
+    https://nipy.org/nibabel/dicom/dicom_orientation.html
+    """
 
-def translate_contour_to_data_coordinants(contour, series_slice: Dataset):
-    offset = series_slice.ImagePositionPatient
-    spacing = series_slice.PixelSpacing
-    contour[:, 0] = (contour[:, 0]) * spacing[0] + offset[0]
-    contour[:, 1] = (contour[:, 1]) * spacing[1] + offset[1]
-    return contour
+    first_slice = series_data[0]
+    last_slice = series_data[-1]
 
+    offset = first_slice.ImagePositionPatient
+    spacing = first_slice.PixelSpacing
+    orientation = first_slice.ImageOrientationPatient
 
-def translate_contour_to_pixel_coordinants(contour, series_slice: Dataset):
-    offset = series_slice.ImagePositionPatient
-    spacing = series_slice.PixelSpacing
-    contour[:, 0] = (contour[:, 0] - offset[0]) / spacing[0]
-    contour[:, 1] = (contour[:, 1] - + offset[1]) / spacing[1] 
+    if len(series_data) > 1:
+        next_slice_translation = (
+            np.array(last_slice.ImagePositionPatient)
+            - np.array(first_slice.ImagePositionPatient)
+        ) / (len(series_data) - 1)
+    else:
+        # Just to make the matrix invertible when there is only one slice
+        next_slice_translation = np.cross(
+            np.array(last_slice.ImagePositionPatient),
+            np.array(first_slice.ImagePositionPatient)
+        )
 
-    return contour
+    return np.array([
+        [orientation[0] * spacing[0], orientation[3] * spacing[1], next_slice_translation[0], offset[0]],
+        [orientation[1] * spacing[0], orientation[4] * spacing[1], next_slice_translation[1], offset[1]],
+        [orientation[2] * spacing[0], orientation[5] * spacing[1], next_slice_translation[2], offset[2]],
+        [0.0, 0.0, 0.0, 1.0]
+    ])
 
+def get_patient_to_pixel_transformation_matrix(series_data):
+    return np.linalg.inv(get_pixel_to_patient_transformation_matrix(series_data))
 
-def format_contour_for_dicom(contour, series_slice: Dataset):
-    # DICOM uses a 1d array of x, y, z coords
-    z_indicies = np.ones((contour.shape[0], 1)) * series_slice.SliceLocation
-    contour = np.concatenate((contour, z_indicies), axis = 1)
-    contour = np.ravel(contour)
-    contour = contour.tolist()
-    return contour
+def apply_transformation_to_contour(contour, transformation_matrix: np.ndarray):
+    assert contour.shape[1] == 3
 
+    vec = np.concatenate((
+        contour,
+        np.ones((contour.shape[0], 1))
+    ), axis=1)
+
+    return vec.dot(transformation_matrix.T)[:,:3]
 
 def create_series_mask_from_contour_sequence(series_data, contour_sequence: Sequence):
     mask = create_empty_series_mask(series_data)
+    transformation_matrix = get_patient_to_pixel_transformation_matrix(series_data)
 
     # Iterate through each slice of the series, If it is a part of the contour, add the contour mask
     for i, series_slice in enumerate(series_data):
         slice_contour_data = get_slice_contour_data(series_slice, contour_sequence)
         if len(slice_contour_data):
-            mask[:, :, i] = get_slice_mask_from_slice_contour_data(series_slice, slice_contour_data)
+            mask[:, :, i] = get_slice_mask_from_slice_contour_data(series_slice, slice_contour_data,
+                transformation_matrix)
     return mask
 
 
@@ -165,19 +188,20 @@ def get_slice_contour_data(series_slice: Dataset, contour_sequence: Sequence):
     return slice_contour_data
 
 
-def get_slice_mask_from_slice_contour_data(series_slice: Dataset, slice_contour_data):
+def get_slice_mask_from_slice_contour_data(series_slice: Dataset, slice_contour_data,
+        transformation_matrix: np.ndarray):
     slice_mask = create_empty_slice_mask(series_slice)
-    for contour_coords in slice_contour_data:    
-        fill_mask = get_contour_fill_mask(series_slice, contour_coords)
+    for contour_coords in slice_contour_data:
+        fill_mask = get_contour_fill_mask(series_slice, contour_coords, transformation_matrix)
         # Invert values in the region to be filled. This will create holes where needed if contours are stacked on top of each other
         slice_mask[fill_mask == 1] = np.invert(slice_mask[fill_mask == 1])
     return slice_mask
 
 
-def get_contour_fill_mask(series_slice: Dataset, contour_coords):
+def get_contour_fill_mask(series_slice: Dataset, contour_coords, transformation_matrix: np.ndarray):
     # Format data
     reshaped_contour_data = np.reshape(contour_coords, [len(contour_coords) // 3, 3])
-    translated_contour_data  = translate_contour_to_pixel_coordinants(reshaped_contour_data, series_slice)
+    translated_contour_data = apply_transformation_to_contour(reshaped_contour_data, transformation_matrix)
     polygon = [np.array([translated_contour_data[:, :2]], dtype=np.int32)]
 
     # Create mask for the region. Fill with 1 for ROI

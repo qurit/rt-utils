@@ -1,5 +1,5 @@
 import datetime
-from rt_utils.image_helper import get_contours_coords
+from rt_utils.image_helper import get_contours_coords, get_pixel_to_patient_transformation_matrix
 from rt_utils.utils import ROIData, SOPClassUID
 import numpy as np
 from pydicom.uid import generate_uid
@@ -152,6 +152,8 @@ def create_contour_sequence(roi_data: ROIData, series_data) -> Sequence:
     For each connected segment within a slice, create a contour
     """
 
+    transformation_matrix = get_pixel_to_patient_transformation_matrix(series_data)
+
     contour_sequence = Sequence()
     for i, series_slice in enumerate(series_data):
         mask_slice = roi_data.mask[:,:,i]
@@ -160,7 +162,7 @@ def create_contour_sequence(roi_data: ROIData, series_data) -> Sequence:
             print("Skipping empty mask layer")
             continue
 
-        contour_coords = get_contours_coords(mask_slice, series_slice, roi_data)
+        contour_coords = get_contours_coords(mask_slice, i, roi_data, transformation_matrix)
         for contour_data in contour_coords:
             contour = create_contour(series_slice, contour_data)
             contour_sequence.append(contour)
