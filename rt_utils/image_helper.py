@@ -22,7 +22,7 @@ def load_sorted_image_series(dicom_series_path: str):
         raise Exception("No DICOM Images found in input path")
 
     # Sort slices in ascending order
-    series_data.sort(key=lambda ds: ds.SliceLocation, reverse=False)
+    series_data.sort(key=lambda ds: get_slice_position(ds), reverse=False)
 
     return series_data
 
@@ -43,28 +43,40 @@ def load_dcm_images_from_path(dicom_series_path: str) -> List[Dataset]:
     return series_data
 
 
-def get_contours_coords(mask_slice: np.ndarray, z_index, roi_data: ROIData, transformation_matrix: np.ndarray):
-    # Create pin hole mask if specified
-    if roi_data.use_pin_hole:
-        mask_slice = create_pin_hole_mask(mask_slice, roi_data.approximate_contours)
+def get_contours_coords(roi_data: ROIData, series_data):
+    transformation_matrix = get_pixel_to_patient_transformation_matrix(series_data)
 
-    # Get contours from mask
-    contours, _ = find_mask_contours(mask_slice, roi_data.approximate_contours)
-    validate_contours(contours)
-    
-    # Format for DICOM
-    formatted_contours = []
-    for contour in contours:
-        contour = np.array(contour) # Type cannot be a list
-        contour = np.concatenate((
-            contour,
-            np.full((contour.shape[0], 1), z_index)
-        ), axis=1)
-        translated_contour = apply_transformation_to_contour(contour, transformation_matrix)
-        dicom_formatted_contour = np.ravel(translated_contour).tolist()
-        formatted_contours.append(dicom_formatted_contour)
+    series_contours = []
+    for i, series_slice in enumerate(series_data):
+        mask_slice = roi_data.mask[:, :, i]
 
-    return formatted_contours
+        # Do not add ROI's for blank slices
+        if np.sum(mask_slice) == 0:
+            series_contours.append([])
+            print("Skipping empty mask layer")
+            continue
+
+        # Create pin hole mask if specified
+        if roi_data.use_pin_hole:
+            mask_slice = create_pin_hole_mask(mask_slice, roi_data.approximate_contours)
+
+        # Get contours from mask
+        contours, _ = find_mask_contours(mask_slice, roi_data.approximate_contours)
+        validate_contours(contours)
+
+        # Format for DICOM
+        formatted_contours = []
+        for contour in contours:
+            # Add z index
+            contour = np.concatenate((np.array(contour), np.full((len(contour), 1), i)), axis=1)
+
+            transformed_contour = apply_transformation_to_3d_points(contour, transformation_matrix)
+            dicom_formatted_contour = np.ravel(transformed_contour).tolist()
+            formatted_contours.append(dicom_formatted_contour)
+
+        series_contours.append(formatted_contours)
+
+    return series_contours
 
 
 def find_mask_contours(mask: np.ndarray, approximate_contours: bool):
@@ -76,7 +88,6 @@ def find_mask_contours(mask: np.ndarray, approximate_contours: bool):
     hierarchy = hierarchy[0] # Format extra array out of data
 
     return contours, hierarchy
-
 
 
 def create_pin_hole_mask(mask: np.ndarray, approximate_contours: bool):
@@ -125,43 +136,51 @@ def get_pixel_to_patient_transformation_matrix(series_data):
     """
 
     first_slice = series_data[0]
-    last_slice = series_data[-1]
 
     offset = first_slice.ImagePositionPatient
-    spacing = first_slice.PixelSpacing
-    orientation = first_slice.ImageOrientationPatient
+    row_spacing, column_spacing = first_slice.PixelSpacing
+    slice_spacing = get_spacing_between_slices(series_data)
+    row_direction, column_direction, slice_direction = get_slice_directions(first_slice)
 
-    if len(series_data) > 1:
-        next_slice_translation = (
-            np.array(last_slice.ImagePositionPatient)
-            - np.array(first_slice.ImagePositionPatient)
-        ) / (len(series_data) - 1)
-    else:
-        # Just to make the matrix invertible when there is only one slice
-        next_slice_translation = np.cross(
-            np.array(last_slice.ImagePositionPatient),
-            np.array(first_slice.ImagePositionPatient)
-        )
+    mat = np.identity(4, dtype=np.float32)
+    mat[:3, 0] = row_direction * row_spacing
+    mat[:3, 1] = column_direction * column_spacing
+    mat[:3, 2] = slice_direction * slice_spacing
+    mat[:3, 3] = offset
 
-    return np.array([
-        [orientation[0] * spacing[0], orientation[3] * spacing[1], next_slice_translation[0], offset[0]],
-        [orientation[1] * spacing[0], orientation[4] * spacing[1], next_slice_translation[1], offset[1]],
-        [orientation[2] * spacing[0], orientation[5] * spacing[1], next_slice_translation[2], offset[2]],
-        [0.0, 0.0, 0.0, 1.0]
-    ])
+    return mat
 
 def get_patient_to_pixel_transformation_matrix(series_data):
     return np.linalg.inv(get_pixel_to_patient_transformation_matrix(series_data))
 
-def apply_transformation_to_contour(contour, transformation_matrix: np.ndarray):
-    assert contour.shape[1] == 3
+def apply_transformation_to_3d_points(points: np.ndarray, transformation_matrix: np.ndarray):
+    vec = np.concatenate((points, np.ones((points.shape[0], 1))), axis=1)
+    return vec.dot(transformation_matrix.T)[:, :3]
 
-    vec = np.concatenate((
-        contour,
-        np.ones((contour.shape[0], 1))
-    ), axis=1)
+def get_slice_position(series_slice: Dataset):
+    _, _, slice_direction = get_slice_directions(series_slice)
+    return np.dot(slice_direction, series_slice.ImagePositionPatient)
 
-    return vec.dot(transformation_matrix.T)[:,:3]
+def get_slice_directions(series_slice: Dataset):
+    orientation = series_slice.ImageOrientationPatient
+    row_direction = np.array(orientation[:3])
+    column_direction = np.array(orientation[3:])
+    slice_direction = np.cross(row_direction, column_direction)
+
+    if not np.allclose(np.linalg.norm(slice_direction), 1.0, rtol=1e-3):
+        raise Exception("Invalid Image Orientation (Patient) attribute")
+
+    return row_direction, column_direction, slice_direction
+
+def get_spacing_between_slices(series_data):
+    if len(series_data) > 1:
+        first = get_slice_position(series_data[0])
+        last = get_slice_position(series_data[-1])
+        return (last - first) / (len(series_data) - 1)
+
+    # Return nonzero value for one slice just to make transformation matrix is invertible
+    return 1.0
+
 
 def create_series_mask_from_contour_sequence(series_data, contour_sequence: Sequence):
     mask = create_empty_series_mask(series_data)
@@ -201,8 +220,8 @@ def get_slice_mask_from_slice_contour_data(series_slice: Dataset, slice_contour_
 def get_contour_fill_mask(series_slice: Dataset, contour_coords, transformation_matrix: np.ndarray):
     # Format data
     reshaped_contour_data = np.reshape(contour_coords, [len(contour_coords) // 3, 3])
-    translated_contour_data = apply_transformation_to_contour(reshaped_contour_data, transformation_matrix)
-    polygon = [np.array([translated_contour_data[:, :2]], dtype=np.int32)]
+    translated_contour_data = apply_transformation_to_3d_points(reshaped_contour_data, transformation_matrix)
+    polygon = [np.around([translated_contour_data[:, :2]]).astype(np.int32)]
 
     # Create mask for the region. Fill with 1 for ROI
     fill_mask = create_empty_slice_mask(series_slice).astype(np.uint8)
