@@ -32,12 +32,14 @@ class RTStruct:
         description: str = '', 
         use_pin_hole: bool = False,
         approximate_contours: bool = True,
+        ROIGenerationAlgorithm: str = 'AUTOMATIC'
         ):
         """
         Add a ROI to the rtstruct given a 3D binary mask for the ROI's at each slice
         Optionally input a color or name for the ROI
         If use_pin_hole is set to true, will cut a pinhole through ROI's with holes in them so that they are represented with one contour
         If approximate_contours is set to False, no approximation will be done when generating contour data, leading to much larger amount of contour data
+        ROIGenerationAlgorithm reflects the creation of the mask
         """
 
         # TODO test if name already exists
@@ -55,7 +57,7 @@ class RTStruct:
             )
 
         self.ds.ROIContourSequence.append(ds_helper.create_roi_contour(roi_data, self.series_data))
-        self.ds.StructureSetROISequence.append(ds_helper.create_structure_set_roi(roi_data))
+        self.ds.StructureSetROISequence.append(ds_helper.create_structure_set_roi(roi_data, ROIGenerationAlgorithm))
         self.ds.RTROIObservationsSequence.append(ds_helper.create_rtroi_observation(roi_data))
 
     def validate_mask(self, mask: np.ndarray) -> bool:

@@ -127,14 +127,14 @@ def create_contour_image_sequence(series_data) -> Sequence:
     return contour_image_sequence
 
 
-def create_structure_set_roi(roi_data: ROIData) -> Dataset:
+def create_structure_set_roi(roi_data: ROIData, ROIGenerationAlgorithm='AUTOMATIC') -> Dataset:
     # Structure Set ROI Sequence: Structure Set ROI 1
     structure_set_roi = Dataset()
     structure_set_roi.ROINumber = roi_data.number
     structure_set_roi.ReferencedFrameOfReferenceUID = roi_data.frame_of_reference_uid
     structure_set_roi.ROIName = roi_data.name
     structure_set_roi.ROIDescription = roi_data.description
-    structure_set_roi.ROIGenerationAlgorithm = 'MANUAL'
+    structure_set_roi.ROIGenerationAlgorithm = ROIGenerationAlgorithm
     return structure_set_roi
 
 
