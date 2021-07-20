@@ -39,7 +39,7 @@ class RTStruct:
         Optionally input a color or name for the ROI
         If use_pin_hole is set to true, will cut a pinhole through ROI's with holes in them so that they are represented with one contour
         If approximate_contours is set to False, no approximation will be done when generating contour data, leading to much larger amount of contour data
-        ROIGenerationAlgorithm reflects the creation of the mask
+        ROIGenerationAlgorithm contains information on how the mask was created, default 'AUTOMATIC'
         """
 
         # TODO test if name already exists
