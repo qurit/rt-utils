@@ -122,7 +122,7 @@ def test_loaded_mask_iou(new_rtstruct: RTStruct):
     mask[50:100, 50:100, 0] = 1
     mask[60:150, 40:120, 0] = 1
 
-    IOU_threshold = 0.95 # Expected accuracy
+    IOU_threshold = 1.0 # Expected accuracy
     run_mask_iou_test(new_rtstruct, mask, IOU_threshold)
 
 
@@ -132,7 +132,7 @@ def test_mask_with_holes_iou(new_rtstruct: RTStruct):
     mask[50:100, 50:100, 0] = 1
     mask[65:85, 65:85, 0] = 0
 
-    IOU_threshold = 0.85 # Expect lower accuracy since holes lose information
+    IOU_threshold = 0.95 # Expect lower accuracy since holes lose information
     run_mask_iou_test(new_rtstruct, mask, IOU_threshold)
 
 
@@ -142,7 +142,7 @@ def test_pin_hole_iou(new_rtstruct: RTStruct):
     mask[50:100, 50:100, 0] = 1
     mask[65:85, 65:85, 0] = 0
 
-    IOU_threshold = 0.85 # Expect lower accuracy holes lose information
+    IOU_threshold = 0.95 # Expect lower accuracy holes lose information
     run_mask_iou_test(new_rtstruct, mask, IOU_threshold, use_pin_hole=True)
     
 def test_no_approximation_iou(new_rtstruct: RTStruct):
@@ -150,7 +150,7 @@ def test_no_approximation_iou(new_rtstruct: RTStruct):
     mask[50:100, 50:100, 0] = 1
     mask[60:150, 40:120, 0] = 1
 
-    IOU_threshold = 0.95 # Expected accuracy
+    IOU_threshold = 1.0 # Expected accuracy
     run_mask_iou_test(new_rtstruct, mask, IOU_threshold, approximate_contours=False)
 
 def test_contour_data_sizes(new_rtstruct: RTStruct):
@@ -165,26 +165,12 @@ def test_contour_data_sizes(new_rtstruct: RTStruct):
     # Then using approximation leads to less data within the contour data
     assert get_data_len_by_index(new_rtstruct, 0) < get_data_len_by_index(new_rtstruct, 1)
 
-def test_load_sorted_series(oriented_series_path):
-    series_data = image_helper.load_sorted_image_series(oriented_series_path)
-
-    _, _, slice_direction = image_helper.get_slice_directions(series_data[0])
-    np.testing.assert_allclose(np.linalg.norm(slice_direction), 1, rtol=1e-5, atol=0)
-
-    slice_spacing = image_helper.get_spacing_between_slices(series_data)
-    first_slice_position = np.array(series_data[0].ImagePositionPatient)
-
-    for i, series_slice in enumerate(series_data):
-        position = np.array(series_slice.ImagePositionPatient)
-        expected_position = first_slice_position + i * slice_spacing * slice_direction
-        np.testing.assert_allclose(position, expected_position, rtol=1e-5, atol=0)
-
 def test_nonstandard_image_orientation(oriented_rtstruct: RTStruct):
     mask = get_empty_mask(oriented_rtstruct)
     mask[10:70, 5:15, 1] = 1
     mask[60:70, 5:40, 1] = 1
 
-    IOU_threshold = 0.95 # Expected accuracy
+    IOU_threshold = 1.0 # Expected accuracy
     run_mask_iou_test(oriented_rtstruct, mask, IOU_threshold)
 
 def test_one_slice_image(one_slice_rtstruct: RTStruct):
@@ -192,7 +178,7 @@ def test_one_slice_image(one_slice_rtstruct: RTStruct):
     mask[10:70, 5:15, 0] = 1
     mask[60:70, 5:40, 0] = 1
 
-    IOU_threshold = 0.95 # Expected accuracy
+    IOU_threshold = 1.0 # Expected accuracy
     run_mask_iou_test(one_slice_rtstruct, mask, IOU_threshold)
 
 def get_data_len_by_index(rt_struct: RTStruct, i: int):
