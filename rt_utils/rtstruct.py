@@ -7,15 +7,32 @@ from rt_utils.utils import ROIData
 from . import ds_helper, image_helper
 
 
+ROI_GENERATION_ALGORITHMS = ['AUTOMATIC', 'SEMIAUTOMATIC', 'MANUAL']
+
 class RTStruct:
     """
     Wrapper class to facilitate appending and extracting ROI's within an RTStruct
     """
 
-    def __init__(self, series_data, ds: FileDataset):
+    def __init__(self, series_data, ds: FileDataset, ROIGenerationAlgorithm=0):
         self.series_data = series_data
         self.ds = ds
         self.frame_of_reference_uid = ds.ReferencedFrameOfReferenceSequence[-1].FrameOfReferenceUID  # Use last strucitured set ROI
+        if isinstance(ROIGenerationAlgorithm, int):
+            if ROIGenerationAlgorithm > 2 or ROIGenerationAlgorithm < 0:
+                raise ValueError('ROIGenerationAlgorithm must be either an int (0=\'AUTOMATIC\', 1=\'SEMIAUTOMATIC\', 2=\'MANUAL\') '
+                                 'or a str (not recomended).')
+            else:
+                self.ROIGenerationAlgorithm = ROI_GENERATION_ALGORITHMS[ROIGenerationAlgorithm]
+        elif isinstance(ROIGenerationAlgorithm, str):
+            if ROIGenerationAlgorithm not in ROI_GENERATION_ALGORITHMS:
+                print('Got ROIGenerationAlgorithm {}. Some viewers might complain about this option. '
+                      'Better options might be 0=\'AUTOMATIC\', 1=\'SEMIAUTOMATIC\', or 2=\'MANUAL\'.'.format(ROIGenerationAlgorithm))
+            self.ROIGenerationAlgorithm = ROIGenerationAlgorithm
+        else:
+            raise TypeError('Expected int (0=\'AUTOMATIC\', 1=\'SEMIAUTOMATIC\', 2=\'MANUAL\') '
+                            'or a str (not recomended) for ROIGenerationAlgorithm. Got {}.'.format(type(ROIGenerationAlgorithm)))
+
 
     def set_series_description(self, description: str):
         """
@@ -31,15 +48,13 @@ class RTStruct:
         name: str = None,
         description: str = '', 
         use_pin_hole: bool = False,
-        approximate_contours: bool = True,
-        ROIGenerationAlgorithm: str = 'AUTOMATIC'
+        approximate_contours: bool = True
         ):
         """
         Add a ROI to the rtstruct given a 3D binary mask for the ROI's at each slice
         Optionally input a color or name for the ROI
         If use_pin_hole is set to true, will cut a pinhole through ROI's with holes in them so that they are represented with one contour
         If approximate_contours is set to False, no approximation will be done when generating contour data, leading to much larger amount of contour data
-        ROIGenerationAlgorithm contains information on how the mask was created, default 'AUTOMATIC'
         """
 
         # TODO test if name already exists
@@ -57,7 +72,7 @@ class RTStruct:
             )
 
         self.ds.ROIContourSequence.append(ds_helper.create_roi_contour(roi_data, self.series_data))
-        self.ds.StructureSetROISequence.append(ds_helper.create_structure_set_roi(roi_data, ROIGenerationAlgorithm))
+        self.ds.StructureSetROISequence.append(ds_helper.create_structure_set_roi(roi_data, self.ROIGenerationAlgorithm))
         self.ds.RTROIObservationsSequence.append(ds_helper.create_rtroi_observation(roi_data))
 
     def validate_mask(self, mask: np.ndarray) -> bool:
