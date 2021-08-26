@@ -134,7 +134,7 @@ def create_structure_set_roi(roi_data: ROIData) -> Dataset:
     structure_set_roi.ReferencedFrameOfReferenceUID = roi_data.frame_of_reference_uid
     structure_set_roi.ROIName = roi_data.name
     structure_set_roi.ROIDescription = roi_data.description
-    structure_set_roi.ROIGenerationAlgorithm = 'MANUAL'
+    structure_set_roi.ROIGenerationAlgorithm = roi_data.roi_generation_algorithm
     return structure_set_roi
 
 

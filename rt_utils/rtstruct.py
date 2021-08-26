@@ -12,7 +12,7 @@ class RTStruct:
     Wrapper class to facilitate appending and extracting ROI's within an RTStruct
     """
 
-    def __init__(self, series_data, ds: FileDataset):
+    def __init__(self, series_data, ds: FileDataset, ROIGenerationAlgorithm=0):
         self.series_data = series_data
         self.ds = ds
         self.frame_of_reference_uid = ds.ReferencedFrameOfReferenceSequence[-1].FrameOfReferenceUID  # Use last strucitured set ROI
@@ -32,6 +32,7 @@ class RTStruct:
         description: str = '', 
         use_pin_hole: bool = False,
         approximate_contours: bool = True,
+        roi_generation_algorithm: Union[str, int] = 0
         ):
         """
         Add a ROI to the rtstruct given a 3D binary mask for the ROI's at each slice
@@ -51,7 +52,8 @@ class RTStruct:
             self.frame_of_reference_uid,
             description,
             use_pin_hole,
-            approximate_contours
+            approximate_contours,
+            roi_generation_algorithm
             )
 
         self.ds.ROIContourSequence.append(ds_helper.create_roi_contour(roi_data, self.series_data))
