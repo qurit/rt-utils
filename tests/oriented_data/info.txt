@@ -1,0 +1,2 @@
+Images with non-standard ImageOrientation attribute.
+Missing SliceLocation attribute (it shouldn't be needed).

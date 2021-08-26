@@ -153,15 +153,11 @@ def create_contour_sequence(roi_data: ROIData, series_data) -> Sequence:
     """
 
     contour_sequence = Sequence()
-    for i, series_slice in enumerate(series_data):
-        mask_slice = roi_data.mask[:,:,i]
-        # Do not add ROI's for blank slices
-        if np.sum(mask_slice) == 0:
-            print("Skipping empty mask layer")
-            continue
 
-        contour_coords = get_contours_coords(mask_slice, series_slice, roi_data)
-        for contour_data in contour_coords:
+    contours_coords = get_contours_coords(roi_data, series_data)
+
+    for series_slice, slice_contours in zip(series_data, contours_coords):
+        for contour_data in slice_contours:
             contour = create_contour(series_slice, contour_data)
             contour_sequence.append(contour)
 
