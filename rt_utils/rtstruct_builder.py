@@ -23,7 +23,7 @@ class RTStructBuilder:
         return RTStruct(series_data, ds)
 
     @staticmethod
-    def create_from(dicom_series_path: str, rt_struct_path: str) -> RTStruct:
+    def create_from(dicom_series_path: str, rt_struct_path: str, use_media_storage: bool = True) -> RTStruct:
         """
         Method to load an existing rt struct, given related DICOM series and existing rt struct
         """
@@ -31,7 +31,7 @@ class RTStructBuilder:
         series_data = image_helper.load_sorted_image_series(dicom_series_path)
         ds = dcmread(rt_struct_path)
         RTStructBuilder.validate_rtstruct(ds)
-        RTStructBuilder.validate_rtstruct_series_references(ds, series_data)
+        RTStructBuilder.validate_rtstruct_series_references(ds, series_data, use_media_storage)
 
         # TODO create new frame of reference? Right now we assume the last frame of reference created is suitable 
         return RTStruct(series_data, ds)
@@ -49,7 +49,7 @@ class RTStructBuilder:
             raise Exception("Please check that the existing RTStruct is valid")
 
     @staticmethod
-    def validate_rtstruct_series_references(ds: Dataset, series_data: List[Dataset]):
+    def validate_rtstruct_series_references(ds: Dataset, series_data: List[Dataset], use_media_storage: bool = True):
         """
         Method to validate RTStruct only references dicom images found within the input series_data
         """
@@ -58,19 +58,25 @@ class RTStructBuilder:
                 for rt_refd_series in rt_refd_study.RTReferencedSeriesSequence:
                     for contour_image in rt_refd_series.ContourImageSequence:
                         RTStructBuilder.validate_contour_image_in_series_data(
-                            contour_image, series_data)
+                            contour_image, series_data, use_media_storage)
 
     @staticmethod
-    def validate_contour_image_in_series_data(contour_image: Dataset, series_data: List[Dataset]):
+    def validate_contour_image_in_series_data(contour_image: Dataset, series_data: List[Dataset],
+                                              use_media_storage: bool = True):
         """
         Method to validate that the ReferencedSOPInstanceUID of a given contour image exists within the series data
         """
-        for series in series_data:
-            if contour_image.ReferencedSOPInstanceUID == series.file_meta.MediaStorageSOPInstanceUID:
-                return
+        if use_media_storage:
+            for series in series_data:
+                if contour_image.ReferencedSOPInstanceUID == series.file_meta.MediaStorageSOPInstanceUID:
+                    return
+        else:
+            for series in series_data:
+                if contour_image.ReferencedSOPInstanceUID == series.SOPInstanceUID:
+                    return
 
         # ReferencedSOPInstanceUID is NOT available
         raise Exception(
-            f'Loaded RTStruct references image(s) that are not contained in input series data. ' + 
+            f'Loaded RTStruct references image(s) that are not contained in input series data. ' +
             f'Problematic image has SOP Instance Id: {contour_image.ReferencedSOPInstanceUID}'
         )
