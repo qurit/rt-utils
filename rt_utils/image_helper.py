@@ -153,7 +153,10 @@ def get_pixel_to_patient_transformation_matrix(series_data):
 def get_patient_to_pixel_transformation_matrix(series_data):
     first_slice = series_data[0]
 
-    offset = np.array(first_slice.ImagePositionPatient)
+    if first_slice.Modality == 'NM':
+        offset = np.array(first_slice.DetectorInformationSequence[0].ImagePositionPatient)
+    else:
+        offset = np.array(first_slice.ImagePositionPatient)
     row_spacing, column_spacing = first_slice.PixelSpacing
     slice_spacing = get_spacing_between_slices(series_data)
     row_direction, column_direction, slice_direction = get_slice_directions(first_slice)
@@ -186,10 +189,17 @@ def apply_transformation_to_3d_points(points: np.ndarray, transformation_matrix:
 
 def get_slice_position(series_slice: Dataset):
     _, _, slice_direction = get_slice_directions(series_slice)
-    return np.dot(slice_direction, series_slice.ImagePositionPatient)
+    if series_slice.Modality == 'NM':
+        image_position_patient = series_slice.DetectorInformationSequence[0].ImagePositionPatient
+    else:
+        image_position_patient = series_slice.ImagePositionPatient
+    return np.dot(slice_direction, image_position_patient)
 
 def get_slice_directions(series_slice: Dataset):
-    orientation = series_slice.ImageOrientationPatient
+    if series_slice.Modality == 'NM':        
+        orientation = series_slice.DetectorInformationSequence[0].ImageOrientationPatient
+    else:
+        orientation = series_slice.ImageOrientationPatient
     row_direction = np.array(orientation[:3])
     column_direction = np.array(orientation[3:])
     slice_direction = np.cross(row_direction, column_direction)
