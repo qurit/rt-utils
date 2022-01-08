@@ -12,11 +12,11 @@ File contains helper methods that handles DICOM header creation/formatting
 """
 
 
-def create_rtstruct_dataset(series_data, use_media_storage: bool = True) -> FileDataset:
+def create_rtstruct_dataset(series_data) -> FileDataset:
     ds = generate_base_dataset()
     add_study_and_series_information(ds, series_data)
     add_patient_information(ds, series_data)
-    add_refd_frame_of_ref_sequence(ds, series_data, use_media_storage)
+    add_refd_frame_of_ref_sequence(ds, series_data)
     return ds
 
 
@@ -94,21 +94,21 @@ def add_patient_information(ds: FileDataset, series_data):
     ds.PatientWeight = getattr(reference_ds, 'PatientWeight', '')
 
 
-def add_refd_frame_of_ref_sequence(ds: FileDataset, series_data, use_media_storage: bool = True):
+def add_refd_frame_of_ref_sequence(ds: FileDataset, series_data):
     refd_frame_of_ref = Dataset()
     refd_frame_of_ref.FrameOfReferenceUID = generate_uid()  # TODO Find out if random generation is ok
-    refd_frame_of_ref.RTReferencedStudySequence = create_frame_of_ref_study_sequence(series_data, use_media_storage)
+    refd_frame_of_ref.RTReferencedStudySequence = create_frame_of_ref_study_sequence(series_data)
 
     # Add to sequence
     ds.ReferencedFrameOfReferenceSequence = Sequence()
     ds.ReferencedFrameOfReferenceSequence.append(refd_frame_of_ref)
 
 
-def create_frame_of_ref_study_sequence(series_data, use_media_storage: bool = True) -> Sequence:
+def create_frame_of_ref_study_sequence(series_data) -> Sequence:
     reference_ds = series_data[0]  # All elements in series should have the same data
     rt_refd_series = Dataset()
     rt_refd_series.SeriesInstanceUID = reference_ds.SeriesInstanceUID
-    rt_refd_series.ContourImageSequence = create_contour_image_sequence(series_data, use_media_storage)
+    rt_refd_series.ContourImageSequence = create_contour_image_sequence(series_data)
 
     rt_refd_series_sequence = Sequence()
     rt_refd_series_sequence.append(rt_refd_series)
@@ -123,22 +123,15 @@ def create_frame_of_ref_study_sequence(series_data, use_media_storage: bool = Tr
     return rt_refd_study_sequence
 
 
-def create_contour_image_sequence(series_data, use_media_storage: bool = True) -> Sequence:
+def create_contour_image_sequence(series_data) -> Sequence:
     contour_image_sequence = Sequence()
 
     # Add each referenced image
-    if use_media_storage:
-        for series in series_data:
-            contour_image = Dataset()
-            contour_image.ReferencedSOPClassUID = series.file_meta.MediaStorageSOPClassUID
-            contour_image.ReferencedSOPInstanceUID = series.file_meta.MediaStorageSOPInstanceUID
-            contour_image_sequence.append(contour_image)
-    else:
-        for series in series_data:
-            contour_image = Dataset()
-            contour_image.ReferencedSOPClassUID = series.SOPClassUID
-            contour_image.ReferencedSOPInstanceUID = series.SOPInstanceUID
-            contour_image_sequence.append(contour_image)
+    for series in series_data:
+        contour_image = Dataset()
+        contour_image.ReferencedSOPClassUID = series.SOPClassUID
+        contour_image.ReferencedSOPInstanceUID = series.SOPInstanceUID
+        contour_image_sequence.append(contour_image)
 
     return contour_image_sequence
 
@@ -154,15 +147,15 @@ def create_structure_set_roi(roi_data: ROIData) -> Dataset:
     return structure_set_roi
 
 
-def create_roi_contour(roi_data: ROIData, series_data, use_media_storage: bool = True) -> Dataset:
+def create_roi_contour(roi_data: ROIData, series_data) -> Dataset:
     roi_contour = Dataset()
     roi_contour.ROIDisplayColor = roi_data.color
-    roi_contour.ContourSequence = create_contour_sequence(roi_data, series_data, use_media_storage)
+    roi_contour.ContourSequence = create_contour_sequence(roi_data, series_data)
     roi_contour.ReferencedROINumber = str(roi_data.number)
     return roi_contour
 
 
-def create_contour_sequence(roi_data: ROIData, series_data, use_media_storage: bool = True) -> Sequence:
+def create_contour_sequence(roi_data: ROIData, series_data) -> Sequence:
     """
     Iterate through each slice of the mask
     For each connected segment within a slice, create a contour
@@ -174,20 +167,16 @@ def create_contour_sequence(roi_data: ROIData, series_data, use_media_storage: b
 
     for series_slice, slice_contours in zip(series_data, contours_coords):
         for contour_data in slice_contours:
-            contour = create_contour(series_slice, contour_data, use_media_storage)
+            contour = create_contour(series_slice, contour_data)
             contour_sequence.append(contour)
 
     return contour_sequence
 
 
-def create_contour(series_slice: Dataset, contour_data: np.ndarray, use_media_storage: bool = True) -> Dataset:
+def create_contour(series_slice: Dataset, contour_data: np.ndarray) -> Dataset:
     contour_image = Dataset()
-    if use_media_storage:
-        contour_image.ReferencedSOPClassUID = series_slice.file_meta.MediaStorageSOPClassUID
-        contour_image.ReferencedSOPInstanceUID = series_slice.file_meta.MediaStorageSOPInstanceUID
-    else:
-        contour_image.ReferencedSOPClassUID = series_slice.SOPClassUID
-        contour_image.ReferencedSOPInstanceUID = series_slice.SOPInstanceUID
+    contour_image.ReferencedSOPClassUID = series_slice.SOPClassUID
+    contour_image.ReferencedSOPInstanceUID = series_slice.SOPInstanceUID
 
     # Contour Image Sequence
     contour_image_sequence = Sequence()
