@@ -54,6 +54,10 @@ class RTStructBuilder:
         Method to validate RTStruct only references dicom images found within the input series_data
         """
         for refd_frame_of_ref in ds.ReferencedFrameOfReferenceSequence:
+            # Study sequence references are optional so return early if it does not exist
+            if "RTReferencedStudySequence" not in refd_frame_of_ref:
+                return
+
             for rt_refd_study in refd_frame_of_ref.RTReferencedStudySequence:
                 for rt_refd_series in rt_refd_study.RTReferencedSeriesSequence:
                     for contour_image in rt_refd_series.ContourImageSequence:
