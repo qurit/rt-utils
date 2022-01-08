@@ -71,27 +71,6 @@ def test_add_valid_roi(new_rtstruct: RTStruct):
     assert new_rtstruct.get_roi_names() == [NAME]
 
 
-def test_add_valid_roi_without_meta_uid(new_rtstruct: RTStruct):
-    assert new_rtstruct.get_roi_names() == []
-    assert len(new_rtstruct.ds.ROIContourSequence) == 0
-    assert len(new_rtstruct.ds.StructureSetROISequence) == 0
-    assert len(new_rtstruct.ds.RTROIObservationsSequence) == 0
-
-    NAME = "Test ROI"
-    COLOR = [123, 123, 232]
-    mask = get_empty_mask(new_rtstruct)
-    mask[50:100, 50:100, 0] = 1
-
-    new_rtstruct.add_roi(mask, color=COLOR, name=NAME, use_media_storage=False)
-
-    assert len(new_rtstruct.ds.ROIContourSequence) == 1
-    assert len(new_rtstruct.ds.ROIContourSequence[0].ContourSequence) == 1  # Only 1 slice was added to
-    assert len(new_rtstruct.ds.StructureSetROISequence) == 1
-    assert len(new_rtstruct.ds.RTROIObservationsSequence) == 1
-    assert new_rtstruct.ds.ROIContourSequence[0].ROIDisplayColor == COLOR
-    assert new_rtstruct.get_roi_names() == [NAME]
-
-
 def test_get_invalid_roi_mask_by_name(new_rtstruct: RTStruct):
     assert new_rtstruct.get_roi_names() == []
     with pytest.raises(RTStruct.ROIException):
