@@ -91,6 +91,15 @@ def test_loading_invalid_reference_rt_struct(series_path):
         RTStructBuilder.create_from(series_path, invalid_reference_rt_struct_path)
 
 
+def test_non_existant_referenced_study_sequence(series_path):
+    non_existent_reference_study_rt_struct_path = os.path.join(series_path, 'non_existent_reference_rt.dcm')
+    assert os.path.exists(non_existent_reference_study_rt_struct_path)
+    rtstruct = RTStructBuilder.create_from(series_path, non_existent_reference_study_rt_struct_path)
+
+    # Test that the attribute does not exist but RTStruct instantiation was still successful
+    assert not hasattr(rtstruct.ds.ReferencedFrameOfReferenceSequence[0], 'RTReferencedStudySequence')
+
+
 def test_loading_valid_rt_struct(series_path):
     valid_rt_struct_path = os.path.join(series_path, 'rt.dcm')
     assert os.path.exists(valid_rt_struct_path)
