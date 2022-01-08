@@ -15,7 +15,8 @@ class RTStruct:
     def __init__(self, series_data, ds: FileDataset, ROIGenerationAlgorithm=0):
         self.series_data = series_data
         self.ds = ds
-        self.frame_of_reference_uid = ds.ReferencedFrameOfReferenceSequence[-1].FrameOfReferenceUID  # Use last strucitured set ROI
+        self.frame_of_reference_uid = ds.ReferencedFrameOfReferenceSequence[
+            -1].FrameOfReferenceUID  # Use last strucitured set ROI
 
     def set_series_description(self, description: str):
         """
@@ -25,14 +26,14 @@ class RTStruct:
         self.ds.SeriesDescription = description
 
     def add_roi(
-        self,
-        mask: np.ndarray,
-        color: Union[str, List[int]] = None,
-        name: str = None,
-        description: str = '', 
-        use_pin_hole: bool = False,
-        approximate_contours: bool = True,
-        roi_generation_algorithm: Union[str, int] = 0
+            self,
+            mask: np.ndarray,
+            color: Union[str, List[int]] = None,
+            name: str = None,
+            description: str = '',
+            use_pin_hole: bool = False,
+            approximate_contours: bool = True,
+            roi_generation_algorithm: Union[str, int] = 0,
         ):
         """
         Add a ROI to the rtstruct given a 3D binary mask for the ROI's at each slice
@@ -54,7 +55,7 @@ class RTStruct:
             use_pin_hole,
             approximate_contours,
             roi_generation_algorithm
-            )
+        )
 
         self.ds.ROIContourSequence.append(ds_helper.create_roi_contour(roi_data, self.series_data))
         self.ds.StructureSetROISequence.append(ds_helper.create_structure_set_roi(roi_data))

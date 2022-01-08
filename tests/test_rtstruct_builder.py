@@ -37,7 +37,7 @@ def test_add_non_binary_roi(new_rtstruct: RTStruct):
 
 def test_add_empty_roi(new_rtstruct: RTStruct):
     mask = get_empty_mask(new_rtstruct)
-    mask = mask[:, :, 1:] # One less slice than expected
+    mask = mask[:, :, 1:]  # One less slice than expected
     with pytest.raises(RTStruct.ROIException):
         new_rtstruct.add_roi(mask)
 
@@ -59,11 +59,11 @@ def test_add_valid_roi(new_rtstruct: RTStruct):
     COLOR = [123, 123, 232]
     mask = get_empty_mask(new_rtstruct)
     mask[50:100, 50:100, 0] = 1
-    
+
     new_rtstruct.add_roi(mask, color=COLOR, name=NAME)
 
     assert len(new_rtstruct.ds.ROIContourSequence) == 1
-    assert len(new_rtstruct.ds.ROIContourSequence[0].ContourSequence) == 1 # Only 1 slice was added to
+    assert len(new_rtstruct.ds.ROIContourSequence[0].ContourSequence) == 1  # Only 1 slice was added to
     assert len(new_rtstruct.ds.StructureSetROISequence) == 1
     assert len(new_rtstruct.ds.RTROIObservationsSequence) == 1
     assert new_rtstruct.ds.ROIContourSequence[0].ROIDisplayColor == COLOR
@@ -106,12 +106,12 @@ def test_loading_valid_rt_struct(series_path):
 
     # Test adding a new ROI
     mask = get_empty_mask(rtstruct)
-    mask[50:100,50:100,0] = 1
+    mask[50:100, 50:100, 0] = 1
     rtstruct.add_roi(mask)
 
-    assert len(rtstruct.ds.ROIContourSequence) == 2 # 1 should be added
-    assert len(rtstruct.ds.StructureSetROISequence) == 2 # 1 should be added
-    assert len(rtstruct.ds.RTROIObservationsSequence) == 2 # 1 should be added
+    assert len(rtstruct.ds.ROIContourSequence) == 2  # 1 should be added
+    assert len(rtstruct.ds.StructureSetROISequence) == 2  # 1 should be added
+    assert len(rtstruct.ds.RTROIObservationsSequence) == 2  # 1 should be added
     new_roi = rtstruct.ds.StructureSetROISequence[-1]
     assert new_roi.ROIName == 'ROI-2'
 
@@ -122,7 +122,7 @@ def test_loaded_mask_iou(new_rtstruct: RTStruct):
     mask[50:100, 50:100, 0] = 1
     mask[60:150, 40:120, 0] = 1
 
-    IOU_threshold = 1.0 # Expected accuracy
+    IOU_threshold = 1.0  # Expected accuracy
     run_mask_iou_test(new_rtstruct, mask, IOU_threshold)
 
 
@@ -132,7 +132,7 @@ def test_mask_with_holes_iou(new_rtstruct: RTStruct):
     mask[50:100, 50:100, 0] = 1
     mask[65:85, 65:85, 0] = 0
 
-    IOU_threshold = 0.95 # Expect lower accuracy since holes lose information
+    IOU_threshold = 0.95  # Expect lower accuracy since holes lose information
     run_mask_iou_test(new_rtstruct, mask, IOU_threshold)
 
 
@@ -142,16 +142,18 @@ def test_pin_hole_iou(new_rtstruct: RTStruct):
     mask[50:100, 50:100, 0] = 1
     mask[65:85, 65:85, 0] = 0
 
-    IOU_threshold = 0.95 # Expect lower accuracy holes lose information
+    IOU_threshold = 0.95  # Expect lower accuracy holes lose information
     run_mask_iou_test(new_rtstruct, mask, IOU_threshold, use_pin_hole=True)
-    
+
+
 def test_no_approximation_iou(new_rtstruct: RTStruct):
     mask = get_empty_mask(new_rtstruct)
     mask[50:100, 50:100, 0] = 1
     mask[60:150, 40:120, 0] = 1
 
-    IOU_threshold = 1.0 # Expected accuracy
+    IOU_threshold = 1.0  # Expected accuracy
     run_mask_iou_test(new_rtstruct, mask, IOU_threshold, approximate_contours=False)
+
 
 def test_contour_data_sizes(new_rtstruct: RTStruct):
     mask = get_empty_mask(new_rtstruct)
@@ -165,26 +167,30 @@ def test_contour_data_sizes(new_rtstruct: RTStruct):
     # Then using approximation leads to less data within the contour data
     assert get_data_len_by_index(new_rtstruct, 0) < get_data_len_by_index(new_rtstruct, 1)
 
+
 def test_nonstandard_image_orientation(oriented_rtstruct: RTStruct):
     mask = get_empty_mask(oriented_rtstruct)
     mask[10:70, 5:15, 1] = 1
     mask[60:70, 5:40, 1] = 1
 
-    IOU_threshold = 1.0 # Expected accuracy
+    IOU_threshold = 1.0  # Expected accuracy
     run_mask_iou_test(oriented_rtstruct, mask, IOU_threshold)
+
 
 def test_one_slice_image(one_slice_rtstruct: RTStruct):
     mask = get_empty_mask(one_slice_rtstruct)
     mask[10:70, 5:15, 0] = 1
     mask[60:70, 5:40, 0] = 1
 
-    IOU_threshold = 1.0 # Expected accuracy
+    IOU_threshold = 1.0  # Expected accuracy
     run_mask_iou_test(one_slice_rtstruct, mask, IOU_threshold)
+
 
 def get_data_len_by_index(rt_struct: RTStruct, i: int):
     return len(rt_struct.ds.ROIContourSequence[i].ContourSequence[0].ContourData)
 
-def run_mask_iou_test(rtstruct:RTStruct, mask, IOU_threshold, use_pin_hole=False, approximate_contours=True):
+
+def run_mask_iou_test(rtstruct: RTStruct, mask, IOU_threshold, use_pin_hole=False, approximate_contours=True):
     # Save and load mask
     mask_name = "test"
     rtstruct.add_roi(mask, name=mask_name, use_pin_hole=use_pin_hole, approximate_contours=approximate_contours)

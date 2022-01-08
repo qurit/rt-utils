@@ -83,6 +83,7 @@ def find_mask_contours(mask: np.ndarray, approximate_contours: bool):
     approximation_method = cv.CHAIN_APPROX_SIMPLE if approximate_contours else cv.CHAIN_APPROX_NONE 
     contours, hierarchy = cv.findContours(mask.astype(np.uint8), cv.RETR_TREE, approximation_method)
     # Format extra array out of data
+    contours = list(contours)  # Open-CV updated contours to be a tuple so we convert it back into a list here
     for i, contour in enumerate(contours):
         contours[i] = [[pos[0][0], pos[0][1]] for pos in contour]
     hierarchy = hierarchy[0] # Format extra array out of data

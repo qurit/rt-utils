@@ -66,11 +66,11 @@ class RTStructBuilder:
         Method to validate that the ReferencedSOPInstanceUID of a given contour image exists within the series data
         """
         for series in series_data:
-            if contour_image.ReferencedSOPInstanceUID == series.file_meta.MediaStorageSOPInstanceUID:
+            if contour_image.ReferencedSOPInstanceUID == series.SOPInstanceUID:
                 return
 
         # ReferencedSOPInstanceUID is NOT available
         raise Exception(
-            f'Loaded RTStruct references image(s) that are not contained in input series data. ' + 
+            f'Loaded RTStruct references image(s) that are not contained in input series data. ' +
             f'Problematic image has SOP Instance Id: {contour_image.ReferencedSOPInstanceUID}'
         )
