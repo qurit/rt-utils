@@ -5,7 +5,6 @@ from rt_utils import RTStructBuilder
 from rt_utils.utils import SOPClassUID
 from rt_utils import image_helper
 from pydicom.dataset import validate_file_meta
-from pydicom.uid import generate_uid
 import numpy as np
 
 
