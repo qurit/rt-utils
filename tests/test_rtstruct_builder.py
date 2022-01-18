@@ -9,7 +9,7 @@ import numpy as np
 
 
 def test_create_from_empty_series_dir():
-    empty_dir_path = os.path.join(os.path.dirname(__file__), 'empty')
+    empty_dir_path = os.path.join(os.path.dirname(__file__), "empty")
     assert os.path.exists(empty_dir_path)
     with pytest.raises(Exception):
         RTStructBuilder.create_new(empty_dir_path)
@@ -18,7 +18,7 @@ def test_create_from_empty_series_dir():
 def test_only_images_loaded_into_series_data(new_rtstruct: RTStruct):
     assert len(new_rtstruct.series_data) > 0
     for ds in new_rtstruct.series_data:
-        assert hasattr(ds, 'pixel_array')
+        assert hasattr(ds, "pixel_array")
 
 
 def test_valid_filemeta(new_rtstruct: RTStruct):
@@ -63,7 +63,9 @@ def test_add_valid_roi(new_rtstruct: RTStruct):
     new_rtstruct.add_roi(mask, color=COLOR, name=NAME)
 
     assert len(new_rtstruct.ds.ROIContourSequence) == 1
-    assert len(new_rtstruct.ds.ROIContourSequence[0].ContourSequence) == 1  # Only 1 slice was added to
+    assert (
+        len(new_rtstruct.ds.ROIContourSequence[0].ContourSequence) == 1
+    )  # Only 1 slice was added to
     assert len(new_rtstruct.ds.StructureSetROISequence) == 1
     assert len(new_rtstruct.ds.RTROIObservationsSequence) == 1
     assert new_rtstruct.ds.ROIContourSequence[0].ROIDisplayColor == COLOR
@@ -77,7 +79,7 @@ def test_get_invalid_roi_mask_by_name(new_rtstruct: RTStruct):
 
 
 def test_loading_invalid_rt_struct(series_path):
-    invalid_rt_struct_path = os.path.join(series_path, 'ct_1.dcm')
+    invalid_rt_struct_path = os.path.join(series_path, "ct_1.dcm")
     assert os.path.exists(invalid_rt_struct_path)
     with pytest.raises(Exception):
         RTStructBuilder.create_from(series_path, invalid_rt_struct_path)
@@ -85,30 +87,38 @@ def test_loading_invalid_rt_struct(series_path):
 
 def test_loading_invalid_reference_rt_struct(series_path):
     # This RTStruct references images not found within the series path
-    invalid_reference_rt_struct_path = os.path.join(series_path, 'invalid_reference_rt.dcm')
+    invalid_reference_rt_struct_path = os.path.join(
+        series_path, "invalid_reference_rt.dcm"
+    )
     assert os.path.exists(invalid_reference_rt_struct_path)
     with pytest.raises(Exception):
         RTStructBuilder.create_from(series_path, invalid_reference_rt_struct_path)
 
 
 def test_non_existant_referenced_study_sequence(series_path):
-    non_existent_reference_study_rt_struct_path = os.path.join(series_path, 'non_existent_reference_rt.dcm')
+    non_existent_reference_study_rt_struct_path = os.path.join(
+        series_path, "non_existent_reference_rt.dcm"
+    )
     assert os.path.exists(non_existent_reference_study_rt_struct_path)
-    rtstruct = RTStructBuilder.create_from(series_path, non_existent_reference_study_rt_struct_path)
+    rtstruct = RTStructBuilder.create_from(
+        series_path, non_existent_reference_study_rt_struct_path
+    )
 
     # Test that the attribute does not exist but RTStruct instantiation was still successful
-    assert not hasattr(rtstruct.ds.ReferencedFrameOfReferenceSequence[0], 'RTReferencedStudySequence')
+    assert not hasattr(
+        rtstruct.ds.ReferencedFrameOfReferenceSequence[0], "RTReferencedStudySequence"
+    )
 
 
 def test_loading_valid_rt_struct(series_path):
-    valid_rt_struct_path = os.path.join(series_path, 'rt.dcm')
+    valid_rt_struct_path = os.path.join(series_path, "rt.dcm")
     assert os.path.exists(valid_rt_struct_path)
     rtstruct = RTStructBuilder.create_from(series_path, valid_rt_struct_path)
 
     # Tests existing values predefined in the file are found
-    assert hasattr(rtstruct.ds, 'ROIContourSequence')
-    assert hasattr(rtstruct.ds, 'StructureSetROISequence')
-    assert hasattr(rtstruct.ds, 'RTROIObservationsSequence')
+    assert hasattr(rtstruct.ds, "ROIContourSequence")
+    assert hasattr(rtstruct.ds, "StructureSetROISequence")
+    assert hasattr(rtstruct.ds, "RTROIObservationsSequence")
     assert len(rtstruct.ds.ROIContourSequence) == 1
     assert len(rtstruct.ds.StructureSetROISequence) == 1
     assert len(rtstruct.ds.RTROIObservationsSequence) == 1
@@ -122,7 +132,7 @@ def test_loading_valid_rt_struct(series_path):
     assert len(rtstruct.ds.StructureSetROISequence) == 2  # 1 should be added
     assert len(rtstruct.ds.RTROIObservationsSequence) == 2  # 1 should be added
     new_roi = rtstruct.ds.StructureSetROISequence[-1]
-    assert new_roi.ROIName == 'ROI-2'
+    assert new_roi.ROIName == "ROI-2"
 
 
 def test_loaded_mask_iou(new_rtstruct: RTStruct):
@@ -174,7 +184,9 @@ def test_contour_data_sizes(new_rtstruct: RTStruct):
     new_rtstruct.add_roi(mask, approximate_contours=False)
 
     # Then using approximation leads to less data within the contour data
-    assert get_data_len_by_index(new_rtstruct, 0) < get_data_len_by_index(new_rtstruct, 1)
+    assert get_data_len_by_index(new_rtstruct, 0) < get_data_len_by_index(
+        new_rtstruct, 1
+    )
 
 
 def test_nonstandard_image_orientation(oriented_rtstruct: RTStruct):
@@ -199,10 +211,21 @@ def get_data_len_by_index(rt_struct: RTStruct, i: int):
     return len(rt_struct.ds.ROIContourSequence[i].ContourSequence[0].ContourData)
 
 
-def run_mask_iou_test(rtstruct: RTStruct, mask, IOU_threshold, use_pin_hole=False, approximate_contours=True):
+def run_mask_iou_test(
+    rtstruct: RTStruct,
+    mask,
+    IOU_threshold,
+    use_pin_hole=False,
+    approximate_contours=True,
+):
     # Save and load mask
     mask_name = "test"
-    rtstruct.add_roi(mask, name=mask_name, use_pin_hole=use_pin_hole, approximate_contours=approximate_contours)
+    rtstruct.add_roi(
+        mask,
+        name=mask_name,
+        use_pin_hole=use_pin_hole,
+        approximate_contours=approximate_contours,
+    )
     loaded_mask = rtstruct.get_roi_mask_by_name(mask_name)
 
     # Use IOU to test accuracy of loaded mask
@@ -214,6 +237,10 @@ def run_mask_iou_test(rtstruct: RTStruct, mask, IOU_threshold, use_pin_hole=Fals
 
 def get_empty_mask(rtstruct) -> np.ndarray:
     ref_dicom_image = rtstruct.series_data[0]
-    mask_dims = (int(ref_dicom_image.Columns), int(ref_dicom_image.Rows), len(rtstruct.series_data))
+    mask_dims = (
+        int(ref_dicom_image.Columns),
+        int(ref_dicom_image.Rows),
+        len(rtstruct.series_data),
+    )
     mask = np.zeros(mask_dims)
     return mask.astype(bool)

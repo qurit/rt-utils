@@ -1,13 +1,13 @@
 import setuptools
 
-VERSION = '1.2.0'
+VERSION = "1.2.0"
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
-with open('requirements.txt') as f:
+with open("requirements.txt") as f:
     required = f.read().splitlines()
 
 setuptools.setup(
-    name="rt-utils", 
+    name="rt-utils",
     version=VERSION,
     author="Asim Shrestha",
     author_email="asim.shrestha@hotmail.com",
@@ -36,6 +36,6 @@ setuptools.setup(
         "Intended Audience :: Science/Research",
         "Intended Audience :: Developers",
     ],
-    python_requires='>=3.6',
+    python_requires=">=3.6",
     install_requires=required,
 )
