@@ -16,7 +16,8 @@ class RTStruct:
         self.series_data = series_data
         self.ds = ds
         self.frame_of_reference_uid = ds.ReferencedFrameOfReferenceSequence[
-            -1].FrameOfReferenceUID  # Use last strucitured set ROI
+            -1
+        ].FrameOfReferenceUID  # Use last strucitured set ROI
 
     def set_series_description(self, description: str):
         """
@@ -26,15 +27,15 @@ class RTStruct:
         self.ds.SeriesDescription = description
 
     def add_roi(
-            self,
-            mask: np.ndarray,
-            color: Union[str, List[int]] = None,
-            name: str = None,
-            description: str = '',
-            use_pin_hole: bool = False,
-            approximate_contours: bool = True,
-            roi_generation_algorithm: Union[str, int] = 0,
-        ):
+        self,
+        mask: np.ndarray,
+        color: Union[str, List[int]] = None,
+        name: str = None,
+        description: str = "",
+        use_pin_hole: bool = False,
+        approximate_contours: bool = True,
+        roi_generation_algorithm: Union[str, int] = 0,
+    ):
         """
         Add a ROI to the rtstruct given a 3D binary mask for the ROI's at each slice
         Optionally input a color or name for the ROI
@@ -54,24 +55,32 @@ class RTStruct:
             description,
             use_pin_hole,
             approximate_contours,
-            roi_generation_algorithm
+            roi_generation_algorithm,
         )
 
-        self.ds.ROIContourSequence.append(ds_helper.create_roi_contour(roi_data, self.series_data))
-        self.ds.StructureSetROISequence.append(ds_helper.create_structure_set_roi(roi_data))
-        self.ds.RTROIObservationsSequence.append(ds_helper.create_rtroi_observation(roi_data))
+        self.ds.ROIContourSequence.append(
+            ds_helper.create_roi_contour(roi_data, self.series_data)
+        )
+        self.ds.StructureSetROISequence.append(
+            ds_helper.create_structure_set_roi(roi_data)
+        )
+        self.ds.RTROIObservationsSequence.append(
+            ds_helper.create_rtroi_observation(roi_data)
+        )
 
     def validate_mask(self, mask: np.ndarray) -> bool:
         if mask.dtype != bool:
-            raise RTStruct.ROIException(f"Mask data type must be boolean. Got {mask.dtype}")
+            raise RTStruct.ROIException(
+                f"Mask data type must be boolean. Got {mask.dtype}"
+            )
 
         if mask.ndim != 3:
             raise RTStruct.ROIException(f"Mask must be 3 dimensional. Got {mask.ndim}")
 
         if len(self.series_data) != np.shape(mask)[2]:
             raise RTStruct.ROIException(
-                "Mask must have the save number of layers (In the 3rd dimension) as input series. " +
-                f"Expected {len(self.series_data)}, got {np.shape(mask)[2]}"
+                "Mask must have the save number of layers (In the 3rd dimension) as input series. "
+                + f"Expected {len(self.series_data)}, got {np.shape(mask)[2]}"
             )
 
         if np.sum(mask) == 0:
@@ -87,7 +96,9 @@ class RTStruct:
         if not self.ds.StructureSetROISequence:
             return []
 
-        return [structure_roi.ROIName for structure_roi in self.ds.StructureSetROISequence]
+        return [
+            structure_roi.ROIName for structure_roi in self.ds.StructureSetROISequence
+        ]
 
     def get_roi_mask_by_name(self, name) -> np.ndarray:
         """
@@ -96,8 +107,12 @@ class RTStruct:
 
         for structure_roi in self.ds.StructureSetROISequence:
             if structure_roi.ROIName == name:
-                contour_sequence = ds_helper.get_contour_sequence_by_roi_number(self.ds, structure_roi.ROINumber)
-                return image_helper.create_series_mask_from_contour_sequence(self.series_data, contour_sequence)
+                contour_sequence = ds_helper.get_contour_sequence_by_roi_number(
+                    self.ds, structure_roi.ROINumber
+                )
+                return image_helper.create_series_mask_from_contour_sequence(
+                    self.series_data, contour_sequence
+                )
 
         raise RTStruct.ROIException(f"ROI of name `{name}` does not exist in RTStruct")
 
@@ -108,10 +123,10 @@ class RTStruct:
         """
 
         # Add .dcm if needed
-        file_path = file_path if file_path.endswith('.dcm') else file_path + '.dcm'
+        file_path = file_path if file_path.endswith(".dcm") else file_path + ".dcm"
 
         try:
-            file = open(file_path, 'w')
+            file = open(file_path, "w")
             # Opening worked, we should have a valid file_path
             print("Writing file to", file_path)
             self.ds.save_as(file_path)
