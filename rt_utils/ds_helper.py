@@ -21,7 +21,7 @@ def create_rtstruct_dataset(series_data) -> FileDataset:
 
 
 def generate_base_dataset() -> FileDataset:
-    file_name = 'rt-utils-struct'
+    file_name = "rt-utils-struct"
     file_meta = get_file_meta()
     ds = FileDataset(file_name, {}, file_meta=file_meta, preamble=b"\0" * 128)
     add_required_elements_to_ds(ds)
@@ -32,10 +32,12 @@ def generate_base_dataset() -> FileDataset:
 def get_file_meta() -> FileMetaDataset:
     file_meta = FileMetaDataset()
     file_meta.FileMetaInformationGroupLength = 202
-    file_meta.FileMetaInformationVersion = b'\x00\x01'
+    file_meta.FileMetaInformationVersion = b"\x00\x01"
     file_meta.TransferSyntaxUID = ImplicitVRLittleEndian
     file_meta.MediaStorageSOPClassUID = SOPClassUID.RTSTRUCT
-    file_meta.MediaStorageSOPInstanceUID = generate_uid()  # TODO find out random generation is fine
+    file_meta.MediaStorageSOPInstanceUID = (
+        generate_uid()
+    )  # TODO find out random generation is fine
     file_meta.ImplementationClassUID = SOPClassUID.RTSTRUCT_IMPLEMENTATION_CLASS
     return file_meta
 
@@ -43,16 +45,16 @@ def get_file_meta() -> FileMetaDataset:
 def add_required_elements_to_ds(ds: FileDataset):
     dt = datetime.datetime.now()
     # Append data elements required by the DICOM standarad
-    ds.SpecificCharacterSet = 'ISO_IR 100'
-    ds.InstanceCreationDate = dt.strftime('%Y%m%d')
-    ds.InstanceCreationTime = dt.strftime('%H%M%S.%f')
-    ds.StructureSetLabel = 'RTstruct'
-    ds.StructureSetDate = dt.strftime('%Y%m%d')
-    ds.StructureSetTime = dt.strftime('%H%M%S.%f')
-    ds.Modality = 'RTSTRUCT'
-    ds.Manufacturer = 'Qurit'
-    ds.ManufacturerModelName = 'rt-utils'
-    ds.InstitutionName = 'Qurit'
+    ds.SpecificCharacterSet = "ISO_IR 100"
+    ds.InstanceCreationDate = dt.strftime("%Y%m%d")
+    ds.InstanceCreationTime = dt.strftime("%H%M%S.%f")
+    ds.StructureSetLabel = "RTstruct"
+    ds.StructureSetDate = dt.strftime("%Y%m%d")
+    ds.StructureSetTime = dt.strftime("%H%M%S.%f")
+    ds.Modality = "RTSTRUCT"
+    ds.Manufacturer = "Qurit"
+    ds.ManufacturerModelName = "rt-utils"
+    ds.InstitutionName = "Qurit"
     # Set the transfer syntax
     ds.is_little_endian = True
     ds.is_implicit_VR = True
@@ -60,7 +62,7 @@ def add_required_elements_to_ds(ds: FileDataset):
     ds.SOPClassUID = ds.file_meta.MediaStorageSOPClassUID
     ds.SOPInstanceUID = ds.file_meta.MediaStorageSOPInstanceUID
 
-    ds.ApprovalStatus = 'UNAPPROVED'
+    ds.ApprovalStatus = "UNAPPROVED"
 
 
 def add_sequence_lists_to_ds(ds: FileDataset):
@@ -72,11 +74,11 @@ def add_sequence_lists_to_ds(ds: FileDataset):
 def add_study_and_series_information(ds: FileDataset, series_data):
     reference_ds = series_data[0]  # All elements in series should have the same data
     ds.StudyDate = reference_ds.StudyDate
-    ds.SeriesDate = getattr(reference_ds, 'SeriesDate', '')
+    ds.SeriesDate = getattr(reference_ds, "SeriesDate", "")
     ds.StudyTime = reference_ds.StudyTime
-    ds.SeriesTime = getattr(reference_ds, 'SeriesTime', '')
-    ds.StudyDescription = getattr(reference_ds, 'StudyDescription', '')
-    ds.SeriesDescription = getattr(reference_ds, 'SeriesDescription', '')
+    ds.SeriesTime = getattr(reference_ds, "SeriesTime", "")
+    ds.StudyDescription = getattr(reference_ds, "StudyDescription", "")
+    ds.SeriesDescription = getattr(reference_ds, "SeriesDescription", "")
     ds.StudyInstanceUID = reference_ds.StudyInstanceUID
     ds.SeriesInstanceUID = generate_uid()  # TODO: find out if random generation is ok
     ds.StudyID = reference_ds.StudyID
@@ -85,19 +87,23 @@ def add_study_and_series_information(ds: FileDataset, series_data):
 
 def add_patient_information(ds: FileDataset, series_data):
     reference_ds = series_data[0]  # All elements in series should have the same data
-    ds.PatientName = getattr(reference_ds, 'PatientName', '')
-    ds.PatientID = getattr(reference_ds, 'PatientID', '')
-    ds.PatientBirthDate = getattr(reference_ds, 'PatientBirthDate', '')
-    ds.PatientSex = getattr(reference_ds, 'PatientSex', '')
-    ds.PatientAge = getattr(reference_ds, 'PatientAge', '')
-    ds.PatientSize = getattr(reference_ds, 'PatientSize', '')
-    ds.PatientWeight = getattr(reference_ds, 'PatientWeight', '')
+    ds.PatientName = getattr(reference_ds, "PatientName", "")
+    ds.PatientID = getattr(reference_ds, "PatientID", "")
+    ds.PatientBirthDate = getattr(reference_ds, "PatientBirthDate", "")
+    ds.PatientSex = getattr(reference_ds, "PatientSex", "")
+    ds.PatientAge = getattr(reference_ds, "PatientAge", "")
+    ds.PatientSize = getattr(reference_ds, "PatientSize", "")
+    ds.PatientWeight = getattr(reference_ds, "PatientWeight", "")
 
 
 def add_refd_frame_of_ref_sequence(ds: FileDataset, series_data):
     refd_frame_of_ref = Dataset()
-    refd_frame_of_ref.FrameOfReferenceUID = generate_uid()  # TODO Find out if random generation is ok
-    refd_frame_of_ref.RTReferencedStudySequence = create_frame_of_ref_study_sequence(series_data)
+    refd_frame_of_ref.FrameOfReferenceUID = (
+        generate_uid()
+    )  # TODO Find out if random generation is ok
+    refd_frame_of_ref.RTReferencedStudySequence = create_frame_of_ref_study_sequence(
+        series_data
+    )
 
     # Add to sequence
     ds.ReferencedFrameOfReferenceSequence = Sequence()
@@ -184,8 +190,12 @@ def create_contour(series_slice: Dataset, contour_data: np.ndarray) -> Dataset:
 
     contour = Dataset()
     contour.ContourImageSequence = contour_image_sequence
-    contour.ContourGeometricType = 'CLOSED_PLANAR'  # TODO figure out how to get this value
-    contour.NumberOfContourPoints = len(contour_data) / 3  # Each point has an x, y, and z value
+    contour.ContourGeometricType = (
+        "CLOSED_PLANAR"  # TODO figure out how to get this value
+    )
+    contour.NumberOfContourPoints = (
+        len(contour_data) / 3
+    )  # Each point has an x, y, and z value
     contour.ContourData = contour_data
 
     return contour
@@ -196,10 +206,10 @@ def create_rtroi_observation(roi_data: ROIData) -> Dataset:
     rtroi_observation.ObservationNumber = roi_data.number
     rtroi_observation.ReferencedROINumber = roi_data.number
     # TODO figure out how to get observation description
-    rtroi_observation.ROIObservationDescription = 'Type:Soft,Range:*/*,Fill:0,Opacity:0.0,Thickness:1,LineThickness:2,read-only:false'
-    rtroi_observation.private_creators = 'Qurit Lab'
-    rtroi_observation.RTROIInterpretedType = ''
-    rtroi_observation.ROIInterpreter = ''
+    rtroi_observation.ROIObservationDescription = "Type:Soft,Range:*/*,Fill:0,Opacity:0.0,Thickness:1,LineThickness:2,read-only:false"
+    rtroi_observation.private_creators = "Qurit Lab"
+    rtroi_observation.RTROIInterpretedType = ""
+    rtroi_observation.ROIInterpreter = ""
     return rtroi_observation
 
 
