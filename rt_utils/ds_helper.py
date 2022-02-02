@@ -98,16 +98,22 @@ def add_patient_information(ds: FileDataset, series_data):
 
 def add_refd_frame_of_ref_sequence(ds: FileDataset, series_data):
     refd_frame_of_ref = Dataset()
+    try:
+        # Updated to support import of files into the treatment planning system Pinnacle
+        FrameOfRef=series_data[0]['FrameOfReferenceUID'].value
+    except:
+        FrameOfRef = generate_uid()
     refd_frame_of_ref.FrameOfReferenceUID = (
-        generate_uid()
-    )  # TODO Find out if random generation is ok
+        FrameOfRef
+    )  
     refd_frame_of_ref.RTReferencedStudySequence = create_frame_of_ref_study_sequence(
         series_data
     )
 
     # Add to sequence
     ds.ReferencedFrameOfReferenceSequence = Sequence()
-    ds.ReferencedFrameOfReferenceSequence.append(refd_frame_of_ref)
+    ds.ReferencedFrameOfReferenceSequence.append(refd_frame_of_ref) 
+
 
 
 def create_frame_of_ref_study_sequence(series_data) -> Sequence:
