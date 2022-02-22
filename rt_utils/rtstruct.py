@@ -106,7 +106,7 @@ class RTStruct:
         """
 
         for structure_roi in self.ds.StructureSetROISequence:
-            if structure_roi.ROIName == name:
+            if structure_roi.ROIName.casefold() == name.casefold():
                 contour_sequence = ds_helper.get_contour_sequence_by_roi_number(
                     self.ds, structure_roi.ROINumber
                 )
