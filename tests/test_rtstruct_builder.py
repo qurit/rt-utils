@@ -72,11 +72,29 @@ def test_add_valid_roi(new_rtstruct: RTStruct):
     assert new_rtstruct.get_roi_names() == [NAME]
 
 
+def test_get_roi_by_name_case_insensitive(new_rtstruct: RTStruct):
+    NAME = "Test ROI"
+    mask = get_empty_mask(new_rtstruct)
+    mask[50:100, 50:100, 0] = 1
+    new_rtstruct.add_roi(mask, name=NAME)
+
+    assert type(new_rtstruct.get_roi_mask_by_name(name=NAME.upper())) is np.ndarray
+
+
+def test_get_invalid_roi_by_none_name(new_rtstruct: RTStruct):
+    NAME = "Test ROI"
+    mask = get_empty_mask(new_rtstruct)
+    mask[50:100, 50:100, 0] = 1
+    new_rtstruct.add_roi(mask, name=NAME)
+
+    with pytest.raises(RTStruct.ROIException):
+        new_rtstruct.get_roi_mask_by_name(name=None)
+
+
 def test_get_invalid_roi_mask_by_name(new_rtstruct: RTStruct):
     assert new_rtstruct.get_roi_names() == []
     with pytest.raises(RTStruct.ROIException):
         new_rtstruct.get_roi_mask_by_name("FAKE_NAME")
-
 
 def test_loading_invalid_rt_struct(series_path):
     invalid_rt_struct_path = os.path.join(series_path, "ct_1.dcm")
