@@ -96,6 +96,7 @@ def test_get_invalid_roi_mask_by_name(new_rtstruct: RTStruct):
     with pytest.raises(RTStruct.ROIException):
         new_rtstruct.get_roi_mask_by_name("FAKE_NAME")
 
+
 def test_loading_invalid_rt_struct(series_path):
     invalid_rt_struct_path = os.path.join(series_path, "ct_1.dcm")
     assert os.path.exists(invalid_rt_struct_path)
