@@ -104,9 +104,10 @@ class RTStruct:
         """
         Returns the 3D binary mask of the ROI with the given input name
         """
+        name = name.casefold() if type(name) is str else name
 
         for structure_roi in self.ds.StructureSetROISequence:
-            if structure_roi.ROIName.casefold() == name.casefold():
+            if structure_roi.ROIName.casefold() == name:
                 contour_sequence = ds_helper.get_contour_sequence_by_roi_number(
                     self.ds, structure_roi.ROINumber
                 )
