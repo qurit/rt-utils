@@ -266,31 +266,18 @@ def get_slice_contour_data(series_slice: Dataset, contour_sequence: Sequence):
 def get_slice_mask_from_slice_contour_data(
     series_slice: Dataset, slice_contour_data, transformation_matrix: np.ndarray
 ):
-    slice_mask = create_empty_slice_mask(series_slice)
+    # Go through all contours in a slice, create polygons in correct space and with a correct format 
+    # and append to polygons array (appropriate for fillPoly) 
+    polygons = []
     for contour_coords in slice_contour_data:
-        fill_mask = get_contour_fill_mask(
-            series_slice, contour_coords, transformation_matrix
-        )
-        # Invert values in the region to be filled. This will create holes where needed if contours are stacked on top of each other
-        slice_mask[fill_mask == 1] = np.invert(slice_mask[fill_mask == 1])
+        reshaped_contour_data = np.reshape(contour_coords, [len(contour_coords) // 3, 3])
+        translated_contour_data = apply_transformation_to_3d_points(reshaped_contour_data, transformation_matrix)
+        polygon = [np.around([translated_contour_data[:, :2]]).astype(np.int32)]
+        polygon = np.array(polygon).squeeze()
+        polygons.append(polygon)
+    slice_mask = create_empty_slice_mask(series_slice).astype(np.uint8)
+    cv.fillPoly(img=slice_mask, pts = polygons, color = 1)
     return slice_mask
-
-
-def get_contour_fill_mask(
-    series_slice: Dataset, contour_coords, transformation_matrix: np.ndarray
-):
-    # Format data
-    reshaped_contour_data = np.reshape(contour_coords, [len(contour_coords) // 3, 3])
-    translated_contour_data = apply_transformation_to_3d_points(
-        reshaped_contour_data, transformation_matrix
-    )
-    polygon = [np.around([translated_contour_data[:, :2]]).astype(np.int32)]
-
-    # Create mask for the region. Fill with 1 for ROI
-    fill_mask = create_empty_slice_mask(series_slice).astype(np.uint8)
-    cv.fillPoly(img=fill_mask, pts=polygon, color=1)
-    return fill_mask
-
 
 def create_empty_series_mask(series_data):
     ref_dicom_image = series_data[0]
