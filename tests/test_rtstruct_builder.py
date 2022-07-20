@@ -146,12 +146,17 @@ def test_loaded_mask_iou(new_rtstruct: RTStruct):
 
 
 def test_mask_with_holes_iou(new_rtstruct: RTStruct):
-    # Create square mask with hole
+    # Create square mask with holes
     mask = get_empty_mask(new_rtstruct)
     mask[50:100, 50:100, 0] = 1
     mask[65:85, 65:85, 0] = 0
+    # add another structure with hole inside of hole
+    mask[120:230, 120:230, 0] = 1
+    mask[135:215, 135:215, 0] = 0
+    mask[150:200, 150:200, 0] = 1
+    mask[165:185, 165:185, 0] = 0
 
-    IOU_threshold = 0.95  # Expect lower accuracy since holes lose information
+    IOU_threshold = 1
     run_mask_iou_test(new_rtstruct, mask, IOU_threshold)
 
 
