@@ -53,7 +53,6 @@ def get_contours_coords(roi_data: ROIData, series_data):
         # Do not add ROI's for blank slices
         if np.sum(mask_slice) == 0:
             series_contours.append([])
-            print("Skipping empty mask layer")
             continue
 
         # Create pin hole mask if specified
