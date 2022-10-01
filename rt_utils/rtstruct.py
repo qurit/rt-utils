@@ -84,7 +84,7 @@ class RTStruct:
             )
 
         if np.sum(mask) == 0:
-            raise RTStruct.ROIException("Mask cannot be empty")
+            print("[INFO]: ROI mask is empty")
 
         return True
 
