@@ -30,23 +30,25 @@ def test_valid_filemeta(new_rtstruct: RTStruct):
 
 def test_add_non_binary_roi(new_rtstruct: RTStruct):
     mask = get_empty_mask(new_rtstruct)
-    mask.astype(float)
+    mask = mask.astype(float)
     with pytest.raises(RTStruct.ROIException):
         new_rtstruct.add_roi(mask)
 
 
 def test_add_empty_roi(new_rtstruct: RTStruct):
     mask = get_empty_mask(new_rtstruct)
-    mask = mask[:, :, 1:]  # One less slice than expected
-    with pytest.raises(RTStruct.ROIException):
-        new_rtstruct.add_roi(mask)
+    new_rtstruct.add_roi(mask)
+    assert len(new_rtstruct.ds.ROIContourSequence) == 1
+    assert len(new_rtstruct.ds.ROIContourSequence[0].ContourSequence) == 0  # No slices added
+    assert len(new_rtstruct.ds.StructureSetROISequence) == 1
+    assert len(new_rtstruct.ds.RTROIObservationsSequence) == 1
 
 
 def test_add_invalid_sized_roi(new_rtstruct: RTStruct):
     mask = get_empty_mask(new_rtstruct)
+    mask = mask[:, :, 1:]  # One less slice than expected
     with pytest.raises(RTStruct.ROIException):
         new_rtstruct.add_roi(mask)
-    # Create ROI
 
 
 def test_add_valid_roi(new_rtstruct: RTStruct):
@@ -65,7 +67,7 @@ def test_add_valid_roi(new_rtstruct: RTStruct):
     assert len(new_rtstruct.ds.ROIContourSequence) == 1
     assert (
         len(new_rtstruct.ds.ROIContourSequence[0].ContourSequence) == 1
-    )  # Only 1 slice was added to
+    )  # Only 1 slice was added
     assert len(new_rtstruct.ds.StructureSetROISequence) == 1
     assert len(new_rtstruct.ds.RTROIObservationsSequence) == 1
     assert new_rtstruct.ds.ROIContourSequence[0].ROIDisplayColor == COLOR
