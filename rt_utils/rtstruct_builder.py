@@ -13,14 +13,14 @@ class RTStructBuilder:
     """
 
     @staticmethod
-    def create_new(dicom_series_path: str) -> RTStruct:
+    def create_new(dicom_series_path: str, warn_only: bool = False) -> RTStruct:
         """
         Method to generate a new rt struct from a DICOM series
         """
 
         series_data = image_helper.load_sorted_image_series(dicom_series_path)
         ds = ds_helper.create_rtstruct_dataset(series_data)
-        return RTStruct(series_data, ds)
+        return RTStruct(series_data, ds, warn_only=warn_only)
 
     @staticmethod
     def create_from(dicom_series_path: str, rt_struct_path: str) -> RTStruct:
