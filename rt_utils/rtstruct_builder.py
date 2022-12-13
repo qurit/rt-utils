@@ -69,7 +69,7 @@ class RTStructBuilder:
 
     @staticmethod
     def validate_contour_image_in_series_data(
-        contour_image: Dataset, series_data: List[Dataset]
+        contour_image: Dataset, series_data: List[Dataset], warning_only: bool = False
     ):
         """
         Method to validate that the ReferencedSOPInstanceUID of a given contour image exists within the series data
@@ -79,7 +79,13 @@ class RTStructBuilder:
                 return
 
         # ReferencedSOPInstanceUID is NOT available
-        raise Exception(
-            f"Loaded RTStruct references image(s) that are not contained in input series data. "
-            + f"Problematic image has SOP Instance Id: {contour_image.ReferencedSOPInstanceUID}"
-        )
+        if warning_onlyu:
+            warnings.warn(
+                f"Loaded RTStruct references image(s) that are not contained in input series data. "
+                + f"Problematic image has SOP Instance Id: {contour_image.ReferencedSOPInstanceUID}"
+            )
+        else:
+            raise Exception(
+                f"Loaded RTStruct references image(s) that are not contained in input series data. "
+                + f"Problematic image has SOP Instance Id: {contour_image.ReferencedSOPInstanceUID}"
+            )
