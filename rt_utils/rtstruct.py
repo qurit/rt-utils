@@ -12,10 +12,9 @@ class RTStruct:
     Wrapper class to facilitate appending and extracting ROI's within an RTStruct
     """
 
-    def __init__(self, series_data, ds: FileDataset, ROIGenerationAlgorithm=0, warn_only: bool = False):
+    def __init__(self, series_data, ds: FileDataset, ROIGenerationAlgorithm=0):
         self.series_data = series_data
         self.ds = ds
-        self.warn_only = warn_only
         self.frame_of_reference_uid = ds.ReferencedFrameOfReferenceSequence[
             -1
         ].FrameOfReferenceUID  # Use last strucitured set ROI
