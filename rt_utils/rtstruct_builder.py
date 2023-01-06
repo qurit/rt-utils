@@ -13,7 +13,7 @@ class RTStructBuilder:
     """
 
     @staticmethod
-    def create_new(dicom_series_path: str, warn_only: bool = False) -> RTStruct:
+    def create_new(dicom_series_path: str) -> RTStruct:
         """
         Method to generate a new rt struct from a DICOM series
         """
@@ -23,7 +23,7 @@ class RTStructBuilder:
         return RTStruct(series_data, ds, warn_only=warn_only)
 
     @staticmethod
-    def create_from(dicom_series_path: str, rt_struct_path: str) -> RTStruct:
+    def create_from(dicom_series_path: str, rt_struct_path: str, warn_only: bool = False) -> RTStruct:
         """
         Method to load an existing rt struct, given related DICOM series and existing rt struct
         """
@@ -31,7 +31,7 @@ class RTStructBuilder:
         series_data = image_helper.load_sorted_image_series(dicom_series_path)
         ds = dcmread(rt_struct_path)
         RTStructBuilder.validate_rtstruct(ds)
-        RTStructBuilder.validate_rtstruct_series_references(ds, series_data)
+        RTStructBuilder.validate_rtstruct_series_references(ds, series_data, warn_only)
 
         # TODO create new frame of reference? Right now we assume the last frame of reference created is suitable
         return RTStruct(series_data, ds)
@@ -51,7 +51,7 @@ class RTStructBuilder:
             raise Exception("Please check that the existing RTStruct is valid")
 
     @staticmethod
-    def validate_rtstruct_series_references(ds: Dataset, series_data: List[Dataset]):
+    def validate_rtstruct_series_references(ds: Dataset, series_data: List[Dataset], warn_only: bool = False):
         """
         Method to validate RTStruct only references dicom images found within the input series_data
         """
@@ -64,7 +64,7 @@ class RTStructBuilder:
                 for rt_refd_series in rt_refd_study.RTReferencedSeriesSequence:
                     for contour_image in rt_refd_series.ContourImageSequence:
                         RTStructBuilder.validate_contour_image_in_series_data(
-                            contour_image, series_data
+                            contour_image, series_data, warn_only
                         )
 
     @staticmethod
@@ -79,8 +79,8 @@ class RTStructBuilder:
                 return
 
         # ReferencedSOPInstanceUID is NOT available
-        msg = f"Loaded RTStruct references image(s) that are not contained in input series data. "
-                + f"Problematic image has SOP Instance Id: {contour_image.ReferencedSOPInstanceUID}"
+        msg = f"Loaded RTStruct references image(s) that are not contained in input series data. " \
+              f"Problematic image has SOP Instance Id: {contour_image.ReferencedSOPInstanceUID}"
         if warning_only:
             warnings.warn(msg)
         else:
