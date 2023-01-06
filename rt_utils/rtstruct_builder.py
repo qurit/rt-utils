@@ -79,13 +79,9 @@ class RTStructBuilder:
                 return
 
         # ReferencedSOPInstanceUID is NOT available
+        msg = f"Loaded RTStruct references image(s) that are not contained in input series data. "
+                + f"Problematic image has SOP Instance Id: {contour_image.ReferencedSOPInstanceUID}"
         if warning_only:
-            warnings.warn(
-                f"Loaded RTStruct references image(s) that are not contained in input series data. "
-                + f"Problematic image has SOP Instance Id: {contour_image.ReferencedSOPInstanceUID}"
-            )
+            warnings.warn(msg)
         else:
-            raise Exception(
-                f"Loaded RTStruct references image(s) that are not contained in input series data. "
-                + f"Problematic image has SOP Instance Id: {contour_image.ReferencedSOPInstanceUID}"
-            )
+            raise Exception(msg)
