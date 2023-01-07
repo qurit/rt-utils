@@ -20,7 +20,7 @@ class RTStructBuilder:
 
         series_data = image_helper.load_sorted_image_series(dicom_series_path)
         ds = ds_helper.create_rtstruct_dataset(series_data)
-        return RTStruct(series_data, ds, warn_only=warn_only)
+        return RTStruct(series_data, ds)
 
     @staticmethod
     def create_from(dicom_series_path: str, rt_struct_path: str, warn_only: bool = False) -> RTStruct:
