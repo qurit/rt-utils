@@ -214,6 +214,9 @@ def get_contour_sequence_by_roi_number(ds, roi_number):
 
         # Ensure same type
         if str(roi_contour.ReferencedROINumber) == str(roi_number):
-            return roi_contour.ContourSequence
+            if hasattr(roi_contour, "ContourSequence"):
+                return roi_contour.ContourSequence
+            else:
+                return Sequence()
 
     raise Exception(f"Referenced ROI number '{roi_number}' not found")
