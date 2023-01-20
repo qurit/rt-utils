@@ -35,6 +35,7 @@ class RTStruct:
         use_pin_hole: bool = False,
         approximate_contours: bool = True,
         roi_generation_algorithm: Union[str, int] = 0,
+        smoothing_factor: int = 1,
     ):
         """
         Add a ROI to the rtstruct given a 3D binary mask for the ROI's at each slice
@@ -42,6 +43,10 @@ class RTStruct:
         If use_pin_hole is set to true, will cut a pinhole through ROI's with holes in them so that they are represented with one contour
         If approximate_contours is set to False, no approximation will be done when generating contour data, leading to much larger amount of contour data
         """
+
+        ## If upscaled coords are given, they should be adjusted accordingly
+        rows = self.series_data[0][0x00280010].value
+        scaling_factor = int(mask.shape[0] / rows)
 
         # TODO test if name already exists
         self.validate_mask(mask)
@@ -56,6 +61,8 @@ class RTStruct:
             use_pin_hole,
             approximate_contours,
             roi_generation_algorithm,
+            smoothing_factor,
+            scaling_factor,
         )
 
         self.ds.ROIContourSequence.append(

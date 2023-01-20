@@ -41,7 +41,6 @@ class SOPClassUID:
 @dataclass
 class ROIData:
     """Data class to easily pass ROI data to helper methods."""
-
     mask: str
     color: Union[str, List[int]]
     number: int
@@ -51,6 +50,11 @@ class ROIData:
     use_pin_hole: bool = False
     approximate_contours: bool = True
     roi_generation_algorithm: Union[str, int] = 0
+    smoothing_factor: int = 1
+    scaling_factor: int = 1
+
+
+
 
     def __post_init__(self):
         self.validate_color()

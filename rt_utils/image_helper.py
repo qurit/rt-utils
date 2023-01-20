@@ -60,7 +60,10 @@ def get_contours_coords(roi_data: ROIData, series_data):
             mask_slice = create_pin_hole_mask(mask_slice, roi_data.approximate_contours)
 
         # Get contours from mask
-        contours, _ = find_mask_contours(mask_slice, roi_data.approximate_contours)
+        contours, _ = find_mask_contours(mask_slice,
+                                         roi_data.approximate_contours,
+                                         smoothing_factor=roi_data.smoothing_factor,
+                                         scaling_factor=roi_data.scaling_factor)
         validate_contours(contours)
 
         # Format for DICOM
@@ -82,7 +85,7 @@ def get_contours_coords(roi_data: ROIData, series_data):
     return series_contours
 
 
-def find_mask_contours(mask: np.ndarray, approximate_contours: bool):
+def find_mask_contours(mask: np.ndarray, approximate_contours: bool, smoothing_factor=1, scaling_factor=1):
     approximation_method = (
         cv.CHAIN_APPROX_SIMPLE if approximate_contours else cv.CHAIN_APPROX_NONE
     )
@@ -93,8 +96,10 @@ def find_mask_contours(mask: np.ndarray, approximate_contours: bool):
     contours = list(
         contours
     )  # Open-CV updated contours to be a tuple so we convert it back into a list here
+
+    assert smoothing_factor > 0
     for i, contour in enumerate(contours):
-        contours[i] = [[pos[0][0], pos[0][1]] for pos in contour]
+        contours[i] = [[(contour[i][0][0]/scaling_factor), (contour[i][0][1]/scaling_factor)] for i in range(0, len(contour), smoothing_factor)]
     hierarchy = hierarchy[0]  # Format extra array out of data
 
     return contours, hierarchy
