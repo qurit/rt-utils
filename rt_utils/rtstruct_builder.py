@@ -64,8 +64,8 @@ class RTStructBuilder:
             rt_roi_observation_seq.ReferencedROINumber = roi_number
 
             # check for ROI name duplication
-            for ds2_name in ds2.StructureSetROISequence.ROIName:
-                if struct_set_roi_seq.ROIName == ds2_name:
+            for struct_set_roi_seq2 in ds2.StructureSetROISequence:
+                if struct_set_roi_seq.ROIName == struct_set_roi_seq2.ROIName:
                     struct_set_roi_seq += "_2"
 
             ds2.ROIContourSequence.append(roi_contour_seq)
