@@ -39,52 +39,6 @@ class RTStructBuilder:
         return RTStruct(series_data, ds)
 
     @staticmethod
-    def merge_rtstructs(dicom_series_path: str, rt_struct_path1: str, 
-        rt_struct_path2: str, merged_struct_path: str, warn_only: bool = False):
-        """
-        Method to merge two existing RTStruct files belonging to same series data, returning them as one RTStruct
-        """
-
-        series_data = image_helper.load_sorted_image_series(dicom_series_path)
-        ds1 = dcmread(rt_struct_path1)
-        ds2 = dcmread(rt_struct_path2)
-        print(f"Checking RTStruct from {rt_struct_path1}")
-        RTStructBuilder.validate_rtstruct(ds1)
-        print(f"Checking RTStruct from {rt_struct_path2}")
-        RTStructBuilder.validate_rtstruct(ds2)
-        print(f"Checking compatibility between {rt_struct_path1} and series data {dicom_series_path}")
-        RTStructBuilder.validate_rtstruct_series_references(ds1, series_data, warn_only)
-        print(f"Checking compatibility between {rt_struct_path2} and series data {dicom_series_path}")
-        RTStructBuilder.validate_rtstruct_series_references(ds2, series_data, warn_only)
-
-        for roi_contour_seq, struct_set_roi_seq, rt_roi_observation_seq in zip(ds1.ROIContourSequence, ds1.StructureSetROISequence, ds1.RTROIObservationsSequence):
-            roi_number = len(ds2.StructureSetROISequence) + 1
-            roi_contour_seq.ReferencedROINumber = roi_number
-            struct_set_roi_seq.ROINumber = roi_number
-            rt_roi_observation_seq.ReferencedROINumber = roi_number
-
-            # check for ROI name duplication
-            for ds2_name in ds2.StructureSetROISequence.ROIName:
-                if struct_set_roi_seq.ROIName == ds2_name:
-                    struct_set_roi_seq += "_2"
-
-            ds2.ROIContourSequence.append(roi_contour_seq)
-            ds2.StructureSetROISequence.append(struct_set_roi_seq)
-            ds2.RTROIObservationsSequence.append(rt_roi_observation_seq)
-
-        # Add .dcm if needed
-        merged_struct_path = merged_struct_path if merged_struct_path.endswith(".dcm") else merged_struct_path + ".dcm"
-
-        try:
-            file = open(merged_struct_path, "w")
-            # Opening worked, we should have a valid merged_struct_path
-            print("Writing file to", merged_struct_path)
-            ds2.save_as(merged_struct_path)
-            file.close()
-        except OSError:
-            raise Exception(f"Cannot write to file path '{merged_struct_path}'")
-
-    @staticmethod
     def validate_rtstruct(ds: Dataset):
         """
         Method to validate a dataset is a valid RTStruct containing the required fields
