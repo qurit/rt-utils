@@ -14,6 +14,7 @@
 ---
  
 RT-Utils is motivated to allow physicians and other users to view the results of segmentation performed on a series of DICOM images. RT-Utils allows you to create or load RT Structs, extract 3d masks from RT Struct ROIs, easily add one or more regions of interest, and save the resulting RT Struct in just a few lines!
+You can also use the RT-Utils for merging two existing RT Structs to one file.
 
 ## How it works
 RT-Utils provides a builder class to faciliate the creation and loading of an RT Struct. From there, you can add ROIs through binary masks and optionally input the colour of the region along with the region name.
@@ -116,6 +117,21 @@ plt.show()
 <p align="center">
   The results of a loading an exisiting ROI as a mask, as viewed in Python.
 </p>
+
+## Merging two existing RT Structs
+To be able to merge two RT Structs it is important that both RT Structs have to belong to the same image series,
+e.g. if there is one set for the organs at risk and one set for the target volume(s).
+```Python
+from rt_utils import RTStructMerger
+
+# Load existing RT Structs and corresponding image series and merge them into one RTStruct
+merged_rt_struct = RTStructMerger.merge_rtstructs(
+  dicom_series_path="./testlocation",
+  rt_struct_path1="./testlocation/rt-struct1.dcm",
+  rt_struct_path2="./testlocation/rt-struct2.dcm"
+  )
+merged_rt_struct.save('merged-rt-struct')
+```
 
 ## Additional Parameters
 The add_roi method of our RTStruct class has a multitude of optional parameters available. Below is a comprehensive list of all these parameters and what they do.
