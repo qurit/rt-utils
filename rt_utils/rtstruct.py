@@ -56,10 +56,12 @@ class RTStruct:
         # TODO test if name already exists
         self.validate_mask(mask)
         
+        roi_number = roi_number(self)
+        
         roi_data = ROIData(
             mask,
             color,      
-            roi_number = roi_number(self),                                       
+            roi_number,                                    
             name,
             self.frame_of_reference_uid,
             description,
