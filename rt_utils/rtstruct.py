@@ -3,7 +3,7 @@ from typing import List, Union
 import numpy as np
 from pydicom.dataset import FileDataset
 
-from rt_utils.utils import ROIData
+from rt_utils.utils import ROIData, Polygon2D
 from . import ds_helper, image_helper
 
 
@@ -28,7 +28,8 @@ class RTStruct:
 
     def add_roi(
         self,
-        mask: np.ndarray,
+        mask: np.ndarray=None,
+        polygon: list=None,
         color: Union[str, List[int]] = None,
         name: str = None,
         description: str = "",
@@ -37,17 +38,22 @@ class RTStruct:
         roi_generation_algorithm: Union[str, int] = 0,
     ):
         """
-        Add a ROI to the rtstruct given a 3D binary mask for the ROI's at each slice
+        Add a ROI to the rtstruct given a 3D binary mask or list of polygons for the ROI's at each slice
         Optionally input a color or name for the ROI
         If use_pin_hole is set to true, will cut a pinhole through ROI's with holes in them so that they are represented with one contour
         If approximate_contours is set to False, no approximation will be done when generating contour data, leading to much larger amount of contour data
         """
-
         # TODO test if name already exists
-        self.validate_mask(mask)
+        assert isinstance(mask, (type(None), np.ndarray)) and isinstance(polygon, (type(None), list))
+        assert (mask is None) ^ (polygon is None), "Only one of 'mas' and 'polygon' can be set."
+        if mask is not None:
+            self.validate_mask(mask)
+        else:
+            self.validate_polygon(polygon)
+        data = mask if mask is not None else polygon
         roi_number = len(self.ds.StructureSetROISequence) + 1
         roi_data = ROIData(
-            mask,
+            data,
             color,
             roi_number,
             name,
@@ -87,6 +93,24 @@ class RTStruct:
             print("[INFO]: ROI mask is empty")
 
         return True
+
+    def validate_polygon(self, polygon: list) -> None:
+        """
+        polygon should be in the format of list of lists.
+        The inner loop list contains Polygon2D objects representing
+        ROIs of correspoding slice. The innter loop list can be empty.
+
+        """
+        for poly in polygon:
+            if type(poly) != list:
+                raise RTStruct.ROIException(
+                    f"polygon must be list of list containing Polygon2D objects"
+                )
+            for p in poly:
+                if not isinstance(p, Polygon2D):
+                    raise RTStruct.ROIException(
+                        f"Polygon element must Polygon2D object, but got {type(p)}"
+                    )
 
     def get_roi_names(self) -> List[str]:
         """
