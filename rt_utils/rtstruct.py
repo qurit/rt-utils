@@ -25,12 +25,23 @@ class RTStruct:
         """
 
         self.ds.SeriesDescription = description
+        
+    def roi_number(
+         ROI_list = self.ds.StructureSetROISequence
+            for i in range(len(ROI_list)):
+                ROI_number.append(ROI_list[i].ROINumber.numerator)
+            j = 0 
+            while j in ROI_number :
+                j = j+1
+        
+        
 
     def add_roi(
         self,
         mask: np.ndarray,
         color: Union[str, List[int]] = None,
         name: str = None,
+        roi_number : int = None,
         description: str = "",
         use_pin_hole: bool = False,
         approximate_contours: bool = True,
@@ -45,11 +56,11 @@ class RTStruct:
 
         # TODO test if name already exists
         self.validate_mask(mask)
-        roi_number = len(self.ds.StructureSetROISequence) + 1
+        
         roi_data = ROIData(
             mask,
-            color,
-            roi_number,
+            color,      
+            roi_number = roi_number(0)                                       
             name,
             self.frame_of_reference_uid,
             description,
