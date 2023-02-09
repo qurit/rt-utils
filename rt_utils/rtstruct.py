@@ -41,7 +41,6 @@ class RTStruct:
         mask: np.ndarray,
         color: Union[str, List[int]] = None,
         name: str = None,
-        roi_number : int = None,
         description: str = "",
         use_pin_hole: bool = False,
         approximate_contours: bool = True,
@@ -60,7 +59,7 @@ class RTStruct:
         roi_data = ROIData(
             mask,
             color,      
-            roi_number = roi_number(self)                                       
+            roi_number = roi_number(self),                                       
             name,
             self.frame_of_reference_uid,
             description,
