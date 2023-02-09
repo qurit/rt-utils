@@ -29,6 +29,7 @@ class RTStruct:
     def roi_number(self):
         
          ROI_list = self.ds.StructureSetROISequence
+         ROI_number = []
          for i in range(len(ROI_list)):
                 ROI_number.append(ROI_list[i].ROINumber.numerator)
          j = 0 
@@ -54,10 +55,8 @@ class RTStruct:
         """
 
         # TODO test if name already exists
-        self.validate_mask(mask)
-        
-        roi_number = roi_number(self)
-        
+        self.validate_mask(mask)        
+        roi_number = self.roi_number(self)        
         roi_data = ROIData(
             mask,
             color,      
