@@ -26,15 +26,15 @@ class RTStruct:
 
         self.ds.SeriesDescription = description
         
-    def roi_number(
+    def roi_number(self):
+        
          ROI_list = self.ds.StructureSetROISequence
-            for i in range(len(ROI_list)):
+         for i in range(len(ROI_list)):
                 ROI_number.append(ROI_list[i].ROINumber.numerator)
-            j = 0 
-            while j in ROI_number :
+         j = 0 
+         while j in ROI_number :
                 j = j+1
-        
-        
+         return j             
 
     def add_roi(
         self,
@@ -60,7 +60,7 @@ class RTStruct:
         roi_data = ROIData(
             mask,
             color,      
-            roi_number = roi_number(0)                                       
+            roi_number = roi_number(self)                                       
             name,
             self.frame_of_reference_uid,
             description,
