@@ -35,6 +35,8 @@ class RTStruct:
          while j in ROI_number :
                 j = j+1
          return j             
+    
+    """choose a ROI number which has not been attributed to the ROI already existing the original RTstructure. This might prevent duplicate and error in opening"""
 
     def add_roi(
         self,
