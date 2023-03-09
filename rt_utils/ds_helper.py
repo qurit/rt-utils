@@ -192,7 +192,9 @@ def create_contour(series_slice: Dataset, contour_data: np.ndarray) -> Dataset:
     contour.NumberOfContourPoints = (
         len(contour_data) / 3
     )  # Each point has an x, y, and z value
-    contour.ContourData = contour_data
+
+    # Rounds ContourData to 10 decimal places to ensure it is <16 bytes length, as per NEMA DICOM standard guidelines.
+    contour.ContourData = [round(val, 10) for val in contour_data]
 
     return contour
 
