@@ -102,15 +102,10 @@ class RTStruct:
 
         """
         for poly in polygon:
-            if type(poly) != list:
+            if not isinstance(poly, Polygon2D):
                 raise RTStruct.ROIException(
-                    f"polygon must be list of list containing Polygon2D objects"
+                    f"polygon must be list of Polygon2D objects"
                 )
-            for p in poly:
-                if not isinstance(p, Polygon2D):
-                    raise RTStruct.ROIException(
-                        f"Polygon element must Polygon2D object, but got {type(p)}"
-                    )
 
     def get_roi_names(self) -> List[str]:
         """

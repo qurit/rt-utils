@@ -63,9 +63,11 @@ def get_contours_coords(roi_data: ROIData, series_data):
             # Get contours from mask
             contours, _ = find_mask_contours(mask_slice, roi_data.approximate_contours)
         else:
-            if sum([p.area for p in roi_data.polygon[i]]) == 0:
+            if roi_data.polygon[i].area == 0:
+                # empty ROI
+                series_contours.append([])
                 continue
-            contours = [p.coords.tolist() for p in roi_data.polygon[i]]
+            contours = [roi_data.polygon[i].coords.tolist()]
 
         validate_contours(contours)
 

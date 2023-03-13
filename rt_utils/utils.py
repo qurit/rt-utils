@@ -153,24 +153,14 @@ class ROIData:
             )
 
     def valaidate_polygon(self, polygon):
-        all_poly = [item for sublist in polygon for item in sublist]
-        if len(all_poly) == 0:
+        if len(polygon) == 0:
             raise ValueError('Empty polygon')
-        else:
-            h, w = all_poly[0].h, all_poly[0].w
-        # fill empty list with a placeholder Polygon2D
-        for idx, poly in enumerate(polygon):
-            if len(poly) == 0:
-                polygon[idx] = Polygon2D(coords=[], h=h, w=w)
         return polygon
 
     @staticmethod
     def polygon2mask(polygon):
-        all_poly = [item for sublist in polygon for item in sublist]
-        h, w = all_poly[0].h, all_poly[0].w
-        mask = np.zeros((h, w, len(polygon)), dtype=bool)
-        for idx, poly in enumerate(polygon):
-            mask[:, :, idx] = np.concatenate([p.mask[:, :, None] for p in poly], axis=2).sum(axis=2).astype(bool)
+        h, w = polygon[0].h, polygon[0].w
+        mask = np.concatenate([p.mask[:, :, None] for p in polygon], axis=-1)
         return mask
 
 
