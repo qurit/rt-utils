@@ -1,7 +1,8 @@
 import os
-from typing import List
+from typing import List, Union
 from enum import IntEnum
 
+import SimpleITK
 import cv2 as cv
 import numpy as np
 from pydicom import dcmread
@@ -62,8 +63,9 @@ def get_contours_coords(roi_data: ROIData, series_data):
         # Get contours from mask
         contours, _ = find_mask_contours(mask_slice,
                                          roi_data.approximate_contours,
-                                         smoothing_factor=roi_data.smoothing_factor,
                                          scaling_factor=roi_data.scaling_factor)
+        if not contours:
+            continue
         validate_contours(contours)
 
         # Format for DICOM
@@ -85,7 +87,8 @@ def get_contours_coords(roi_data: ROIData, series_data):
     return series_contours
 
 
-def find_mask_contours(mask: np.ndarray, approximate_contours: bool, smoothing_factor=1, scaling_factor=1):
+
+def find_mask_contours(mask: np.ndarray, approximate_contours: bool, scaling_factor: int):
     approximation_method = (
         cv.CHAIN_APPROX_SIMPLE if approximate_contours else cv.CHAIN_APPROX_NONE
     )
@@ -97,10 +100,10 @@ def find_mask_contours(mask: np.ndarray, approximate_contours: bool, smoothing_f
         contours
     )  # Open-CV updated contours to be a tuple so we convert it back into a list here
 
-    assert smoothing_factor > 0
     for i, contour in enumerate(contours):
-        contours[i] = [[(contour[i][0][0]/scaling_factor), (contour[i][0][1]/scaling_factor)] for i in range(0, len(contour), smoothing_factor)]
-    hierarchy = hierarchy[0]  # Format extra array out of data
+        contours[i] = [[(contour[i][0][0] / scaling_factor), (contour[i][0][1] / scaling_factor)] for i in
+                       range(0, len(contour))]
+    # hierarchy = hierarchy[0]  # Format extra array out of data
 
     return contours, hierarchy
 
@@ -131,7 +134,7 @@ def create_pin_hole_mask(mask: np.ndarray, approximate_contours: bool):
 
 
 def draw_line_upwards_from_point(
-    mask: np.ndarray, start, fill_value: int
+        mask: np.ndarray, start, fill_value: int
 ) -> np.ndarray:
     line_width = 2
     end = (start[0], start[1] - 1)
@@ -201,7 +204,7 @@ def get_patient_to_pixel_transformation_matrix(series_data):
 
 
 def apply_transformation_to_3d_points(
-    points: np.ndarray, transformation_matrix: np.ndarray
+        points: np.ndarray, transformation_matrix: np.ndarray
 ):
     """
     * Augment each point with a '1' as the fourth coordinate to allow translation
@@ -224,7 +227,7 @@ def get_slice_directions(series_slice: Dataset):
     slice_direction = np.cross(row_direction, column_direction)
 
     if not np.allclose(
-        np.dot(row_direction, column_direction), 0.0, atol=1e-3
+            np.dot(row_direction, column_direction), 0.0, atol=1e-3
     ) or not np.allclose(np.linalg.norm(slice_direction), 1.0, atol=1e-3):
         raise Exception("Invalid Image Orientation (Patient) attribute")
 
@@ -268,7 +271,7 @@ def get_slice_contour_data(series_slice: Dataset, contour_sequence: Sequence):
 
 
 def get_slice_mask_from_slice_contour_data(
-    series_slice: Dataset, slice_contour_data, transformation_matrix: np.ndarray
+        series_slice: Dataset, slice_contour_data, transformation_matrix: np.ndarray
 ):
     # Go through all contours in a slice, create polygons in correct space and with a correct format 
     # and append to polygons array (appropriate for fillPoly) 
@@ -280,8 +283,9 @@ def get_slice_mask_from_slice_contour_data(
         polygon = np.array(polygon).squeeze()
         polygons.append(polygon)
     slice_mask = create_empty_slice_mask(series_slice).astype(np.uint8)
-    cv.fillPoly(img=slice_mask, pts = polygons, color = 1)
+    cv.fillPoly(img=slice_mask, pts=polygons, color=1)
     return slice_mask
+
 
 def create_empty_series_mask(series_data):
     ref_dicom_image = series_data[0]

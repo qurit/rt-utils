@@ -1,11 +1,11 @@
-from typing import List, Union
+from typing import List, Union, Dict
 
 import numpy as np
 from pydicom.dataset import FileDataset
 
 from rt_utils.utils import ROIData
-from . import ds_helper, image_helper
-
+from . import ds_helper, image_helper, smoothing
+from typing import Tuple
 
 class RTStruct:
     """
@@ -35,7 +35,9 @@ class RTStruct:
         use_pin_hole: bool = False,
         approximate_contours: bool = True,
         roi_generation_algorithm: Union[str, int] = 0,
-        smoothing_factor: int = 1,
+        apply_smoothing: Union[str, None] = None, # strings can be "2d" or "3d"
+        smoothing_parameters: Dict = smoothing.default_smoothing_parameters
+
     ):
         """
         Add a ROI to the rtstruct given a 3D binary mask for the ROI's at each slice
@@ -43,6 +45,13 @@ class RTStruct:
         If use_pin_hole is set to true, will cut a pinhole through ROI's with holes in them so that they are represented with one contour
         If approximate_contours is set to False, no approximation will be done when generating contour data, leading to much larger amount of contour data
         """
+        if apply_smoothing:
+            if apply_smoothing == "3d":
+                mask = smoothing.pipeline_3d(mask, **smoothing_parameters)
+            elif apply_smoothing == "2d":
+                mask = smoothing.pipeline_2d(mask, **smoothing_parameters)
+            else:
+                print("Invalid input. Use '2d' or '3d'. Otherwise leave as None")
 
         ## If upscaled coords are given, they should be adjusted accordingly
         rows = self.series_data[0][0x00280010].value
@@ -61,8 +70,7 @@ class RTStruct:
             use_pin_hole,
             approximate_contours,
             roi_generation_algorithm,
-            smoothing_factor,
-            scaling_factor,
+            scaling_factor
         )
 
         self.ds.ROIContourSequence.append(
