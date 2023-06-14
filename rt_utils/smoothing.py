@@ -5,9 +5,10 @@ from typing import List, Union, Tuple, Dict
 import logging
 
 default_smoothing_parameters = {
-    "iterations": 3,
-    "crop_margins": [10, 10, 1],
-    "np_kron": {"scaling_factor": 2},
+    "iterations": 2,
+    "crop_margins": [20, 20, 1],
+    "initial_shift": [0, 0, 0],
+    "np_kron": {"scaling_factor": 3},
     "ndimage_gaussian_filter": {"sigma": 2,
                                 "radius": 3},
     "threshold": {"threshold": 0.4},
@@ -38,7 +39,7 @@ def get_new_margin(column, margin, column_length):
 
     return new_min, new_max
     
-def crop_mask(mask: np.ndarray, crop_margins: List[int]):  
+def crop_mask(mask: np.ndarray, crop_margins: np.ndarray):  
     x, y, z = np.nonzero(mask)
 
     x_min, x_max = get_new_margin(x, crop_margins[0], mask.shape[0])
@@ -59,7 +60,7 @@ def restore_mask_dimensions(cropped_mask: np.ndarray, new_shape, bbox):
 
 def iteration_2d(mask: np.ndarray, np_kron, ndimage_gaussian_filter, threshold, ndimage_median_filter):
     cropped_mask = kron_upscale(mask=mask, **np_kron)
-    return cropped_mask
+
     for z_idx in range(cropped_mask.shape[2]):
         slice = cropped_mask[:, :, z_idx]            
         slice = gaussian_blur(mask=slice, **ndimage_gaussian_filter)
@@ -86,8 +87,7 @@ def pipeline(mask: np.ndarray,
         smoothing_parameters = default_smoothing_parameters
 
     iterations = smoothing_parameters["iterations"]
-    crop_margins = smoothing_parameters["crop_margins"]
-
+    crop_margins = np.array(smoothing_parameters["crop_margins"])
     np_kron = smoothing_parameters["np_kron"]
     ndimage_gaussian_filter = smoothing_parameters["ndimage_gaussian_filter"]
     threshold = smoothing_parameters["threshold"]
@@ -129,7 +129,9 @@ def get_final_mask_shape_and_bbox(mask, bbox, scaling_factor, iterations):
 
     final_shape = np.array(mask.shape)
     final_shape[:2] *= final_scaling_factor
+
     bbox[:4] *= final_scaling_factor
+    bbox[:4] -= round(final_scaling_factor * 0.5)  # Shift organ 
     print("Final shape: ", final_shape)
     print("Final bbox: ", bbox)
     return final_shape, bbox
