@@ -103,7 +103,8 @@ def find_mask_contours(mask: np.ndarray, approximate_contours: bool, scaling_fac
     for i, contour in enumerate(contours):
         contours[i] = [[(contour[i][0][0] / scaling_factor), (contour[i][0][1] / scaling_factor)] for i in
                        range(0, len(contour))]
-    # hierarchy = hierarchy[0]  # Format extra array out of data
+    
+    hierarchy = hierarchy[0]  # Format extra array out of data
 
     return contours, hierarchy
 
