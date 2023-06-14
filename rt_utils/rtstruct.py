@@ -36,8 +36,7 @@ class RTStruct:
         approximate_contours: bool = True,
         roi_generation_algorithm: Union[str, int] = 0,
         apply_smoothing: Union[str, None] = None, # strings can be "2d" or "3d"
-        smoothing_parameters: Dict = smoothing.default_smoothing_parameters
-
+        smoothing_parameters: Union[Dict, None] = None
     ):
         """
         Add a ROI to the rtstruct given a 3D binary mask for the ROI's at each slice
@@ -46,12 +45,8 @@ class RTStruct:
         If approximate_contours is set to False, no approximation will be done when generating contour data, leading to much larger amount of contour data
         """
         if apply_smoothing:
-            if apply_smoothing == "3d":
-                mask = smoothing.pipeline_3d(mask, **smoothing_parameters)
-            elif apply_smoothing == "2d":
-                mask = smoothing.pipeline_2d(mask, **smoothing_parameters)
-            else:
-                print("Invalid input. Use '2d' or '3d'. Otherwise leave as None")
+            mask = smoothing.pipeline(mask=mask, apply_smoothing=apply_smoothing,
+                                      smoothing_parameters=smoothing_parameters)
 
         ## If upscaled coords are given, they should be adjusted accordingly
         rows = self.series_data[0][0x00280010].value
