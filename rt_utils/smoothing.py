@@ -55,7 +55,7 @@ def restore_mask_dimensions(cropped_mask: np.ndarray, new_shape, bbox):
     return new_mask.astype(bool)
 
 def iteration_2d(mask: np.ndarray, np_kron, ndimage_gaussian_filter, threshold, ndimage_median_filter):
-    cropped_mask = kron_upscale(mask=cropped_mask, **np_kron)
+    cropped_mask = kron_upscale(mask=mask, **np_kron)
 
     for z_idx in range(cropped_mask.shape[2]):
         slice = cropped_mask[:, :, z_idx]
