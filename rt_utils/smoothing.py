@@ -5,8 +5,9 @@ from typing import List, Union, Tuple, Dict
 import logging
 
 # A set of parameters that is know to work well
-default_smoothing_parameters = {
-    "iterations": 2,
+default_smoothing_parameters_2d = {
+    "scaling_iterations": 2,
+    "filter_iterations": 1,
     "crop_margins": [20, 20, 1],
     "np_kron": {"scaling_factor": 3},
     "ndimage_gaussian_filter": {"sigma": 2,
@@ -14,8 +15,8 @@ default_smoothing_parameters = {
     "threshold": {"threshold": 0.4},
 }
 # A set of parameters that is know to work well
-default_smoothing_parameters_2 = {
-    "iterations": 3,
+default_smoothing_parameters_2d_2 = {
+    "scaling_iterations": 3,
     "crop_margins": [20, 20, 1],
     "np_kron": {"scaling_factor": 2},
     "ndimage_gaussian_filter": {"sigma": 2,
@@ -87,28 +88,30 @@ def restore_mask_dimensions(cropped_mask: np.ndarray, new_shape, bbox):
     new_mask[bbox[0]: bbox[1], bbox[2]: bbox[3], bbox[4]: bbox[5]] = cropped_mask
     return new_mask.astype(bool)
 
-def iteration_2d(mask: np.ndarray, np_kron, ndimage_gaussian_filter, threshold):
+def iteration_2d(mask: np.ndarray, np_kron, ndimage_gaussian_filter, threshold, filter_iterations):
     """
     This is the actual set of filters. Applied iterative over z direction
     """
     cropped_mask = kron_upscale(mask=mask, params=np_kron)
 
-    for z_idx in range(cropped_mask.shape[2]):
-        slice = cropped_mask[:, :, z_idx]            
-        slice = gaussian_blur(mask=slice, params=ndimage_gaussian_filter)
-        slice = binary_threshold(mask=slice, params=threshold)
+    for filter_iteration in range(filter_iterations):
+        for z_idx in range(cropped_mask.shape[2]):
+            slice = cropped_mask[:, :, z_idx]            
+            slice = gaussian_blur(mask=slice, params=ndimage_gaussian_filter)
+            slice = binary_threshold(mask=slice, params=threshold)
 
-        cropped_mask[:, :, z_idx] = slice
+            cropped_mask[:, :, z_idx] = slice
 
     return cropped_mask
 
-def iteration_3d(mask: np.ndarray, np_kron, ndimage_gaussian_filter, threshold):
+def iteration_3d(mask: np.ndarray, np_kron, ndimage_gaussian_filter, threshold, filter_iterations):
     """
     This is the actual filters applied iteratively in 3d.
     """
-    cropped_mask = kron_upscale(mask=mask, params=np_kron)
-    cropped_mask = gaussian_blur(mask=cropped_mask, params=ndimage_gaussian_filter)
-    cropped_mask = binary_threshold(mask=cropped_mask, params=threshold)
+    for filter_iteration in range(filter_iterations):
+        cropped_mask = kron_upscale(mask=mask, params=np_kron)
+        cropped_mask = gaussian_blur(mask=cropped_mask, params=ndimage_gaussian_filter)
+        cropped_mask = binary_threshold(mask=cropped_mask, params=threshold)
 
     return cropped_mask
 
@@ -119,9 +122,11 @@ def pipeline(mask: np.ndarray,
     This is the entrypoint for smoothing a mask.
     """
     if not smoothing_parameters:
-        smoothing_parameters = default_smoothing_parameters
+        smoothing_parameters = default_smoothing_parameters_2d
 
-    iterations = smoothing_parameters["iterations"]
+    scaling_iterations = smoothing_parameters["scaling_iterations"]
+    filter_iterations = smoothing_parameters["filter_iterations"]
+
     crop_margins = np.array(smoothing_parameters["crop_margins"])
     np_kron = smoothing_parameters["np_kron"]
     ndimage_gaussian_filter = smoothing_parameters["ndimage_gaussian_filter"]
@@ -132,22 +137,24 @@ def pipeline(mask: np.ndarray,
     cropped_mask, bbox = crop_mask(mask, crop_margins=crop_margins)
     final_shape, final_bbox = get_final_mask_shape_and_bbox(mask=mask,
                                                             scaling_factor=np_kron["scaling_factor"],
-                                                            iterations=iterations,
+                                                            scaling_iterations=scaling_iterations,
                                                             bbox=bbox)
-    logging.info(f"Final scaling with factor of {np_kron['scaling_factor']} for {iterations} iterations")
-    for i in range(iterations):
-        logging.info(f"Iteration {i+1} out of {iterations}")
+    logging.info(f"Final scaling with factor of {np_kron['scaling_factor']} for {scaling_iterations} scaling_iterations")
+    for i in range(scaling_iterations):
+        logging.info(f"Iteration {i+1} out of {scaling_iterations}")
         logging.info(f"Applying filters")
         if apply_smoothing == "2d":
             cropped_mask = iteration_2d(cropped_mask,
                                 np_kron=np_kron,
                                 ndimage_gaussian_filter=ndimage_gaussian_filter,
-                                threshold=threshold)
+                                threshold=threshold,
+                                filter_iterations=filter_iterations)
         elif apply_smoothing == "3d":
             cropped_mask = iteration_3d(cropped_mask,
                                 np_kron=np_kron,
                                 ndimage_gaussian_filter=ndimage_gaussian_filter,
-                                threshold=threshold)
+                                threshold=threshold,
+                                filter_iterations=filter_iterations)
         else:
             raise Exception("Wrong dimension parameter. Use '2d' or '3d'.")
  
@@ -156,12 +163,12 @@ def pipeline(mask: np.ndarray,
     mask = restore_mask_dimensions(cropped_mask, final_shape, final_bbox)
     return mask
 
-def get_final_mask_shape_and_bbox(mask, bbox, scaling_factor, iterations):
+def get_final_mask_shape_and_bbox(mask, bbox, scaling_factor, scaling_iterations):
     """
     This function scales image shape and the bounding box which should be used for the final mask
     """
 
-    final_scaling_factor = pow(scaling_factor, iterations)
+    final_scaling_factor = pow(scaling_factor, scaling_iterations)
 
     final_shape = np.array(mask.shape)
     final_shape[:2] *= final_scaling_factor
