@@ -87,7 +87,7 @@ def restore_mask_dimensions(cropped_mask: np.ndarray, new_shape, bbox):
     new_mask[bbox[0]: bbox[1], bbox[2]: bbox[3], bbox[4]: bbox[5]] = cropped_mask
     return new_mask.astype(bool)
 
-def iteration_2d(mask: np.ndarray, np_kron, ndimage_gaussian_filter, threshold, ndimage_median_filter):
+def iteration_2d(mask: np.ndarray, np_kron, ndimage_gaussian_filter, threshold):
     """
     This is the actual set of filters. Applied iterative over z direction
     """
@@ -102,7 +102,7 @@ def iteration_2d(mask: np.ndarray, np_kron, ndimage_gaussian_filter, threshold, 
 
     return cropped_mask
 
-def iteration_3d(mask: np.ndarray, np_kron, ndimage_gaussian_filter, threshold, ndimage_median_filter):
+def iteration_3d(mask: np.ndarray, np_kron, ndimage_gaussian_filter, threshold):
     """
     This is the actual filters applied iteratively in 3d.
     """
