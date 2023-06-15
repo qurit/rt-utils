@@ -7,23 +7,13 @@ import logging
 # A set of parameters that is know to work well
 default_smoothing_parameters_2d = {
     "scaling_iterations": 2,
-    "filter_iterations": 1,
+    "filter_iterations": 3,
     "crop_margins": [20, 20, 1],
     "np_kron": {"scaling_factor": 3},
     "ndimage_gaussian_filter": {"sigma": 2,
                                 "radius": 3},
-    "threshold": {"threshold": 0.4},
+    "threshold": {"threshold": 0.5},
 }
-# A set of parameters that is know to work well
-default_smoothing_parameters_2d_2 = {
-    "scaling_iterations": 3,
-    "crop_margins": [20, 20, 1],
-    "np_kron": {"scaling_factor": 2},
-    "ndimage_gaussian_filter": {"sigma": 2,
-                                "radius": 5},
-    "threshold": {"threshold": 0.4},
-}
-
 
 def kron_upscale(mask: np.ndarray, params):
     """
