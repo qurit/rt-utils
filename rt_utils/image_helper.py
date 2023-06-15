@@ -100,6 +100,7 @@ def find_mask_contours(mask: np.ndarray, approximate_contours: bool, scaling_fac
         contours
     )  # Open-CV updated contours to be a tuple so we convert it back into a list here
 
+    # Coordinates are rescaled to image grid by dividing with scaling factor
     for i, contour in enumerate(contours):
         contours[i] = [[(contour[i][0][0] / scaling_factor), (contour[i][0][1] / scaling_factor)] for i in
                        range(0, len(contour))]
