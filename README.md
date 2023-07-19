@@ -27,7 +27,6 @@ pip install rt_utils
 ```
 
 ## Installation in editable mode
-**Please note**: in order to install `rt_utils` in editable mode successfully, you need to have python>=3.7.
 ```
 git clone https://github.com/qurit/rt-utils.git
 cd rt-utils
