@@ -23,7 +23,6 @@ setuptools.setup(
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3 :: Only",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
@@ -41,6 +40,6 @@ setuptools.setup(
         "Intended Audience :: Science/Research",
         "Intended Audience :: Developers",
     ],
-    python_requires=">=3.6",
+    python_requires=">=3.7",
     install_requires=required,
 )
