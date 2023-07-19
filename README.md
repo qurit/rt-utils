@@ -26,6 +26,14 @@ The format for the ROI mask is an nd numpy array of type bool. It is an array of
 pip install rt_utils
 ```
 
+## Installation in editable mode
+**Please note**: in order to install `rt_utils` in editable mode successfully, you need to have python>=3.7.
+```
+git clone https://github.com/qurit/rt-utils.git
+cd rt-utils
+pip install -e .
+```
+
 ## Creating new RT Structs
 ```Python
 from rt_utils import RTStructBuilder
