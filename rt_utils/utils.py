@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Union, Tuple
 from random import randrange
 from pydicom.uid import PYDICOM_IMPLEMENTATION_UID
 from dataclasses import dataclass
@@ -41,7 +41,6 @@ class SOPClassUID:
 @dataclass
 class ROIData:
     """Data class to easily pass ROI data to helper methods."""
-
     mask: str
     color: Union[str, List[int]]
     number: int
@@ -51,6 +50,10 @@ class ROIData:
     use_pin_hole: bool = False
     approximate_contours: bool = True
     roi_generation_algorithm: Union[str, int] = 0
+    scaling_factor: int = 1
+    smooth_radius: Union[int, None] = None
+    smooth_scale: Union[int, None] = None
+
 
     def __post_init__(self):
         self.validate_color()
