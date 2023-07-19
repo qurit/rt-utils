@@ -1,0 +1,59 @@
+[build-system]
+requires = [
+    "pip >= 21.3",
+    "setuptools >= 64",
+    "wheel >= 0.37"
+    ]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["rt_utils"]
+
+[project]
+name = "rt-utils"
+dynamic = ["version"]
+authors = [ 
+    {name = "Asim Shrestha", email = "asim.shrestha@hotmail.com"}
+    ]
+maintainers = [
+    {name = "Pedro Esquinas", email = "plesqui+rtutils@gmail.com"}
+]
+
+description = "A small library for handling masks and RT-Structs"
+readme = "README.md"
+requires-python = ">=3.6"
+keywords = ["RTStruct", "Dicom", "Pydicom"]
+classifiers = [
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Typing :: Typed",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Utilities",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+    "Topic :: Scientific/Engineering :: Image Processing",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Intended Audience :: Healthcare Industry",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+]
+dependencies = [
+    "pydicom",
+    "numpy",
+    "opencv-python>=4.0.0",
+    "dataclasses"
+]
+license = {file = "LICENSE"}
+
+[project.urls]
+"Repository" = "https://github.com/qurit/rtutils"
+"Bug Tracker" = "https://github.com/qurit/rtutils/issues"
