@@ -25,6 +25,18 @@ class RTStruct:
         """
 
         self.ds.SeriesDescription = description
+        
+    def roi_number(self):        
+         ROI_list = self.ds.StructureSetROISequence
+         ROI_number = []
+         for i in range(len(ROI_list)):
+                ROI_number.append(ROI_list[i].ROINumber.numerator)
+         j = 0 
+         while j in ROI_number :
+                j = j+1
+         return j             
+    
+    """choose a ROI number which has not been attributed to the ROI already existing the original RTstructure. This might prevent duplicate and error in opening"""
 
     def add_roi(
         self,
@@ -44,12 +56,12 @@ class RTStruct:
         """
 
         # TODO test if name already exists
-        self.validate_mask(mask)
-        roi_number = len(self.ds.StructureSetROISequence) + 1
+        self.validate_mask(mask)        
+        roi_number = self.roi_number()        
         roi_data = ROIData(
             mask,
-            color,
-            roi_number,
+            color,      
+            roi_number,                                    
             name,
             self.frame_of_reference_uid,
             description,
