@@ -80,7 +80,7 @@ def add_study_and_series_information(ds: FileDataset, series_data):
     ds.StudyDescription = getattr(reference_ds, "StudyDescription", "")
     ds.SeriesDescription = getattr(reference_ds, "SeriesDescription", "")
     ds.StudyInstanceUID = reference_ds.StudyInstanceUID
-    ds.SeriesInstanceUID = generate_uid()  # TODO: find out if random generation is ok
+    ds.SeriesInstanceUID = reference_ds.SeriesInstanceUID
     ds.StudyID = reference_ds.StudyID
     ds.SeriesNumber = "1"  # TODO: find out if we can just use 1 (Should be fine since its a new series)
 
@@ -98,7 +98,7 @@ def add_patient_information(ds: FileDataset, series_data):
 
 def add_refd_frame_of_ref_sequence(ds: FileDataset, series_data):
     refd_frame_of_ref = Dataset()
-    refd_frame_of_ref.FrameOfReferenceUID =  getattr(series_data[0], 'FrameOfReferenceUID', generate_uid())
+    refd_frame_of_ref.FrameOfReferenceUID = getattr(series_data[0], 'FrameOfReferenceUID', generate_uid())
     refd_frame_of_ref.RTReferencedStudySequence = create_frame_of_ref_study_sequence(series_data)
 
     # Add to sequence
