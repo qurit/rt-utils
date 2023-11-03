@@ -1,6 +1,7 @@
 import os
 from typing import List
 from enum import IntEnum
+from warnings import warn
 
 import cv2 as cv
 import numpy as np
@@ -231,7 +232,10 @@ def get_spacing_between_slices(series_data):
         first = get_slice_position(series_data[0])
         last = get_slice_position(series_data[-1])
         return (last - first) / (len(series_data) - 1)
-
+    positions = [get_slice_position(i) for i in series_data]
+    deltas = np.array(positions[1:]) - np.array(positions[:-1])
+    if np.unique(deltas).shape[0] > 1:
+        raise Exception('Nonuniform slice thickness detected')
     # Return nonzero value for one slice just to make the transformation matrix invertible
     return 1.0
 
@@ -239,6 +243,7 @@ def get_spacing_between_slices(series_data):
 def create_series_mask_from_contour_sequence(series_data, contour_sequence: Sequence):
     mask = create_empty_series_mask(series_data)
     transformation_matrix = get_patient_to_pixel_transformation_matrix(series_data)
+# TODO: support multiple acquisitions
 
     # Iterate through each slice of the series, If it is a part of the contour, add the contour mask
     for i, series_slice in enumerate(series_data):
@@ -273,6 +278,11 @@ def get_slice_mask_from_slice_contour_data(
         translated_contour_data = apply_transformation_to_3d_points(reshaped_contour_data, transformation_matrix)
         polygon = [np.around([translated_contour_data[:, :2]]).astype(np.int32)]
         polygon = np.array(polygon).squeeze()
+        if len(polygon.shape)<2:
+            temp = np.zeros([1,2])
+            np.put(temp, [0,1], [polygon[0], polygon[1]])
+            polygon = temp.astype(np.int32)
+            warn('Adding degenerate contour (<3 points)')
         polygons.append(polygon)
     slice_mask = create_empty_slice_mask(series_slice).astype(np.uint8)
     cv.fillPoly(img=slice_mask, pts = polygons, color = 1)
