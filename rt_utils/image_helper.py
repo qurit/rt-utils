@@ -240,8 +240,10 @@ def get_spacing_between_slices(series_data):
     return 1.0
 
 
-def create_series_mask_from_contour_sequence(series_data, contour_sequence: Sequence):
+def create_series_mask_from_contour_sequence(series_data, contour_sequence: Sequence, separate_acquisitions=False):
     mask = create_empty_series_mask(series_data)
+    if separate_acquisitions:
+        mask = np.expand_dims(mask, -1)
     transformation_matrix = get_patient_to_pixel_transformation_matrix(series_data)
 # TODO: support multiple acquisitions
 
@@ -249,9 +251,15 @@ def create_series_mask_from_contour_sequence(series_data, contour_sequence: Sequ
     for i, series_slice in enumerate(series_data):
         slice_contour_data = get_slice_contour_data(series_slice, contour_sequence)
         if len(slice_contour_data):
-            mask[:, :, i] = get_slice_mask_from_slice_contour_data(
-                series_slice, slice_contour_data, transformation_matrix
-            )
+            if separate_acquisitions:
+                aq = int(series_slice.AcquisitionNumber)
+                mask[:, :, i, aq] = get_slice_mask_from_slice_contour_data(
+                    series_slice, slice_contour_data, transformation_matrix
+                )
+            else:
+                mask[:, :, i] = get_slice_mask_from_slice_contour_data(
+                    series_slice, slice_contour_data, transformation_matrix
+                )
     return mask
 
 
