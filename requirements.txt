@@ -1,4 +1,4 @@
 pydicom
 numpy
 opencv-python>=4.0.0
-dataclasses
+dataclasses ; python_version <= "3.6"
