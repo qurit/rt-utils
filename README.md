@@ -26,6 +26,13 @@ The format for the ROI mask is an nd numpy array of type bool. It is an array of
 pip install rt_utils
 ```
 
+## Installation in editable mode
+```
+git clone https://github.com/qurit/rt-utils.git
+cd rt-utils
+pip install -e .
+```
+
 ## Creating new RT Structs
 ```Python
 from rt_utils import RTStructBuilder
@@ -141,3 +148,6 @@ The add_roi method of our RTStruct class has a multitude of optional parameters 
 - <b>use_pin_hole</b>: A boolean value that defaults to false. If set to true, lines will be erased through your mask such that each separate region within your image can be encapsulated via a single contour instead of contours nested within one another. Use this if your RT Struct viewer of choice does not support nested contours / contours with holes.
 - <b>approximate_contours</b>: A boolean value that defaults to True which defines whether or not approximations are made when extracting contours from the input mask. Setting this to false will lead to much larger contour data within your RT Struct so only use this if as much precision as possible is required.
 - <b>roi_generation_algorithm</b>: An enum value that defaults to 0 which defines what ROI generation algorithm will be used. 0=\'AUTOMATIC\', 1=\'SEMIAUTOMATIC\', or 2=\'MANUAL\'.
+
+#To be added
+nifti to rtstruct
