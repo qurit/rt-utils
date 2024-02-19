@@ -171,7 +171,7 @@ def create_contour_sequence(roi_data: ROIData, series_data) -> Sequence:
 
         for contour_data in slice_contours:
             contour = create_contour(series_slice, contour_data)
-            if contour.ContourGeometricType == 'CLOSED_PLANAR' and contour.NumberOfContourPoints > 2:
+            if (contour.ContourGeometricType == 'CLOSED_PLANAR' and contour.NumberOfContourPoints > 2) or contour.ContourGeometricType != 'CLOSED_PLANAR':
                 contour_sequence.append(contour)
 
     return contour_sequence
@@ -194,7 +194,9 @@ def create_contour(series_slice: Dataset, contour_data: np.ndarray) -> Dataset:
     contour.NumberOfContourPoints = (
         len(contour_data) / 3
     )  # Each point has an x, y, and z value
-    contour.ContourData = contour_data
+
+    # Rounds ContourData to 10 decimal places to ensure it is <16 bytes length, as per NEMA DICOM standard guidelines.
+    contour.ContourData = [round(val, 10) for val in contour_data]
 
     return contour
 
@@ -216,6 +218,9 @@ def get_contour_sequence_by_roi_number(ds, roi_number):
 
         # Ensure same type
         if str(roi_contour.ReferencedROINumber) == str(roi_number):
-            return roi_contour.ContourSequence
+            if hasattr(roi_contour, "ContourSequence"):
+                return roi_contour.ContourSequence
+            else:
+                return Sequence()
 
     raise Exception(f"Referenced ROI number '{roi_number}' not found")
