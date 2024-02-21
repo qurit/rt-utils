@@ -1,5 +1,4 @@
 from typing import List, Union
-from random import randrange
 
 import numpy as np
 from pydicom.uid import PYDICOM_IMPLEMENTATION_UID
@@ -126,3 +125,12 @@ class ROIData:
                     type(self.roi_generation_algorithm)
                 )
             )
+
+
+def _flatten_lists(lists: List[List[float]]) -> List[float]:
+    """Flatten the list [[1, 2, 3], [1, 2, 3] -> [1, 2, 3, 1, 2, 3]"""
+    flatten_list = []
+    for l in lists:
+        flatten_list += l
+
+    return flatten_list
