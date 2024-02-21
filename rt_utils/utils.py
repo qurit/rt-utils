@@ -1,5 +1,7 @@
 from typing import List, Union
 from random import randrange
+
+import numpy as np
 from pydicom.uid import PYDICOM_IMPLEMENTATION_UID
 from dataclasses import dataclass
 
@@ -41,8 +43,7 @@ class SOPClassUID:
 @dataclass
 class ROIData:
     """Data class to easily pass ROI data to helper methods."""
-
-    mask: str
+    mask: np.ndarray
     color: Union[str, List[int]]
     number: int
     name: str

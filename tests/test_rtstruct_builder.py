@@ -81,6 +81,41 @@ def test_add_valid_roi(new_rtstruct: RTStruct):
     assert new_rtstruct.get_roi_names() == [NAME]
 
 
+def test_add_valid_roi_from_coordinates(new_rtstruct: RTStruct):
+    assert new_rtstruct.get_roi_names() == []
+    assert len(new_rtstruct.ds.ROIContourSequence) == 0
+    assert len(new_rtstruct.ds.StructureSetROISequence) == 0
+    assert len(new_rtstruct.ds.RTROIObservationsSequence) == 0
+
+    NAME = "Test ROI"
+    COLOR = [123, 123, 232]
+    coordinates = [
+        [
+            [-100, -100, 60],
+            [-100, -75, 60],
+            [-75, -75, 60],
+            [-75, -100, 60]
+        ],
+        [
+            [-90, -90, 65],
+            [-90, -65, 65],
+            [-65, -65, 65],
+            [-65, -90, 65],
+        ]
+    ]
+
+    new_rtstruct.add_roi_from_coordinates(coordinates, color=COLOR, name=NAME)
+
+    assert len(new_rtstruct.ds.ROIContourSequence) == 1
+    assert (
+            len(new_rtstruct.ds.ROIContourSequence[0].ContourSequence) == 2
+    )  # 2 contour on to slice were added
+    assert len(new_rtstruct.ds.StructureSetROISequence) == 1
+    assert len(new_rtstruct.ds.RTROIObservationsSequence) == 1
+    assert new_rtstruct.ds.ROIContourSequence[0].ROIDisplayColor == COLOR
+    assert new_rtstruct.get_roi_names() == [NAME]
+
+
 def test_get_invalid_roi_mask_by_name(new_rtstruct: RTStruct):
     assert new_rtstruct.get_roi_names() == []
     with pytest.raises(RTStruct.ROIException):
