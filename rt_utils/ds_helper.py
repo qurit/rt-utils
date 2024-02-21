@@ -9,7 +9,7 @@ from pydicom.dataset import Dataset, FileDataset, FileMetaDataset
 from pydicom.sequence import Sequence
 from pydicom.uid import ImplicitVRLittleEndian
 
-from utils import _flatten_lists
+from rt_utils.utils import _flatten_lists
 
 """
 File contains helper methods that handles DICOM header creation/formatting
