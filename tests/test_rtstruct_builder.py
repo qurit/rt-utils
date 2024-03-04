@@ -1,9 +1,9 @@
+from _pytest.fixtures import FixtureRequest
+
 from rt_utils.rtstruct import RTStruct
 import pytest
 import os
 from rt_utils import RTStructBuilder
-from rt_utils.utils import SOPClassUID
-from rt_utils import image_helper
 from pydicom.dataset import validate_file_meta
 import numpy as np
 
@@ -13,6 +13,13 @@ def test_create_from_empty_series_dir():
     assert os.path.exists(empty_dir_path)
     with pytest.raises(Exception):
         RTStructBuilder.create_new(empty_dir_path)
+
+
+@pytest.mark.parametrize('series_fixture', ['series_path', 'series_datasets'])
+def test_create_new_datasets(series_fixture, request: FixtureRequest):
+    rtstruct = RTStructBuilder.create_new(request.getfixturevalue(series_fixture))
+
+    assert len(rtstruct.ds.ReferencedFrameOfReferenceSequence[0].RTReferencedStudySequence) != 0
 
 
 def test_only_images_loaded_into_series_data(new_rtstruct: RTStruct):
@@ -74,6 +81,41 @@ def test_add_valid_roi(new_rtstruct: RTStruct):
     assert new_rtstruct.get_roi_names() == [NAME]
 
 
+def test_add_valid_roi_from_coordinates(new_rtstruct: RTStruct):
+    assert new_rtstruct.get_roi_names() == []
+    assert len(new_rtstruct.ds.ROIContourSequence) == 0
+    assert len(new_rtstruct.ds.StructureSetROISequence) == 0
+    assert len(new_rtstruct.ds.RTROIObservationsSequence) == 0
+
+    NAME = "Test ROI"
+    COLOR = [123, 123, 232]
+    coordinates = [
+        [
+            [-100, -100, 60],
+            [-100, -75, 60],
+            [-75, -75, 60],
+            [-75, -100, 60]
+        ],
+        [
+            [-90, -90, 65],
+            [-90, -65, 65],
+            [-65, -65, 65],
+            [-65, -90, 65],
+        ]
+    ]
+
+    new_rtstruct.add_roi_from_coordinates(coordinates, color=COLOR, name=NAME)
+
+    assert len(new_rtstruct.ds.ROIContourSequence) == 1
+    assert (
+            len(new_rtstruct.ds.ROIContourSequence[0].ContourSequence) == 2
+    )  # 2 contour on to slice were added
+    assert len(new_rtstruct.ds.StructureSetROISequence) == 1
+    assert len(new_rtstruct.ds.RTROIObservationsSequence) == 1
+    assert new_rtstruct.ds.ROIContourSequence[0].ROIDisplayColor == COLOR
+    assert new_rtstruct.get_roi_names() == [NAME]
+
+
 def test_get_invalid_roi_mask_by_name(new_rtstruct: RTStruct):
     assert new_rtstruct.get_roi_names() == []
     with pytest.raises(RTStruct.ROIException):
@@ -112,10 +154,10 @@ def test_non_existant_referenced_study_sequence(series_path):
     )
 
 
-def test_loading_valid_rt_struct(series_path):
-    valid_rt_struct_path = os.path.join(series_path, "rt.dcm")
-    assert os.path.exists(valid_rt_struct_path)
-    rtstruct = RTStructBuilder.create_from(series_path, valid_rt_struct_path)
+@pytest.mark.parametrize('series_fixture', ['series_path', 'series_datasets'])
+def test_loading_valid_rt_struct(rtstruct_path, series_fixture, request: FixtureRequest):
+    assert os.path.exists(rtstruct_path)
+    rtstruct = RTStructBuilder.create_from(request.getfixturevalue(series_fixture), rtstruct_path)
 
     # Tests existing values predefined in the file are found
     assert hasattr(rtstruct.ds, "ROIContourSequence")
