@@ -258,4 +258,4 @@ def get_contour_sequence_by_roi_number(ds, roi_number):
 
 
 def _find_closest_slice(series_slices: List[Dataset], z_coord: float) -> Dataset:
-    return min(series_slices, key=lambda series_slice: abs(series_slice.SliceLocation - z_coord))
+    return min(series_slices, key=lambda series_slice: abs(series_slice.ImagePositionPatient[2] - z_coord))
