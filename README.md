@@ -151,3 +151,8 @@ The add_roi method of our RTStruct class has a multitude of optional parameters 
 
 #To be added
 nifti to rtstruct
+
+## How to Cite
+If you are incorporating RT-Utils into your projects, kindly include the following citation:
+
+Shrestha A, Watkins A, Yousefirizi F, Rahmim A, Uribe CF (2024). RT-utils: A Minimal Python Library for RT-struct Manipulation. arXiv preprint arXiv:2405.06184.
