@@ -155,4 +155,4 @@ nifti to rtstruct
 ## How to Cite
 If you are incorporating RT-Utils into your projects, kindly include the following citation:
 
-Shrestha A, Watkins A, Yousefirizi F, Rahmim A, Uribe CF (2024). RT-utils: A Minimal Python Library for RT-struct Manipulation. arXiv preprint arXiv:2405.06184.
+Shrestha A, Watkins A, Yousefirizi F, Rahmim A, Uribe CF (2024). [RT-utils: A Minimal Python Library for RT-struct Manipulation.](https://arxiv.org/abs/2405.06184#:~:text=Towards%20the%20need%20for%20automated,structures%20stored%20in%20DICOM%20format.) arXiv preprint arXiv:2405.06184.
