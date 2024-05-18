@@ -88,17 +88,29 @@ class RTStruct:
 
         return True
 
-    def get_roi_names(self) -> List[str]:
+    def get_roi_names(self, geometry: str = 'ALL') -> List[str]:
         """
         Returns a list of the names of all ROI within the RTStruct
+        Optional argument to return only ROI of specific geometric type: E.g. [CLOSED_PLANAR, POINT]
         """
 
         if not self.ds.StructureSetROISequence:
+            print("StructureSetROISequence is empty.")
             return []
 
-        return [
-            structure_roi.ROIName for structure_roi in self.ds.StructureSetROISequence
-        ]
+        if geometry == 'ALL':
+            return [
+                structure_roi.ROIName for structure_roi in self.ds.StructureSetROISequence
+            ]
+        if geometry in ['CLOSED_PLANAR', 'OPEN_PLANAR', 'OPEN_NONPLANAR', 'POINT']:
+            return [
+                    self.ds.StructureSetROISequence[i].ROIName
+                    for i in range(0,len(self.ds.ROIContourSequence))
+                    if self.ds.ROIContourSequence[i].ContourSequence[0].ContourGeometricType==geometry
+                ]
+        else:
+            print(f"Unrecognised geometric type: {geometry}")
+            return []
 
     def get_roi_mask_by_name(self, name) -> np.ndarray:
         """
