@@ -1,22 +1,22 @@
 import setuptools
 
-VERSION = "1.2.6"
+VERSION = "1.0.1"
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 with open("requirements.txt") as f:
     required = f.read().splitlines()
 
 setuptools.setup(
-    name="rt-utils",
+    name="rt-utils-raystation",
     version=VERSION,
-    author="Asim Shrestha",
-    author_email="asim.shrestha@hotmail.com",
-    description="A small library for handling masks and RT-Structs",
+    author="Lukas Heine, Fabian Hörst",
+    author_email="fabian.hoerst@uk-essen.de",
+    description="A small library for handling masks and RT-Structs, with fixed for using with RayStation",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/qurit/rtutils",
-    package_dir={'':"rt_utils"},
-    packages=setuptools.find_packages("rt_utils", exclude="tests"),
+    url="https://github.com/code-lukas/rt-utils",
+    #package_dir={'':"rt_utils"},
+    packages=setuptools.find_packages(exclude="tests"),
     keywords=["RTStruct", "Dicom", "Pydicom"],
     classifiers=[
         "Operating System :: OS Independent",
