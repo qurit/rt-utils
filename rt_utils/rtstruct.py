@@ -1,9 +1,12 @@
+from io import BytesIO
 from typing import List, Union
 
 import numpy as np
+import pydicom
 from pydicom.dataset import FileDataset
 
 from rt_utils.utils import ROIData
+
 from . import ds_helper, image_helper
 
 
@@ -133,6 +136,15 @@ class RTStruct:
             file.close()
         except OSError:
             raise Exception(f"Cannot write to file path '{file_path}'")
+        
+    def save_to_memory(self):
+        """
+        Saves the RTStruct to a BytesIO stream and returns it.
+        """
+        buffer = BytesIO()
+        pydicom.dcmwrite(buffer, self.ds)
+        buffer.seek(0)  # Rewind the buffer for reading
+        return buffer
 
     class ROIException(Exception):
         """
