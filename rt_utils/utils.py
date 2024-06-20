@@ -2,6 +2,8 @@ from typing import List, Union
 from random import randrange
 from pydicom.uid import PYDICOM_IMPLEMENTATION_UID
 from dataclasses import dataclass
+import numpy as np
+from PIL import Image, ImageDraw
 
 COLOR_PALETTE = [
     [255, 0, 255],
@@ -41,16 +43,40 @@ class SOPClassUID:
 @dataclass
 class ROIData:
     """Data class to easily pass ROI data to helper methods."""
+    def __init__(self,
+                data,
+                color:str,
+                number:int,
+                name: str,
+                frame_of_reference_uid:int,
+                description:str,
+                use_pin_hole:bool=False,
+                approximate_contours:bool=True,
+                roi_generation_algorithm: Union[str, int] = 0) -> None:
+        """
+        The ROI data can be in two formats.
+            1, a [H, W, N] tensor contain N binary masks where N ths number of slices.
+            2, a list of contour coordinates representing the vertex of a polygon ROI
+        """
+        assert isinstance(data, (np.ndarray, list))
+        if isinstance(data, np.ndarray):
+            self.mask = data
+            self.polygon = None
+        else:
+            self.polygon = self.valaidate_polygon(data)
+            self.mask=self.polygon2mask(data)
+            self.polygon = data
+        # set attributes
+        self.color = color
+        self.number = number
+        self.name = name
+        self.frame_of_reference_uid = frame_of_reference_uid
+        self.description = description
+        self.use_pin_hole = use_pin_hole
+        self.approximate_contours = approximate_contours
+        self.roi_generation_algorithm = roi_generation_algorithm
 
-    mask: str
-    color: Union[str, List[int]]
-    number: int
-    name: str
-    frame_of_reference_uid: int
-    description: str = ""
-    use_pin_hole: bool = False
-    approximate_contours: bool = True
-    roi_generation_algorithm: Union[str, int] = 0
+        self.__post_init__()
 
     def __post_init__(self):
         self.validate_color()
@@ -125,3 +151,58 @@ class ROIData:
                     type(self.roi_generation_algorithm)
                 )
             )
+
+    def valaidate_polygon(self, polygon):
+        if len(polygon) == 0:
+            raise ValueError('Empty polygon')
+        return polygon
+
+    @staticmethod
+    def polygon2mask(polygon):
+        h, w = polygon[0].h, polygon[0].w
+        mask = np.concatenate([p.mask[:, :, None] for p in polygon], axis=-1)
+        return mask
+
+
+class Polygon2D:
+    def __init__(self, coords, h, w) -> None:
+        """
+        coords: coordinates of vertice of a polygon [x1, y1, x2, y2, ..., xn, yn]
+        """
+        assert len(coords) % 2 == 0, 'invalid size of coords'
+        self._coords = np.array(coords).reshape(-1, 2)
+        self._h, self._w = h, w
+        self._mask = None
+        self._area = -1
+
+    @property
+    def h(self):
+        return self._h
+
+    @property
+    def w(self):
+        return self._w
+
+    @property
+    def coords(self):
+        return self._coords
+
+    @property
+    def area(self):
+        if self._area > 0:
+            return self._area
+        else:
+            return self.mask.sum()
+
+    @property
+    def mask(self):
+        if self._mask is not None:
+            return self._mask
+        else:
+            if self.coords.shape[0] <= 1:
+                self._mask = np.zeros((self.h, self.w), dtype=bool)
+            else:
+                img = Image.new('L', (self.w, self.h), 0)
+                ImageDraw.Draw(img).polygon(self.coords.flatten().tolist(), outline=1, fill=1)
+                self._mask = np.array(img, dtype=bool)
+            return self._mask
