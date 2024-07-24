@@ -99,7 +99,7 @@ rtstruct.save('new-rt-struct')
 from rt_utils import RTStructBuilder
 import matplotlib.pyplot as plt
 
-# Load existing RT Struct. Requires the series path and existing RT Struct path
+# Load existing RT Struct. Requires the Image dicom series path and existing RT-Struct path
 rtstruct = RTStructBuilder.create_from(
   dicom_series_path="./testlocation", 
   rt_struct_path="./testlocation/rt-struct.dcm"
