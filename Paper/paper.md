@@ -93,7 +93,8 @@ RT-utils spans a diverse range of technical capabilities such as Creating new RT
 # Real-world Example
 For comparing the effects of different RT-Struct conversion methods, we investigated the RT-utils tool, dcmrtstruct2nii (https://github.com/Sikerdebaard/dcmrtstruct2nii) and the built-in tools from LIFEx [7] and 3D Slicer [8]. We implemented the conversion technique and conducted a comparison of the NIfTI ground truth files. The level of agreement observed between RT-utils and LIFEx surpasses that of other techniques. The mean absolute errors with respect to RT-utils are shown on sagittal and coronal masks. (Figures 1). The visual inspection of an example of converted masks overlaid on PET scans using different techniques are shown in Figures 1. 
 
-![The visual inspection of an example of converted masks overlaid on PET scans using different techniques](https://drive.google.com/file/d/1UZjy0Fi6dw0WaadDMuGWXpkdss9y8zz1/view?usp=sharing)
+![The visual inspection of an example of converted masks overlaid on PET scans using different techniques](https://github.com/user-attachments/assets/139bfba0-d25c-4373-8cf1-c603eeae1d6f)
+
 
 # Acknowledgements
 
