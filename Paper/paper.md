@@ -16,7 +16,7 @@ authors:
     corresponding: true # (This is how to denote the corresponding author)
     affiliation: "1"
   - name: Arman Rahmim
-  - orcid: 0000-0002-9980-2403
+    orcid: 0000-0002-9980-2403
     corresponding: true # (This is how to denote the corresponding author)
     affiliation: "1, 2, 3, 4"
   - name: Carlos Uribe
