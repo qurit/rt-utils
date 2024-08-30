@@ -1,4 +1,4 @@
-# Contributing to [Project Name]
+# Contributing to RT-utils
 
 Thank you for considering contributing to our project! Here are some guidelines to help you get started.
 
@@ -16,4 +16,4 @@ Thank you for considering contributing to our project! Here are some guidelines 
 - Review our [Code of Conduct](link to code of conduct if available) for more details.
 
 ## Contact
-- If you have questions or need help, reach out to [contact information].
+- If you have questions or need help, reach out to yousefi.f@gmail.com.
