@@ -13,7 +13,6 @@ Thank you for considering contributing to our project! Here are some guidelines 
 
 ## Code of Conduct
 - Please be respectful and considerate in all interactions.
-- Review our [Code of Conduct](link to code of conduct if available) for more details.
 
 ## Contact
 - If you have questions or need help, reach out to yousefi.f@gmail.com.
