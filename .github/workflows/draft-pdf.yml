@@ -2,7 +2,7 @@ name: Draft PDF
 on: 
   push:
     paths:
-      - paper/**
+      - Paper/**    # Update to track changes in the correct directory
       - .github/workflows/draft-pdf.yml
 
 jobs:
@@ -12,18 +12,18 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        
+
       - name: List directory contents
-        run: ls -R
-      
+        run: ls -R  # Lists the directory contents for debugging
+
       - name: Build draft PDF
         uses: openjournals/openjournals-draft-action@master
         with:
           journal: joss
-          paper-path: paper/paper.md  # Update this to match the location of your paper.md file
-      
+          paper-path: Paper/paper.md  # Specify the correct path to paper.md
+
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: paper
-          path: paper/paper.pdf  # Ensure this matches the output path of your generated PDF
+          path: Paper/paper.pdf  # Ensure the output path matches where the PDF is generated
