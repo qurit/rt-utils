@@ -2,7 +2,7 @@ name: Draft PDF
 on: 
   push:
     paths:
-          - paper/**
+          - Paper/**
           - .github/workflows/draft-pdf.yml
 
 jobs:
