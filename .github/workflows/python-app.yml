@@ -5,6 +5,9 @@ name: Python application
 
 on:
   push:
+    paths:
+        - paper/**
+        - .github/workflows/draft-pdf.yml
     branches: [ main ]
   pull_request:
     branches: [ main ]
