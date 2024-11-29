@@ -62,7 +62,6 @@ Our module introduces intuitive techniques for efficient data curation of RT-Str
 In the realm of data science, discretized image formats such as NIfTI, NRRD, and MHA are commonly employed, while radiotherapy workflows heavily rely on the DICOM format, specifically the DICOM RT-Struct. Unlike data science architectures like U-Net, which operate on grid-based data, handling the continuously spaced contour points present in RT-Struct poses a unique challenge. To bridge this gap, accurate data conversion between discrete and continuous spaces becomes crucial when working with clinical DICOM RT-Struct data.
 
 ## Technical Overview 
-# RT-utils Overview
 
 **RT-utils** streamlines RT-Structure file curation by identifying Regions of Interest (ROIs), handling multiple ROI names for the same structure, and converting DICOM RT-Struct and images into formats like NumPy arrays and SimpleITK images. These standardized outputs enable deep learning, image analysis, and radiomics applications. The toolkit also generates DICOM RT-Struct files from predicted arrays, bridging segmentation models and clinical workflows.
 
