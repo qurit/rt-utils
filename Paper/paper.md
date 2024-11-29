@@ -62,40 +62,38 @@ Our module introduces intuitive techniques for efficient data curation of RT-Str
 In the realm of data science, discretized image formats such as NIfTI, NRRD, and MHA are commonly employed, while radiotherapy workflows heavily rely on the DICOM format, specifically the DICOM RT-Struct. Unlike data science architectures like U-Net, which operate on grid-based data, handling the continuously spaced contour points present in RT-Struct poses a unique challenge. To bridge this gap, accurate data conversion between discrete and continuous spaces becomes crucial when working with clinical DICOM RT-Struct data.
 
 ## Technical Overview 
+# RT-utils Overview
 
-The module stands out in its capability to identify discrete Regions of Interest (ROI) and pinpoint their precise spatial locations within intricate structures. Noteworthy is its adept handling of scenarios where multiple ROI names correspond to the same anatomical structure, ensuring a comprehensive and accurate representation of data.
-One of the primary functionalities of the module involves the sophisticated identification of distinct ROI names within RT-Struct files. It also accommodates cases where multiple ROI names map to the same anatomical structure, ensuring precise and comprehensive data organization. The module further facilitates the conversion of DICOM images and RT-Structures into widely adopted formats, specifically NumPy arrays and SimpleITK Images. These standardized formats serve as optimal inputs for various applications, including deep learning models, image analysis pipelines, and radiomic feature calculations. 
+**RT-utils** streamlines RT-Structure file curation by identifying Regions of Interest (ROIs), handling multiple ROI names for the same structure, and converting DICOM RT-Struct and images into formats like NumPy arrays and SimpleITK images. These standardized outputs enable deep learning, image analysis, and radiomics applications. The toolkit also generates DICOM RT-Struct files from predicted arrays, bridging segmentation models and clinical workflows.
 
-Another noteworthy feature is the module ability to simplify the generation of DICOM RT-Struct from predicted NumPy arrays, commonly serving as the output of semantic segmentation deep learning models. This functionality establishes a direct link between predictive modeling and clinical applications, offering a path from automated segmentation to structured RT data. RT-utils employs geometric operations from the Shapely library to convert DICOM ROI Contours into binary masks. This involves creating Shapely polygons from contours and rasterizing these polygons into binary masks. Leveraging geometric principles and libraries, our method accurately represents contours as masks, offering a valuable tool for efficient processing of RT-Struct data in radiotherapy applications.
+The module addresses challenges in converting between discretized image formats (e.g., NIfTI, MHA) and RT-Struct's contour-based format, leveraging geometric operations for accurate binary masks from contour points.
 
-First released in 2020, RT-utils is openly hosted on GitHub (*Starred >180 times as of July 2024), and on PyPI (https://pypi.org/project/rt-utils/) encouraging collaborative development. The demonstrated utility of RT-utils aligns with the evolving landscape of AI-based approaches in the medical domain. In this section, we elaborate on the practical applications of RT-utils. To install RT-utils, simply execute the command pip install RT-utils. 
+Since its 2020 release, RT-utils has grown steadily, with its GitHub repository (*Starred >180 times*) and PyPI presence facilitating collaborative development. Installation is simple: `pip install RT-utils`.
 
-## Available Manipulations
+## Key Features
 
-Once installed, users can import RTStructBuilder to create a new RT-Struct or load an existing one. Upon accomplishing this, users acquire the capability to execute the following operations:
-o	Create a distinctive ROI within the RT-Struct using a binary mask. Optionally, users can specify the color, name, and description of the RT-Struct.
-o	Retrieve a list of names for all ROIs contained within the RT-Struct.
-o	Load ROI masks from the RT-Struct by specifying their respective names.
-o	Safeguard the RT-Struct by providing either a name or a path for storage.
+- **ROI Handling:** Identify and manage ROIs, including scenarios where multiple names map to one structure.
+- **DICOM Conversion:** Convert RT-Struct and DICOM images to NumPy arrays and SimpleITK images, optimizing inputs for AI and radiomics.
+- **RT-Struct Generation:** Create RT-Struct files from segmentation model outputs, ensuring compatibility with clinical formats.
+- **Geometric Operations:** Use the Shapely library for accurate binary mask creation from DICOM contours.
 
-## Handling of DICOM Headers
+## Functional Capabilities
 
-RT-utils approach to managing DICOM headers is straightforward and it is designed for simplicity and effectiveness. Initially, we include all necessary headers to ensure the RT-Struct file validity. Subsequently, we maximize the transfer of headers from the input DICOM series, encompassing vital patient information. Moreover, the introduction of new ROIs dynamically integrates them into the relevant sequences within the RT-Struct.
+- **ROI Creation and Retrieval:** Define ROIs using binary masks, specify attributes (e.g., name, color), list ROIs, and extract masks.
+- **DICOM Header Management:** Transfer essential headers while ensuring RT-Struct validity and dynamic ROI integration.
+- **Mask Integration:** Add ROIs as 3D binary arrays, aligned with DICOM slice locations.
+- **Advanced Options:** Features like the `use_pin_hole` parameter eliminate nested contours for compatibility with specific viewers.
 
-## Incorporating an ROI Mask
+## Applications and Limitations
 
-The add_roi method requires the ROI mask to follow a specific format: it should be a 3D array where each 2D slice constitutes a binary mask. In this context, a pixel value of one within the mask indicates that the pixel belongs to the ROI for a specific slice. It is essential that the number of slices in the array match the number of slices in your DICOM series. The order of slices in the array should align with their corresponding slice locations in the DICOM series, ensuring that the first slice in the array corresponds to the smallest slice location in the DICOM series, the second slice corresponds to the second slice location, and so on.
+RT-utils accelerates deep learning model development and facilitates clinical workflow integration, enhancing radiomics and image analysis. While its 2D-based contour conversion may produce pixelated outputs, future updates aim to improve clinical acceptance.
 
-## Practical Applications
-
-RT-utils spans a diverse range of technical capabilities such as Creating new RT Structs, Adding to existing RT Structs, loading an existing RT Struct contour as a mask and Merging two existing RT Structs. Rt-utils also has the parameter use_pin_hole is a Boolean value that is initially set to false. When enabled (set to true), it erases lines within a mask, allowing each distinct region in an image to be enclosed by a single contour instead of having nested contours. This feature is useful when working with RT-Struct viewers that do not support nested contours or contours with holes. These capabilities extend to various applications, offering accelerated development of deep learning models through standardized inputs. It facilitates the integration of RT-Struct data into computational analyses and image processing pipelines (e.g. radiomics and AI), contributing to the efficiency of medical image analysis. Moreover, the toolkit supports a smooth transition from predictive models to clinical workflows, enhancing the practical utility of automated segmentation. In essence, RT-utils not only simplifies the curation of RT-Struct data but also empowers users with versatile tools for interfacing with standard formats, thereby facilitating advanced medical image analysis and model integration. RT-utils is confined to a straightforward 2D-based conversion algorithm. This limitation might generate a synthetic appearance of RT contour i.e. pixelated contours which could potentially impede the acceptance of generated RT contours within clinical environments and in our future efforts this issue will be addressed.
 
 # Real-world Example
 For comparing the effects of different RT-Struct conversion methods, we investigated the RT-utils tool, dcmrtstruct2nii (https://github.com/Sikerdebaard/dcmrtstruct2nii) and the built-in tools from LIFEx[@Nioche2018-ct] and 3D Slicer [@Fedorov2012-ax]. We implemented the conversion technique and conducted a comparison of the NIfTI ground truth files. The level of agreement observed between RT-utils and LIFEx surpasses that of other techniques. The mean absolute errors with respect to RT-utils are shown on sagittal and coronal masks. (Figures 1). The visual inspection of an example of converted masks overlaid on PET scans using different techniques are shown in Figures 1. 
 
 
 ![The visual inspection of an example of converted masks overlaid on PET scans using different techniques](../src/RT.png)
-
 
 
 # Acknowledgements
