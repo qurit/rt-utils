@@ -50,11 +50,18 @@ In the pursuit of automated and precise analysis of medical images using artific
 
 # Statement of need
 
-The growing need for automated and robust analysis of medical images has driven the adoption of AI-based methods that often use DICOM images and RT structures as masks. However, the effectiveness of these AI approaches can vary due to differences in data sources and conversion techniques [@Whybra2023-en][@Yousefirizi2023-ax][@Rufenacht2023-as]. The DICOM standard includes the "radiotherapy structure set (RT-Struct)" object to facilitate the transfer of patient structures and related information, focusing on regions of interest and dose reference points.
+The increasing adoption of AI-based methods for medical image analysis necessitates efficient tools for handling DICOM images and RT-Structures. While existing software packages provide basic functionalities for data conversion, they often lack advanced features required for seamless integration into clinical workflows. The growing need for automated and robust analysis of medical images has driven the adoption of AI-based methods that often use DICOM images and RT structures as masks. However, the effectiveness of these AI approaches can vary due to differences in data sources and conversion techniques [@Whybra2023-en][@Yousefirizi2023-ax][@Rufenacht2023-as]. 
 
 Despite the availability of tools for converting DICOM images and RT-Structures into other formats [@Rufenacht2023-as][@Anderson2021-fp], integrating auto-segmentation solutions using deep learning in clinical environments is rare due to the lack of open-source frameworks that handle DICOM RT-Structure sets effectively. Software packages like dcmrtstruct2nii, DicomRTTool [@Anderson2021-fp], and PyRaDiSe [@Rufenacht2023-as] provide necessary functionalities, while frameworks like TorchIO [@Perez-Garcia2021-jf] and MONAI [@Creators_The_MONAI_Consortium_undated-or] face limitations in processing DICOM RT-structure data. Research has shown that variations in mask generation methods affect patient clustering and radiomic-based modeling in multi-center studies [@Whybra2023-en].
 
-To address these challenges, we developed RT-utils, a specialized Python library designed to enhance the efficiency of manipulating RT-Structures. This tool aims to optimize workflows, simplify the handling of medical imaging data, and provide a comprehensive solution for researchers. RT-utils offers advanced techniques to convert expert-provided contours and AI tool output masks to RT-struct format, making them suitable for clinical workflows.
+RT-utils addresses this gap by offering a specialized Python library that enhances the efficiency of manipulating RT-Structures. It is designed for researchers and clinicians who require advanced yet user-friendly tools to:
+
+  Convert and manipulate RT-Struct data with precision.
+  Integrate AI-generated segmentation masks into clinical DICOM formats.
+  Streamline workflows by automating repetitive and complex tasks.
+  Ensure compatibility with clinical systems through meticulous DICOM header management.
+  
+By providing these capabilities, RT-utils optimizes workflows in medical imaging analysis, facilitating the translation of AI models from research to clinical practice. RT-utils offers advanced techniques to convert expert-provided contours and AI tool output masks to RT-struct format, making them suitable for clinical workflows.
 
 # Overview of RT-utils
 
