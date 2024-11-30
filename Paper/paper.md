@@ -63,8 +63,6 @@ In the realm of data science, discretized image formats such as NIfTI, NRRD, and
 
 The library addresses challenges in converting between discretized image formats (e.g., NIfTI, MHA) and RT-Struct's contour-based format, leveraging geometric operations for accurate binary masks from contour points.
 
-Since its 2020 release, RT-utils has grown steadily, with its GitHub repository (*Starred >180 times*) and PyPI presence facilitating collaborative development. Installation is simple: `pip install RT-utils`.
-
 ## Key Features
 
 - **ROI Handling:** Identify and manage ROIs, including scenarios where multiple names map to one structure.
