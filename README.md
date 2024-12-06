@@ -149,7 +149,7 @@ The add_roi method of our RTStruct class has a multitude of optional parameters 
 - <b>approximate_contours</b>: A boolean value that defaults to True which defines whether or not approximations are made when extracting contours from the input mask. Setting this to false will lead to much larger contour data within your RT Struct so only use this if as much precision as possible is required.
 - <b>roi_generation_algorithm</b>: An enum value that defaults to 0 which defines what ROI generation algorithm will be used. 0=\'AUTOMATIC\', 1=\'SEMIAUTOMATIC\', or 2=\'MANUAL\'.
 
-## New features
+## 🚀 New features
 - nifti to rtstruct conversion has been added.
 - conversion from DICOM to NIFTI for PET and corresponding RT-struct file has been added as an example usage with no issues of shift or mistmatch between the masks.
 
