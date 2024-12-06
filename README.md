@@ -150,8 +150,8 @@ The add_roi method of our RTStruct class has a multitude of optional parameters 
 - <b>roi_generation_algorithm</b>: An enum value that defaults to 0 which defines what ROI generation algorithm will be used. 0=\'AUTOMATIC\', 1=\'SEMIAUTOMATIC\', or 2=\'MANUAL\'.
 
 ## New features
-nifti to rtstruct conversion has been added.
-conversion from DICOM to NIFTI for PET and corresponding RT-struct file has been added as an example usage with no issues of shift or mistmatch between the masks.
+- nifti to rtstruct conversion has been added.
+- conversion from DICOM to NIFTI for PET and corresponding RT-struct file has been added as an example usage with no issues of shift or mistmatch between the masks.
 
 ## Contributing
 We welcome contributions to this project! Please review our [CONTRIBUTING guidelines](./CONTRIBUTING.md) for more details.
