@@ -25,7 +25,13 @@ The format for the ROI mask is an nd numpy array of type bool. It is an array of
 ```
 pip install rt_utils
 ```
-
+##
+**libGL**  
+   libGL is a required system dependency. Install it on Linux using:
+   ```
+   ```bash
+   sudo apt install libgl1
+```
 ## Installation in editable mode
 ```
 git clone https://github.com/qurit/rt-utils.git
