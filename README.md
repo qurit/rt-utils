@@ -32,6 +32,11 @@ git clone https://github.com/qurit/rt-utils.git
 cd rt-utils
 pip install -e .
 ```
+##
+**libGL**  
+   libGL is a required system dependency. Install it on Linux using:
+   ```bash
+   sudo apt install libgl1
 
 ## Creating new RT Structs
 ```Python
