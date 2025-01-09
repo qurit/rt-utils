@@ -1,0 +1,29 @@
+name: Draft PDF
+on: 
+  push:
+    paths:
+      - Paper/**    # Update to track changes in the correct directory
+      - .github/workflows/draft-pdf.yml
+
+jobs:
+  paper:
+    runs-on: ubuntu-latest
+    name: Paper Draft
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: List directory contents
+        run: ls -R  # Lists the directory contents for debugging
+
+      - name: Build draft PDF
+        uses: openjournals/openjournals-draft-action@master
+        with:
+          journal: joss
+          paper-path: Paper/paper.md  # Specify the correct path to paper.md
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: paper
+          path: Paper/paper.pdf  # Ensure the output path matches where the PDF is generated
