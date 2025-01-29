@@ -1,11 +1,11 @@
-from typing import List, Union
+from typing import List, Union, Dict
 
 import numpy as np
 from pydicom.dataset import FileDataset
 
 from rt_utils.utils import ROIData
-from . import ds_helper, image_helper
-
+from . import ds_helper, image_helper, smoothing
+from typing import Tuple
 
 class RTStruct:
     """
@@ -35,6 +35,14 @@ class RTStruct:
         use_pin_hole: bool = False,
         approximate_contours: bool = True,
         roi_generation_algorithm: Union[str, int] = 0,
+        apply_smoothing: Union[str, None] = None, # strings can be "2d" or "3d" or something else if a different smoothing function is used
+        smoothing_function = smoothing.pipeline,  # Can be any function/set of functions that takes the following parameters
+            #                                     # smoothing_function(mask=mask, apply_smoothing=apply_smoothing,
+                                                  #                    smoothing_parameters=smoothing_parameters) -> np.ndarray
+                                                  # The returned np.ndarray can be of any integer scalar shape in x and y of the used dicom image.
+                                                  # Note that Z direction should not be scaled. For instance CT_image.shape == (512, 512, 150).
+                                                  # Smoothed returned array can be (1024, 1024, 150) or (5120, 5120, 150), though you RAM will suffer with the latter.
+        smoothing_parameters: Union[Dict, None] = None,
     ):
         """
         Add a ROI to the rtstruct given a 3D binary mask for the ROI's at each slice
@@ -42,6 +50,13 @@ class RTStruct:
         If use_pin_hole is set to true, will cut a pinhole through ROI's with holes in them so that they are represented with one contour
         If approximate_contours is set to False, no approximation will be done when generating contour data, leading to much larger amount of contour data
         """
+        if apply_smoothing:
+            mask = smoothing_function(mask=mask, apply_smoothing=apply_smoothing,
+                                      smoothing_parameters=smoothing_parameters)
+
+        ## If upscaled coords are given, they should be adjusted accordingly
+        rows = self.series_data[0][0x00280010].value
+        scaling_factor = int(mask.shape[0] / rows)
 
         # TODO test if name already exists
         self.validate_mask(mask)
@@ -56,6 +71,7 @@ class RTStruct:
             use_pin_hole,
             approximate_contours,
             roi_generation_algorithm,
+            scaling_factor
         )
 
         self.ds.ROIContourSequence.append(
