@@ -48,19 +48,27 @@ def get_contours_coords(roi_data: ROIData, series_data):
 
     series_contours = []
     for i, series_slice in enumerate(series_data):
-        mask_slice = roi_data.mask[:, :, i]
+        if roi_data.polygon is None:
+            mask_slice = roi_data.mask[:, :, i]
 
-        # Do not add ROI's for blank slices
-        if np.sum(mask_slice) == 0:
-            series_contours.append([])
-            continue
+            # Do not add ROI's for blank slices
+            if np.sum(mask_slice) == 0:
+                series_contours.append([])
+                continue
 
-        # Create pin hole mask if specified
-        if roi_data.use_pin_hole:
-            mask_slice = create_pin_hole_mask(mask_slice, roi_data.approximate_contours)
+            # Create pin hole mask if specified
+            if roi_data.use_pin_hole:
+                mask_slice = create_pin_hole_mask(mask_slice, roi_data.approximate_contours)
 
-        # Get contours from mask
-        contours, _ = find_mask_contours(mask_slice, roi_data.approximate_contours)
+            # Get contours from mask
+            contours, _ = find_mask_contours(mask_slice, roi_data.approximate_contours)
+        else:
+            if roi_data.polygon[i].area == 0:
+                # empty ROI
+                series_contours.append([])
+                continue
+            contours = [roi_data.polygon[i].coords.tolist()]
+
         validate_contours(contours)
 
         # Format for DICOM
