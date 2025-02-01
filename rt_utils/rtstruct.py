@@ -41,6 +41,45 @@ class RTStruct:
         Optionally input a color or name for the ROI
         If use_pin_hole is set to true, will cut a pinhole through ROI's with holes in them so that they are represented with one contour
         If approximate_contours is set to False, no approximation will be done when generating contour data, leading to much larger amount of contour data
+        This method updates the internal DICOM structure (RTStruct) by adding
+        a new ROIContourSequence, StructureSetROISequence, and
+        RTROIObservationsSequence entry corresponding to the provided mask.
+    
+        Parameters
+        ----------
+        mask : np.ndarray
+            3D boolean array indicating the ROI. Its shape must match
+            the underlying DICOM series in the third dimension.
+        color : str or list of int, optional
+            The color representation for the ROI. This can be a string (e.g., "red")
+            or a list of RGB values (e.g., [255, 0, 0]). Defaults to None.
+        name : str, optional
+            A name/label for this ROI. Defaults to None.
+        description : str, optional
+            Longer text describing this ROI. Defaults to an empty string.
+        use_pin_hole : bool, optional
+            If True, attempts to handle ROIs with holes by creating a pinhole
+            (a single continuous contour). Defaults to False.
+        approximate_contours : bool, optional
+            If False, no approximation is done during contour generation,
+            potentially resulting in very large amounts of contour data.
+            Defaults to True.
+        roi_generation_algorithm : str or int, optional
+            Identifier for the algorithm used to generate this ROI. This can be
+            a string describing the algorithm or an integer code. Defaults to 0.
+    
+        Raises
+        ------
+        ROIException
+            - If the mask is not a 3D boolean array.
+            - If the mask's shape does not match the loaded DICOM series dimensions.
+            - If the mask is empty (no voxels set to True).
+    
+        Returns
+        -------
+        None
+            This method does not return anything, but modifies the internal RTStruct.
+        """
         """
 
         # TODO test if name already exists
