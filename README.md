@@ -158,7 +158,10 @@ The add_roi method of our RTStruct class has a multitude of optional parameters 
 
 ## 🚀 New features
 - nifti to rtstruct conversion has been added.
-- conversion from DICOM to NIFTI for PET and corresponding RT-struct file has been added as an example usage with no issues of shift or mistmatch between the masks.
+- conversion from DICOM to NIFTI for PET and corresponding RT-struct file has been added as an example usage with no issues of shift or mismatch between the masks.
+
+## Examples
+You can find the comparison between RT-utils and other conversion techniques in this public repository: https://github.com/qurit/dicom_nifti_conversion_project 
 
 ## Contributing
 We welcome contributions to this project! Please review our [CONTRIBUTING guidelines](./CONTRIBUTING.md) for more details.
