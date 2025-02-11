@@ -163,6 +163,9 @@ The add_roi method of our RTStruct class has a multitude of optional parameters 
 ## Examples
 You can find the comparison between RT-utils and other conversion techniques in this public repository: https://github.com/qurit/dicom_nifti_conversion_project 
 
+## Examples
+You can find the comparison between RT-utils and other conversion techniques in this public repository: https://github.com/qurit/dicom_nifti_conversion_project 
+
 ## Contributing
 We welcome contributions to this project! Please review our [CONTRIBUTING guidelines](./CONTRIBUTING.md) for more details.
 
