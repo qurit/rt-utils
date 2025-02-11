@@ -1,8 +1,6 @@
 from typing import List, Union
-
 import numpy as np
 from pydicom.dataset import FileDataset
-
 from rt_utils.utils import ROIData
 from . import ds_helper, image_helper
 
@@ -17,13 +15,12 @@ class RTStruct:
         self.ds = ds
         self.frame_of_reference_uid = ds.ReferencedFrameOfReferenceSequence[
             -1
-        ].FrameOfReferenceUID  # Use last strucitured set ROI
+        ].FrameOfReferenceUID  # Use last structured set ROI
 
     def set_series_description(self, description: str):
         """
         Set the series description for the RTStruct dataset
         """
-
         self.ds.SeriesDescription = description
 
     def add_roi(
@@ -37,13 +34,49 @@ class RTStruct:
         roi_generation_algorithm: Union[str, int] = 0,
     ):
         """
-        Add a ROI to the rtstruct given a 3D binary mask for the ROI's at each slice
-        Optionally input a color or name for the ROI
-        If use_pin_hole is set to true, will cut a pinhole through ROI's with holes in them so that they are represented with one contour
-        If approximate_contours is set to False, no approximation will be done when generating contour data, leading to much larger amount of contour data
-        """
+        Add a Region of Interest (ROI) to the RTStruct given a 3D binary mask for each slice.
 
-        # TODO test if name already exists
+        Optionally input a color or name for the ROI. 
+        If `use_pin_hole` is set to True, attempts to handle ROIs with holes by creating a single continuous contour.
+        If `approximate_contours` is set to False, no approximation is done during contour generation, 
+        potentially resulting in a large amount of contour data.
+
+        This method updates the internal DICOM structure (RTStruct) by adding:
+        - ROIContourSequence
+        - StructureSetROISequence
+        - RTROIObservationsSequence
+
+        Parameters
+        ----------
+        mask : np.ndarray
+            3D boolean array indicating the ROI. Its shape must match
+            the underlying DICOM series in the third dimension.
+        color : str or list of int, optional
+            Color representation for the ROI (e.g., "red" or [255, 0, 0]). Defaults to None.
+        name : str, optional
+            Name/label for the ROI. Defaults to None.
+        description : str, optional
+            Longer description of the ROI. Defaults to an empty string.
+        use_pin_hole : bool, optional
+            If True, attempts to create a single continuous contour for ROIs with holes. Defaults to False.
+        approximate_contours : bool, optional
+            If False, skips approximation during contour generation, leading to larger contour data. Defaults to True.
+        roi_generation_algorithm : str or int, optional
+            Identifier for the algorithm used to generate the ROI. Defaults to 0.
+
+        Raises
+        ------
+        ROIException
+            - If the mask is not a 3D boolean array.
+            - If the mask's shape does not match the loaded DICOM series dimensions.
+            - If the mask is empty (no voxels set to True).
+
+        Returns
+        -------
+        None
+            Modifies the internal RTStruct.
+        """
+        # TODO: test if name already exists
         self.validate_mask(mask)
         roi_number = len(self.ds.StructureSetROISequence) + 1
         roi_data = ROIData(
@@ -71,7 +104,7 @@ class RTStruct:
     def validate_mask(self, mask: np.ndarray) -> bool:
         if mask.dtype != bool:
             raise RTStruct.ROIException(
-                f"Mask data type must be boolean. Got {mask.dtype}"
+                f"Mask data type must be boolean, but got {mask.dtype}. Please ensure the mask is a 3D boolean array."
             )
 
         if mask.ndim != 3:
@@ -79,7 +112,7 @@ class RTStruct:
 
         if len(self.series_data) != np.shape(mask)[2]:
             raise RTStruct.ROIException(
-                "Mask must have the save number of layers (In the 3rd dimension) as input series. "
+                "Mask must have the same number of layers (in the 3rd dimension) as the input series. "
                 + f"Expected {len(self.series_data)}, got {np.shape(mask)[2]}"
             )
 
@@ -118,19 +151,17 @@ class RTStruct:
 
     def save(self, file_path: str):
         """
-        Saves the RTStruct with the specified name / location
-        Automatically adds '.dcm' as a suffix
+        Saves the RTStruct with the specified name / location.
+        Automatically adds '.dcm' as a suffix if necessary.
         """
-
         # Add .dcm if needed
         file_path = file_path if file_path.endswith(".dcm") else file_path + ".dcm"
 
         try:
-            file = open(file_path, "w")
-            # Opening worked, we should have a valid file_path
-            print("Writing file to", file_path)
-            self.ds.save_as(file_path)
-            file.close()
+            # Using 'with' to handle file opening and closing automatically
+            with open(file_path, "w") as file:
+                print("Writing file to", file_path)
+                self.ds.save_as(file_path)
         except OSError:
             raise Exception(f"Cannot write to file path '{file_path}'")
 
@@ -138,5 +169,4 @@ class RTStruct:
         """
         Exception class for invalid ROI masks
         """
-
         pass
