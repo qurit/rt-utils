@@ -166,7 +166,7 @@ You can find the comparison between RT-utils and other conversion techniques in 
 ## Examples
 You can find the comparison between RT-utils and other conversion techniques in this public repository: https://github.com/qurit/dicom_nifti_conversion_project.
 
-The real-world example in the JOSS paper under review was generated using HECKTOR Challenge data (patient “CHGJ015”) with the code provided in the (https://github.com/qurit/dicom_nifti_conversion_project ) GitHub repository.
+The real-world example in the JOSS paper under review was generated using the code provided in the RTUTILS_read_world_example_for_PET.ipynb.
 
 ## Contributing
 We welcome contributions to this project! Please review our [CONTRIBUTING guidelines](./CONTRIBUTING.md) for more details.
