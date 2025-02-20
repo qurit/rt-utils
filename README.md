@@ -9,6 +9,7 @@
     <img src="https://img.shields.io/pypi/pyversions/rt-utils" alt="Python version" height="18">
     <a href="https://pypi.org/project/rt-utils"><img src="https://badge.fury.io/py/rt-utils.svg" alt="PyPI version" height="18"></a>  
     <img alt="PyPI - License" src="https://img.shields.io/github/license/qurit/rt-utils?color=g" height="18" />
+  
 </p>
  
 ---
@@ -173,6 +174,8 @@ We welcome contributions to this project! Please review our [CONTRIBUTING guidel
 
 
 ## How to Cite
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14902966.svg)](https://doi.org/10.5281/zenodo.14902966)
+
 If you are incorporating RT-Utils into your projects, kindly include the following citation:
 
 Shrestha A, Watkins A, Yousefirizi F, Rahmim A, Uribe CF (2024). [RT-utils: A Minimal Python Library for RT-struct Manipulation.](https://arxiv.org/abs/2405.06184#:~:text=Towards%20the%20need%20for%20automated,structures%20stored%20in%20DICOM%20format.) arXiv preprint arXiv:2405.06184.
