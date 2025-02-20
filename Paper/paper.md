@@ -38,10 +38,7 @@ affiliations:
 date: 24 July 2024
 bibliography: paper.bib
 
-# Optional fields if submitting to a AAS journal too, see this blog post:
-# https://blog.joss.theoj.org/2018/12/a-new-collaboration-with-aas-publishing
-aas-doi: 10.3847/xxxxx <- update this with the DOI from AAS once you know it.
-aas-journal: Astrophysical Journal <- The name of the AAS journal.
+
 ---
 
 # Summary
@@ -83,10 +80,10 @@ RT-utils accelerates deep learning model development and facilitates clinical wo
 
 
 # Real-world Example
-For comparing the effects of different RT-Struct conversion methods, we investigated the RT-utils tool, dcmrtstruct2nii (https://github.com/Sikerdebaard/dcmrtstruct2nii), and the built-in tools from LIFEx[@Nioche2018-ct] and 3D Slicer [@Fedorov2012-ax]. We implemented the conversion technique and conducted a comparison of the NIfTI ground truth files. The level of agreement observed between RT-utils and LIFEx surpasses that of other techniques. The mean absolute errors with respect to RT-utils are shown on sagittal and coronal masks. (Figure 1). The visual inspection of an example of converted masks overlaid on PET scans using different techniques is shown in Figure 1. The PET scan used in this figure was sourced from the publicly available HECKTOR Challenge dataset [@oreiller2022head]. We presented a real-world example of ground truth conversion from RT-struct to masks, leveraging quantitative metrics such as mean absolute error and pixel count to ensure accuracy and precision in [@Yousefirizi2023-ax].
+For comparing the effects of different RT-Struct conversion methods, we investigated the RT-utils tool, dcmrtstruct2nii (https://github.com/Sikerdebaard/dcmrtstruct2nii), and the built-in tools from LIFEx [@Nioche2018-ct] and 3D Slicer [@Fedorov2012-ax]. We implemented the conversion technique and conducted a comparison of the NIfTI ground truth files. The level of agreement observed between RT-utils and LIFEx surpasses that of other techniques. The mean absolute errors with respect to RT-utils are shown on sagittal and coronal masks. (Figure 1). The visual inspection of an example of converted masks overlaid on PET scans using different techniques is shown in Figure 1.  We presented a real-world example of ground truth conversion from RT-struct to masks, leveraging quantitative metrics such as mean absolute error and pixel count to ensure accuracy and precision in [@Yousefirizi2023-ax].
 
 
-![The visual inspection of an example of converted masks overlaid on PET scans using different techniques](../src/RT.png)
+![The visual inspection of an example of converted masks overlaid on PET scans using different techniques](../src/fig1.png)
 
 
 # Acknowledgements
