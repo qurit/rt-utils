@@ -101,6 +101,39 @@ class RTStruct:
             ds_helper.create_rtroi_observation(roi_data)
         )
 
+    def add_roi_from_coordinates(
+            self,
+            coordinates: List[List[List[float]]],
+            color: Union[str, List[int]] = None,
+            name: str = None,
+            description: str = "",
+            use_pin_hole: bool = False,
+            approximate_contours: bool = True,
+            roi_generation_algorithm: Union[str, int] = 0,
+    ):
+        roi_number = len(self.ds.StructureSetROISequence) + 1
+        roi_data = ROIData(
+            np.zeros(1),  # Fake mask since we do not use it because we use coordinates
+            color,
+            roi_number,
+            name,
+            self.frame_of_reference_uid,
+            description,
+            use_pin_hole,
+            approximate_contours,
+            roi_generation_algorithm,
+        )
+
+        self.ds.ROIContourSequence.append(
+            ds_helper.create_roi_contour_from_coordinates(coordinates, roi_data, self.series_data)
+        )
+        self.ds.StructureSetROISequence.append(
+            ds_helper.create_structure_set_roi(roi_data)
+        )
+        self.ds.RTROIObservationsSequence.append(
+            ds_helper.create_rtroi_observation(roi_data)
+        )
+
     def validate_mask(self, mask: np.ndarray) -> bool:
         if mask.dtype != bool:
             raise RTStruct.ROIException(
