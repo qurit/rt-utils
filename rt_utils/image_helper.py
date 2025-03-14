@@ -155,7 +155,7 @@ def get_pixel_to_patient_transformation_matrix(series_data):
 
     first_slice = series_data[0]
 
-    offset = np.array(first_slice.ImagePositionPatient)
+    offset = np.array(getattr(first_slice, "ImagePositionPatient", [0, 0, 0]))
     row_spacing, column_spacing = first_slice.PixelSpacing
     slice_spacing = get_spacing_between_slices(series_data)
     row_direction, column_direction, slice_direction = get_slice_directions(first_slice)
@@ -172,7 +172,7 @@ def get_pixel_to_patient_transformation_matrix(series_data):
 def get_patient_to_pixel_transformation_matrix(series_data):
     first_slice = series_data[0]
 
-    offset = np.array(first_slice.ImagePositionPatient)
+    offset = np.array(getattr(first_slice, "ImagePositionPatient", [0, 0, 0]))
     row_spacing, column_spacing = first_slice.PixelSpacing
     slice_spacing = get_spacing_between_slices(series_data)
     row_direction, column_direction, slice_direction = get_slice_directions(first_slice)
@@ -209,11 +209,11 @@ def apply_transformation_to_3d_points(
 
 def get_slice_position(series_slice: Dataset):
     _, _, slice_direction = get_slice_directions(series_slice)
-    return np.dot(slice_direction, series_slice.ImagePositionPatient)
+    return np.dot(slice_direction, getattr(series_slice, "ImagePositionPatient", [0, 0, 0]))
 
 
 def get_slice_directions(series_slice: Dataset):
-    orientation = series_slice.ImageOrientationPatient
+    orientation = getattr(series_slice, "ImageOrientationPatient", [1, 0, 0, 0, 1, 0])
     row_direction = np.array(orientation[:3])
     column_direction = np.array(orientation[3:])
     slice_direction = np.cross(row_direction, column_direction)
@@ -265,8 +265,8 @@ def get_slice_contour_data(series_slice: Dataset, contour_sequence: Sequence):
 def get_slice_mask_from_slice_contour_data(
     series_slice: Dataset, slice_contour_data, transformation_matrix: np.ndarray
 ):
-    # Go through all contours in a slice, create polygons in correct space and with a correct format 
-    # and append to polygons array (appropriate for fillPoly) 
+    # Go through all contours in a slice, create polygons in correct space and with a correct format
+    # and append to polygons array (appropriate for fillPoly)
     polygons = []
     for contour_coords in slice_contour_data:
         reshaped_contour_data = np.reshape(contour_coords, [len(contour_coords) // 3, 3])
