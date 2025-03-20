@@ -182,5 +182,5 @@ If you are incorporating RT-Utils into your projects, kindly include the followi
 
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.07361/status.svg)](https://doi.org/10.21105/joss.07361)
 
-Read the full paper: [RT-utils: A Minimal Python Library for RT-struct Manipulation](https://joss.theoj.org/papers/10.21105/joss.07361)
+Read the full paper: Asim Shrestha, Adam Watkins, Fereshteh Yousefirizi, Arman Rahmim, and Carlos Uribe [RT-utils: A Minimal Python Library for RT-struct Manipulation](https://joss.theoj.org/papers/10.21105/joss.07361)
 
