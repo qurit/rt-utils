@@ -16,6 +16,7 @@
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14902966.svg)](https://doi.org/10.5281/zenodo.14902966)
 
+
 RT-Utils is motivated to allow physicians and other users to view the results of segmentation performed on a series of DICOM images. RT-Utils allows you to create or load RT Structs, extract 3d masks from RT Struct ROIs, easily add one or more regions of interest, and save the resulting RT Struct in just a few lines!
 You can also use the RT-Utils for merging two existing RT Structs to one file.
 
@@ -179,4 +180,7 @@ We welcome contributions to this project! Please review our [CONTRIBUTING guidel
 
 If you are incorporating RT-Utils into your projects, kindly include the following citation:
 
-Shrestha A, Watkins A, Yousefirizi F, Rahmim A, Uribe CF (2024). [RT-utils: A Minimal Python Library for RT-struct Manipulation.](https://arxiv.org/abs/2405.06184#:~:text=Towards%20the%20need%20for%20automated,structures%20stored%20in%20DICOM%20format.) arXiv preprint arXiv:2405.06184.
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.07361/status.svg)](https://doi.org/10.21105/joss.07361)
+
+Read the full paper: [RT-utils: A Minimal Python Library for RT-struct Manipulation](https://joss.theoj.org/papers/10.21105/joss.07361)
+
