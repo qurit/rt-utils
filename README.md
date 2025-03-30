@@ -66,6 +66,25 @@ rtstruct.add_roi(
   name="RT-Utils ROI!"
 )
 
+# Add another ROI from coordinates
+rtstruct.add_roi_from_coordinates(
+    coordinates=[
+        [
+            # Example of One contour on one slice
+            [-20.0, -170.0, -559.0],
+            [30.0, -170.0, -559.0],
+            [30.0, -110.0, -559.0],
+            [-20.0, -110.0, -559.0],
+        ],
+        [
+            [-20.0, -170.0, -562.4],
+            [30.0, -170.0, -562.4],
+            [30.0, -110.0, -562.4],
+            [-20.0, -110.0, -562.4],
+        ]
+    ]
+)
+
 rtstruct.save('new-rt-struct')
 ```
 
