@@ -1,10 +1,11 @@
+import warnings
 from typing import List
+
 from pydicom.dataset import Dataset
 from pydicom.filereader import dcmread
 
-import warnings
-
 from rt_utils.utils import SOPClassUID
+
 from . import ds_helper, image_helper
 from .rtstruct import RTStruct
 
@@ -23,6 +24,17 @@ class RTStructBuilder:
         series_data = image_helper.load_sorted_image_series(dicom_series_path)
         ds = ds_helper.create_rtstruct_dataset(series_data)
         return RTStruct(series_data, ds)
+    
+    @staticmethod
+    def create_new_from_memory(dicom_datasets: List[Dataset]) -> RTStruct:
+        """
+         Method to generate a new rt struct from a DICOM series in memory already loaded by pydicom
+        """
+        # dicom_datasets are sorted by InstanceNumber
+        dicom_datasets.sort(key=lambda x: x.InstanceNumber if hasattr(x, 'InstanceNumber') else 0)
+
+        ds = ds_helper.create_rtstruct_dataset(dicom_datasets)
+        return RTStruct(dicom_datasets, ds)
 
     @staticmethod
     def create_from(dicom_series_path: str, rt_struct_path: str, warn_only: bool = False) -> RTStruct:
@@ -37,6 +49,17 @@ class RTStructBuilder:
 
         # TODO create new frame of reference? Right now we assume the last frame of reference created is suitable
         return RTStruct(series_data, ds)
+    
+    @staticmethod
+    def create_from_memory(dicom_datasets: List[Dataset], existing_rt_struct: Dataset,  warn_only: bool = False) -> RTStruct :
+        """
+         Method to generate a new rt struct from a DICOM series and a RTStruct in memory already loaded by pydicom
+        """
+        dicom_datasets.sort(key=lambda x: x.InstanceNumber if hasattr(x, 'InstanceNumber') else 0)
+
+        RTStructBuilder.validate_rtstruct(existing_rt_struct)
+        RTStructBuilder.validate_rtstruct_series_references(existing_rt_struct, dicom_datasets, warn_only)
+        return RTStruct(dicom_datasets, existing_rt_struct)
 
     @staticmethod
     def validate_rtstruct(ds: Dataset):
