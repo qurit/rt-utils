@@ -6,7 +6,7 @@ from rt_utils.utils import SOPClassUID
 from rt_utils import image_helper
 from pydicom.dataset import validate_file_meta
 import numpy as np
-
+import pydicom
 
 def test_create_from_empty_series_dir():
     empty_dir_path = os.path.join(os.path.dirname(__file__), "empty")
@@ -251,3 +251,27 @@ def get_empty_mask(rtstruct) -> np.ndarray:
     )
     mask = np.zeros(mask_dims)
     return mask.astype(bool)
+
+def load_dicom_files_in_memory(file_paths):
+    dicom_datasets = []
+    for path in file_paths:
+        with open(path, 'rb') as f:
+            ds = pydicom.dcmread(f)
+            dicom_datasets.append(ds)
+    return dicom_datasets
+
+def test_create_rtstruct_from_memory():
+    print(os.getcwd())
+    dicom_files = load_dicom_files_in_memory(['tests/mock_data/ct_1.dcm', 'tests/mock_data/ct_2.dcm'])
+    rtstruct = RTStructBuilder.create_new_from_memory(dicom_files)
+    assert rtstruct is not None
+    assert len(rtstruct.series_data) == len(dicom_files)
+
+def test_save_rtstruct_to_memory():
+    dicom_files = load_dicom_files_in_memory(['tests/mock_data/ct_1.dcm', 'tests/mock_data/ct_2.dcm'])
+    rtstruct = RTStructBuilder.create_new_from_memory(dicom_files)
+    buffer = rtstruct.save_to_memory()
+    assert buffer is not None
+    buffer.seek(0)  # Reset the buffer to the beginning for reading
+    loaded_ds = pydicom.dcmread(buffer)
+    assert loaded_ds is not None
