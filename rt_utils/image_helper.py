@@ -8,15 +8,17 @@ from pydicom import dcmread
 from pydicom.dataset import Dataset
 from pydicom.sequence import Sequence
 
-from rt_utils.utils import ROIData, SOPClassUID
+from rt_utils.utils import ROIData
 
 
-def load_sorted_image_series(dicom_series_path: str):
+def load_sorted_image_series(dicom_series_path: str | List[Dataset]) -> List[Dataset]:
     """
     File contains helper methods for loading / formatting DICOM images and contours
     """
-
-    series_data = load_dcm_images_from_path(dicom_series_path)
+    if isinstance(dicom_series_path, str):
+        series_data = load_dcm_images_from_path(dicom_series_path)
+    else:
+        series_data = dicom_series_path
 
     if len(series_data) == 0:
         raise Exception("No DICOM Images found in input path")

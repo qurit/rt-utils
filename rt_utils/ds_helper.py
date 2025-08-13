@@ -1,4 +1,6 @@
 import datetime
+from typing import List, Union
+
 from rt_utils.image_helper import get_contours_coords
 from rt_utils.utils import ROIData, SOPClassUID
 import numpy as np
@@ -6,6 +8,8 @@ from pydicom.uid import generate_uid
 from pydicom.dataset import Dataset, FileDataset, FileMetaDataset
 from pydicom.sequence import Sequence
 from pydicom.uid import ImplicitVRLittleEndian
+
+from rt_utils.utils import _flatten_lists
 
 """
 File contains helper methods that handles DICOM header creation/formatting
@@ -98,7 +102,7 @@ def add_patient_information(ds: FileDataset, series_data):
 
 def add_refd_frame_of_ref_sequence(ds: FileDataset, series_data):
     refd_frame_of_ref = Dataset()
-    refd_frame_of_ref.FrameOfReferenceUID =  getattr(series_data[0], 'FrameOfReferenceUID', generate_uid())
+    refd_frame_of_ref.FrameOfReferenceUID = getattr(series_data[0], 'FrameOfReferenceUID', generate_uid())
     refd_frame_of_ref.RTReferencedStudySequence = create_frame_of_ref_study_sequence(series_data)
 
     # Add to sequence
@@ -157,7 +161,7 @@ def create_roi_contour(roi_data: ROIData, series_data) -> Dataset:
     return roi_contour
 
 
-def create_contour_sequence(roi_data: ROIData, series_data) -> Sequence:
+def create_contour_sequence(roi_data: ROIData, series_data: List[Dataset]) -> Sequence:
     """
     Iterate through each slice of the mask
     For each connected segment within a slice, create a contour
@@ -175,7 +179,36 @@ def create_contour_sequence(roi_data: ROIData, series_data) -> Sequence:
     return contour_sequence
 
 
-def create_contour(series_slice: Dataset, contour_data: np.ndarray) -> Dataset:
+def create_roi_contour_from_coordinates(coordinates: List[List[List[float]]], roi_data: ROIData, series_data) -> Dataset:
+    roi_contour = Dataset()
+    roi_contour.ROIDisplayColor = roi_data.color
+    roi_contour.ContourSequence = create_contour_sequence_from_coordinates(coordinates, series_data)
+    roi_contour.ReferencedROINumber = str(roi_data.number)
+
+    return roi_contour
+
+
+def create_contour_sequence_from_coordinates(coordinates: List[List[List[float]]], series_data: List[Dataset]) -> Sequence:
+    """
+    Iterate through each slice of the mask
+    For each connected segment within a slice, create a contour
+    """
+    contour_sequence = Sequence()
+
+    for contours_coords in coordinates:
+        # Find the closest slice from the provided z coordinates
+        closest_slice = _find_closest_slice(series_slices=series_data, z_coord=contours_coords[0][2])
+
+        # Format contour coordinates in DICOM format [x1,y1,z1,x2,y2,z2,x3,y3,z3]
+        contour_data = _flatten_lists(contours_coords)
+
+        slice_contour = create_contour(closest_slice, contour_data)
+        contour_sequence.append(slice_contour)
+
+    return contour_sequence
+
+
+def create_contour(series_slice: Dataset, contour_data: Union[np.ndarray, List[float]]) -> Dataset:
     contour_image = Dataset()
     contour_image.ReferencedSOPClassUID = series_slice.SOPClassUID
     contour_image.ReferencedSOPInstanceUID = series_slice.SOPInstanceUID
@@ -222,3 +255,7 @@ def get_contour_sequence_by_roi_number(ds, roi_number):
                 return Sequence()
 
     raise Exception(f"Referenced ROI number '{roi_number}' not found")
+
+
+def _find_closest_slice(series_slices: List[Dataset], z_coord: float) -> Dataset:
+    return min(series_slices, key=lambda series_slice: abs(series_slice.ImagePositionPatient[2] - z_coord))
