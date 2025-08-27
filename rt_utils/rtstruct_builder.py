@@ -15,7 +15,7 @@ class RTStructBuilder:
     """
 
     @staticmethod
-    def create_new(dicom_series_path: str) -> RTStruct:
+    def create_new(dicom_series_path: str | List[Dataset]) -> RTStruct:
         """
         Method to generate a new rt struct from a DICOM series
         """
@@ -25,7 +25,7 @@ class RTStructBuilder:
         return RTStruct(series_data, ds)
 
     @staticmethod
-    def create_from(dicom_series_path: str, rt_struct_path: str, warn_only: bool = False) -> RTStruct:
+    def create_from(dicom_series_path: str | List[Dataset], rt_struct_path: str, warn_only: bool = False) -> RTStruct:
         """
         Method to load an existing rt struct, given related DICOM series and existing rt struct
         """
