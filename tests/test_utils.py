@@ -1,9 +1,14 @@
 import numpy as np
 import pytest
 
+from rt_utils import __version__
 from rt_utils.image_helper import mask_to_edge_polygons
 from rt_utils.utils import COLOR_PALETTE
 from tests.test_rtstruct_builder import get_empty_mask
+
+
+def test_package_version():
+    assert __version__ == "1.3.1"
 
 
 def test_single_voxel_edge_polygon():

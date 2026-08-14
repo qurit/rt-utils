@@ -1,6 +1,10 @@
+from pathlib import Path
+
 import setuptools
 
-VERSION = "1.2.6"
+version_namespace = {}
+exec(Path("rt_utils/_version.py").read_text(encoding="utf-8"), version_namespace)
+VERSION = version_namespace["__version__"]
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 with open("requirements.txt") as f:
@@ -14,16 +18,14 @@ setuptools.setup(
     description="A small library for handling masks and RT-Structs",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/qurit/rtutils",
-    package_dir={'':"rt_utils"},
-    packages=setuptools.find_packages("rt_utils", exclude="tests"),
+    url="https://github.com/qurit/rt-utils",
+    packages=setuptools.find_packages(exclude=["tests"]),
     keywords=["RTStruct", "Dicom", "Pydicom"],
     classifiers=[
         "Operating System :: OS Independent",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3 :: Only",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
@@ -39,6 +41,6 @@ setuptools.setup(
         "Intended Audience :: Science/Research",
         "Intended Audience :: Developers",
     ],
-    python_requires=">=3.7",
+    python_requires=">=3.8",
     install_requires=required,
 )
