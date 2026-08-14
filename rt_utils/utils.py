@@ -28,6 +28,7 @@ COLOR_PALETTE = [
 ]
 
 ROI_GENERATION_ALGORITHMS = ["AUTOMATIC", "SEMIAUTOMATIC", "MANUAL"]
+CONTOUR_MODES = ["voxel_center", "voxel_edge"]
 
 
 class SOPClassUID:
@@ -51,11 +52,20 @@ class ROIData:
     use_pin_hole: bool = False
     approximate_contours: bool = True
     roi_generation_algorithm: Union[str, int] = 0
+    contour_mode: str = "voxel_center"
 
     def __post_init__(self):
         self.validate_color()
         self.add_default_values()
         self.validate_roi_generation_algoirthm()
+        self.validate_contour_mode()
+
+    def validate_contour_mode(self):
+        if self.contour_mode not in CONTOUR_MODES:
+            raise ValueError(
+                f"Invalid contour mode '{self.contour_mode}'. "
+                f"Expected one of {CONTOUR_MODES}."
+            )
 
     def add_default_values(self):
         if self.color is None:

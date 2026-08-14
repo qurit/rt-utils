@@ -66,6 +66,14 @@ rtstruct.add_roi(
   name="RT-Utils ROI!"
 )
 
+# By default contours pass through the centres of boundary voxels, preserving
+# historical behavior. To place contours on the outer voxel edges instead:
+rtstruct.add_roi(
+  mask=MASK_FROM_ML_MODEL,
+  name="Voxel-edge ROI",
+  contour_mode="voxel_edge"
+)
+
 rtstruct.save('new-rt-struct')
 ```
 
@@ -183,4 +191,3 @@ If you are incorporating RT-Utils into your projects, kindly include the followi
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.07361/status.svg)](https://doi.org/10.21105/joss.07361)
 
 Read the full paper: Asim Shrestha, Adam Watkins, Fereshteh Yousefirizi, Arman Rahmim, and Carlos Uribe [RT-utils: A Minimal Python Library for RT-struct Manipulation](https://joss.theoj.org/papers/10.21105/joss.07361)
-
