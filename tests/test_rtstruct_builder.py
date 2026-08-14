@@ -181,6 +181,37 @@ def test_no_approximation_iou(new_rtstruct: RTStruct):
     run_mask_iou_test(new_rtstruct, mask, IOU_threshold, approximate_contours=False)
 
 
+def test_voxel_edge_contour_coordinates(new_rtstruct: RTStruct):
+    mask = get_empty_mask(new_rtstruct)
+    mask[50:100, 60:120, 0] = True
+
+    new_rtstruct.add_roi(mask, contour_mode="voxel_edge")
+
+    contour_data = np.asarray(
+        new_rtstruct.ds.ROIContourSequence[-1].ContourSequence[0].ContourData,
+        dtype=float,
+    ).reshape(-1, 3)
+    pixel_to_patient = image_helper.get_pixel_to_patient_transformation_matrix(
+        new_rtstruct.series_data
+    )
+    patient_to_pixel = np.linalg.inv(pixel_to_patient)
+    pixel_points = image_helper.apply_transformation_to_3d_points(
+        contour_data, patient_to_pixel
+    )
+    assert np.isclose(pixel_points[:, 0].min(), 59.5)
+    assert np.isclose(pixel_points[:, 0].max(), 119.5)
+    assert np.isclose(pixel_points[:, 1].min(), 49.5)
+    assert np.isclose(pixel_points[:, 1].max(), 99.5)
+
+
+def test_invalid_contour_mode(new_rtstruct: RTStruct):
+    mask = get_empty_mask(new_rtstruct)
+    mask[50:100, 50:100, 0] = True
+
+    with pytest.raises(ValueError, match="Invalid contour mode"):
+        new_rtstruct.add_roi(mask, contour_mode="not-a-mode")
+
+
 def test_contour_data_sizes(new_rtstruct: RTStruct):
     mask = get_empty_mask(new_rtstruct)
     mask[50:100, 50:100, 0] = 1

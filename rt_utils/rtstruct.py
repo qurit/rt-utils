@@ -32,6 +32,7 @@ class RTStruct:
         use_pin_hole: bool = False,
         approximate_contours: bool = True,
         roi_generation_algorithm: Union[str, int] = 0,
+        contour_mode: str = "voxel_center",
     ):
         """
         Add a Region of Interest (ROI) to the RTStruct given a 3D binary mask for each slice.
@@ -63,6 +64,10 @@ class RTStruct:
             If False, skips approximation during contour generation, leading to larger contour data. Defaults to True.
         roi_generation_algorithm : str or int, optional
             Identifier for the algorithm used to generate the ROI. Defaults to 0.
+        contour_mode : {"voxel_center", "voxel_edge"}, optional
+            Placement of generated contours. ``"voxel_center"`` preserves the
+            original OpenCV behavior. ``"voxel_edge"`` traces the outer edges
+            of foreground voxels. Defaults to ``"voxel_center"``.
 
         Raises
         ------
@@ -89,6 +94,7 @@ class RTStruct:
             use_pin_hole,
             approximate_contours,
             roi_generation_algorithm,
+            contour_mode,
         )
 
         self.ds.ROIContourSequence.append(

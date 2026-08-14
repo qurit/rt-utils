@@ -60,7 +60,11 @@ def get_contours_coords(roi_data: ROIData, series_data):
             mask_slice = create_pin_hole_mask(mask_slice, roi_data.approximate_contours)
 
         # Get contours from mask
-        contours, _ = find_mask_contours(mask_slice, roi_data.approximate_contours)
+        contours, _ = find_mask_contours(
+            mask_slice,
+            roi_data.approximate_contours,
+            contour_mode=roi_data.contour_mode,
+        )
         validate_contours(contours)
 
         # Format for DICOM
@@ -82,7 +86,21 @@ def get_contours_coords(roi_data: ROIData, series_data):
     return series_contours
 
 
-def find_mask_contours(mask: np.ndarray, approximate_contours: bool):
+def find_mask_contours(
+    mask: np.ndarray,
+    approximate_contours: bool,
+    contour_mode: str = "voxel_center",
+):
+    if contour_mode == "voxel_edge":
+        contours = [polygon.tolist() for polygon in mask_to_edge_polygons(mask)]
+        hierarchy = np.full((len(contours), 4), -1, dtype=np.int32)
+        return contours, hierarchy
+    if contour_mode != "voxel_center":
+        raise ValueError(
+            f"Invalid contour mode '{contour_mode}'. Expected one of "
+            "['voxel_center', 'voxel_edge']."
+        )
+
     approximation_method = (
         cv.CHAIN_APPROX_SIMPLE if approximate_contours else cv.CHAIN_APPROX_NONE
     )
@@ -98,6 +116,87 @@ def find_mask_contours(mask: np.ndarray, approximate_contours: bool):
     hierarchy = hierarchy[0]  # Format extra array out of data
 
     return contours, hierarchy
+
+
+def mask_to_edge_polygons(mask: np.ndarray) -> List[np.ndarray]:
+    """Trace polygons on the outer edges of foreground mask voxels.
+
+    Returned vertices use OpenCV's ``(x, y)`` ordering and half-integer
+    coordinates. Each foreground pixel is treated as a unit square centred on
+    its integer index, so the result describes the complete voxel footprint.
+    """
+    foreground = np.ascontiguousarray(mask, dtype=bool)
+    if foreground.ndim != 2:
+        raise ValueError("Mask must be two dimensional")
+
+    rows, columns = foreground.shape
+    padded = np.zeros((rows + 2, columns + 2), dtype=bool)
+    padded[1:-1, 1:-1] = foreground
+    cells = padded[1:-1, 1:-1]
+
+    neighbours = (
+        padded[:-2, 1:-1],
+        padded[1:-1, 2:],
+        padded[2:, 1:-1],
+        padded[1:-1, :-2],
+    )
+    offsets = (
+        (-0.5, -0.5, 0.5, -0.5),
+        (0.5, -0.5, 0.5, 0.5),
+        (0.5, 0.5, -0.5, 0.5),
+        (-0.5, 0.5, -0.5, -0.5),
+    )
+
+    edges = {}
+    for neighbour, (start_x, start_y, end_x, end_y) in zip(neighbours, offsets):
+        for row, column in zip(*np.nonzero(cells & ~neighbour)):
+            start = (column + start_x, row + start_y)
+            end = (column + end_x, row + end_y)
+            edges.setdefault(start, []).append(end)
+
+    polygons = []
+    while edges:
+        start = next(iter(edges))
+        current = start
+        points = [start]
+        while True:
+            ends = edges.get(current)
+            if not ends:
+                break
+            if len(ends) > 1:
+                ends.sort(
+                    key=lambda end: np.arctan2(
+                        end[1] - current[1], end[0] - current[0]
+                    )
+                )
+            current = ends.pop(0)
+            if not ends:
+                del edges[points[-1]]
+            if current == start:
+                break
+            points.append(current)
+
+        polygon = remove_collinear_points(np.asarray(points, dtype=float))
+        if len(polygon) >= 3:
+            polygons.append(polygon)
+    return polygons
+
+
+def remove_collinear_points(polygon: np.ndarray) -> np.ndarray:
+    """Remove intermediate vertices from straight polygon segments."""
+    if len(polygon) < 3:
+        return polygon
+
+    keep = []
+    for index, point in enumerate(polygon):
+        previous = polygon[(index - 1) % len(polygon)]
+        following = polygon[(index + 1) % len(polygon)]
+        first = point - previous
+        second = following - point
+        cross_product = first[0] * second[1] - first[1] * second[0]
+        if abs(cross_product) > 1e-9 or float(first @ second) < 0:
+            keep.append(point)
+    return np.asarray(keep, dtype=float)
 
 
 def create_pin_hole_mask(mask: np.ndarray, approximate_contours: bool):
