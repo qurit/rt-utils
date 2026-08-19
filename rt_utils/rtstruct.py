@@ -83,7 +83,8 @@ class RTStruct:
         """
         # TODO: test if name already exists
         self.validate_mask(mask)
-        roi_number = len(self.ds.StructureSetROISequence) + 1
+        #roi_number = len(self.ds.StructureSetROISequence) + 1
+        roi_number = self.ds.ROINumberSequence[-1] + 1
         roi_data = ROIData(
             mask,
             color,
