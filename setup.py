@@ -43,4 +43,15 @@ setuptools.setup(
     ],
     python_requires=">=3.8",
     install_requires=required,
+    extras_require={
+        # Opt-in conformance gate against rtmask-conformance's analytic GT.
+        # Install via: pip install -e .[conformance]
+        # Requires Python >= 3.10 (rtmask-conformance constraint); pip will
+        # refuse to install the extra on older interpreters, leaving the
+        # base package usable.
+        "conformance": [
+            "rtmask-conformance @ git+https://github.com/brianmanderson/RTMaskConformanceTest",
+            "SimpleITK>=2.4",
+        ],
+    },
 )

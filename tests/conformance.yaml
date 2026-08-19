@@ -1,0 +1,20 @@
+# Conformance threshold overrides for rt-utils vs rtmask-conformance defaults.
+#
+# Per-primitive overrides shallow-merge over `defaults`, which themselves
+# shallow-merge over the package-shipped defaults. Document every relaxation
+# with a date, the metric, and the path back to the published default — the
+# header of DicomRTTool's tests/conformance.yaml is the canonical example:
+# https://github.com/brianmanderson/Dicom_RT_and_Images_to_Mask/blob/main/tests/conformance.yaml
+schema_version: 1
+primitives:
+  cube:
+    # 2026-05-07: rt-utils rasterizes contours via cv2.fillPoly, which is
+    # boundary-inclusive — every voxel touched by the polygon is filled.
+    # For the axis-aligned 60 mm cube on 1 mm voxels this gains roughly
+    # 3.4% volume from boundary pixels along each face (Dice ≈ 0.9835,
+    # volume_rel_err ≈ 3.36%). Surface DSC=1.0, HD95=1.0 mm, MSD=0.33 mm
+    # confirm the geometry is right; the volume gap is purely the boundary
+    # convention. Tighten back to defaults (dice 0.99, volume_rel_err 0.03)
+    # once the rasterizer honours a half-voxel-shrink.
+    dice: 0.98
+    volume_rel_err: 0.04
