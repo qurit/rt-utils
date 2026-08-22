@@ -26,18 +26,12 @@ RT-Utils provides a builder class to faciliate the creation and loading of an RT
 The format for the ROI mask is an nd numpy array of type bool. It is an array of 2d binary masks, one plane for each slice location within the DICOM series. The slices should be sorted in ascending order within the mask. Through these masks, we extract the contours of the regions of interest and place them within the RT Struct file. Note that there is currently only support for the use of one frame of reference UID and structered set ROI sequence. Also note that holes within the ROI may be handled poorly.
 
 ## Installation
-```
+```bash
 pip install rt_utils
 ```
-##
-**libGL**  
-   libGL is a required system dependency. Install it on Linux using:
-   ```
-   ```bash
-   sudo apt install libgl1
-```
+
 ## Installation in editable mode
-```
+```bash
 git clone https://github.com/qurit/rt-utils.git
 cd rt-utils
 pip install -e .
