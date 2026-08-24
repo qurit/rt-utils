@@ -1,7 +1,11 @@
-from rt_utils.rtstruct import RTStruct
-import pytest
 import os
-from rt_utils import RTStructBuilder
+from typing import List
+
+import pydicom
+import pytest
+
+from rt_utils import RTStructBuilder, image_helper
+from rt_utils.rtstruct import RTStruct
 
 
 @pytest.fixture()
@@ -10,12 +14,22 @@ def series_path() -> str:
 
 
 @pytest.fixture()
+def series_datasets(series_path) -> List[pydicom.Dataset]:
+    return image_helper.load_dcm_images_from_path(series_path)
+
+
+@pytest.fixture()
+def rtstruct_path(series_path) -> str:
+    return os.path.join(series_path, "rt.dcm")
+
+
+@pytest.fixture()
 def new_rtstruct() -> RTStruct:
     return get_rtstruct("mock_data")
 
 
 @pytest.fixture()
-def oriented_series_path() -> RTStruct:
+def oriented_series_path() -> str:
     return get_and_test_series_path("oriented_data")
 
 
@@ -25,7 +39,7 @@ def oriented_rtstruct() -> RTStruct:
 
 
 @pytest.fixture()
-def one_slice_series_path() -> RTStruct:
+def one_slice_series_path() -> str:
     return get_and_test_series_path("one_slice_data")
 
 
