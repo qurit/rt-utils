@@ -32,7 +32,7 @@ class RTStruct:
         use_pin_hole: bool = False,
         approximate_contours: bool = True,
         roi_generation_algorithm: Union[str, int] = 0,
-        contour_mode: str = "voxel_center",
+        contour_mode: str = "voxel_edge",
     ):
         """
         Add a Region of Interest (ROI) to the RTStruct given a 3D binary mask for each slice.
