@@ -141,7 +141,17 @@ class RTStruct:
 
     def get_roi_mask_by_name(self, name) -> np.ndarray:
         """
-        Returns the 3D binary mask of the ROI with the given input name
+        Returns the 3D binary mask of the ROI with the given input name.
+
+        Axis order is ``(rows, columns, slices)`` ≡ ``(Y, X, Z)`` in DICOM
+        image-space terms. ``mask[:, :, k]`` selects slice ``k`` and is
+        directly compatible with ``matplotlib.pyplot.imshow``. Note that
+        ``rt_utils.image_helper.create_empty_series_mask`` allocates the
+        underlying array with dimensions ``(Columns, Rows, Slices)``;
+        ``cv2.fillPoly`` then writes into it at ``[y, x]`` indices, so the
+        populated semantic order is ``(rows=Y, columns=X, slices=Z)``.
+        For square images the two namings collapse, but for non-square
+        images the populated layout is what matters to consumers.
         """
 
         for structure_roi in self.ds.StructureSetROISequence:

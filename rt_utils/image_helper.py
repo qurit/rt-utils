@@ -382,6 +382,16 @@ def get_slice_mask_from_slice_contour_data(
     return slice_mask
 
 def create_empty_series_mask(series_data):
+    """Allocate the empty 3D mask that ``get_slice_mask_from_slice_contour_data``
+    fills via ``cv2.fillPoly``.
+
+    NB on axis order: dimensions are allocated as ``(Columns, Rows, Slices)``,
+    but ``cv2.fillPoly`` writes into the per-slice mask at ``[y, x]`` indices,
+    so the *populated* array's semantic order is ``(rows=Y, columns=X, slices=Z)``.
+    For square images the two collapse; for non-square images the populated
+    layout is what consumers should use. ``get_roi_mask_by_name``'s docstring
+    states the populated convention explicitly.
+    """
     ref_dicom_image = series_data[0]
     mask_dims = (
         int(ref_dicom_image.Columns),
@@ -393,6 +403,12 @@ def create_empty_series_mask(series_data):
 
 
 def create_empty_slice_mask(series_slice):
+    """Allocate the empty 2D slice mask that ``cv2.fillPoly`` fills.
+
+    See ``create_empty_series_mask`` for the axis-order caveat — the populated
+    slice is indexed as ``[y, x]`` even though dimensions are nominally
+    ``(Columns, Rows)``.
+    """
     mask_dims = (int(series_slice.Columns), int(series_slice.Rows))
     mask = np.zeros(mask_dims).astype(bool)
     return mask
