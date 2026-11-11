@@ -168,9 +168,11 @@ def create_contour_sequence(roi_data: ROIData, series_data) -> Sequence:
     contours_coords = get_contours_coords(roi_data, series_data)
 
     for series_slice, slice_contours in zip(series_data, contours_coords):
+
         for contour_data in slice_contours:
             contour = create_contour(series_slice, contour_data)
-            contour_sequence.append(contour)
+            if (contour.ContourGeometricType == 'CLOSED_PLANAR' and contour.NumberOfContourPoints > 2) or contour.ContourGeometricType != 'CLOSED_PLANAR':
+                contour_sequence.append(contour)
 
     return contour_sequence
 
