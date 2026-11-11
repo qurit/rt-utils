@@ -257,6 +257,16 @@ class RTStruct:
                 + f"Expected {len(self.series_data)}, got {np.shape(mask)[2]}"
             )
 
+        reference_slice = self.series_data[0]
+        expected_in_plane = (int(reference_slice.Columns), int(reference_slice.Rows))
+        if np.shape(mask)[:2] != expected_in_plane:
+            raise RTStruct.ROIException(
+                "Mask must have the same in-plane dimensions as the input series. "
+                f"Expected {expected_in_plane}, got {np.shape(mask)[:2]}. "
+                "Masks are indexed as (Columns, Rows, Slices); note that this is "
+                "the transpose of the layout a DICOM pixel_array is read in."
+            )
+
         if np.sum(mask) == 0:
             print("[INFO]: ROI mask is empty")
 

@@ -79,3 +79,43 @@ def test_unchanged_series_is_unaffected(series_path):
 
     assert rtstruct.ds.StudyID == rtstruct.series_data[0].StudyID
     assert rtstruct.get_roi_names() == ["roi"]
+
+
+# --- mask shape validation --------------------------------------------------
+
+
+def test_mask_with_wrong_in_plane_shape_is_rejected(new_rtstruct):
+    """A mask sized for a different series must fail clearly.
+
+    Only the slice count was checked before, so a mask with the wrong
+    in-plane dimensions was accepted and failed later inside numpy with
+    "could not broadcast input array from shape ... into shape ...".
+    """
+    wrong = np.zeros((156, 105, len(new_rtstruct.series_data)), dtype=bool)
+    wrong[10:20, 10:20, 0] = True
+
+    with pytest.raises(Exception) as error:
+        new_rtstruct.add_roi(mask=wrong, name="wrong")
+
+    message = str(error.value)
+    assert "in-plane dimensions" in message
+    assert "(156, 105)" in message
+
+
+def test_mask_shape_is_checked_against_a_non_square_series(one_slice_series_path):
+    """The expected shape is (Columns, Rows), which only differs when non-square."""
+    rtstruct = RTStructBuilder.create_new(dicom_series_path=one_slice_series_path)
+    reference = rtstruct.series_data[0]
+    columns, rows = int(reference.Columns), int(reference.Rows)
+    assert columns != rows, "this fixture is expected to be non-square"
+
+    correct = np.zeros((columns, rows, len(rtstruct.series_data)), dtype=bool)
+    correct[10:20, 10:20, 0] = True
+    rtstruct.add_roi(mask=correct, name="ok")
+    assert rtstruct.get_roi_names() == ["ok"]
+
+    # The transpose must be rejected rather than silently mangled.
+    transposed = np.zeros((rows, columns, len(rtstruct.series_data)), dtype=bool)
+    transposed[10:20, 10:20, 0] = True
+    with pytest.raises(Exception, match="in-plane dimensions"):
+        rtstruct.add_roi(mask=transposed, name="transposed")
