@@ -139,14 +139,29 @@ class RTStruct:
             structure_roi.ROIName for structure_roi in self.ds.StructureSetROISequence
         ]
 
-    def get_roi_mask_by_name(self, name) -> np.ndarray:
+    def get_roi_mask_by_name(self, name, case_sensitive: bool = True) -> np.ndarray:
         """
-        Returns the 3D binary mask of the ROI with the given input name
+        Returns the 3D binary mask of the ROI with the given input name.
+
+        The name must match exactly by default. Pass case_sensitive=False to
+        match while ignoring case, which helps when ROI naming conventions
+        differ between treatment planning systems.
+
+        Matching exactly is the default because a structure set may contain
+        several ROIs whose names differ only in case, and those are distinct
+        structures. With case_sensitive=False the first one in
+        StructureSetROISequence wins and the others become unreachable.
         """
-        name = name.casefold() if type(name) is str else name
+        target = name
+        if not case_sensitive and isinstance(name, str):
+            target = name.casefold()
 
         for structure_roi in self.ds.StructureSetROISequence:
-            if structure_roi.ROIName.casefold() == name:
+            roi_name = structure_roi.ROIName
+            if not case_sensitive and isinstance(roi_name, str):
+                roi_name = roi_name.casefold()
+
+            if roi_name == target:
                 contour_sequence = ds_helper.get_contour_sequence_by_roi_number(
                     self.ds, structure_roi.ROINumber
                 )
