@@ -38,7 +38,7 @@ classifiers = [
 dependencies = [
     "pydicom",
     "numpy",
-    "opencv-python>=4.0.0",
+    "opencv-python-headless>=4.0.0",
 ]
 dynamic = ["version"]
 
