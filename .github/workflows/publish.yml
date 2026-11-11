@@ -1,0 +1,151 @@
+# Build and publish rt-utils to PyPI.
+#
+# Triggers:
+#   * Creating a GitHub Release  -> builds, validates, publishes to PyPI.
+#   * Manual "Run workflow"      -> lets you do a dry run against TestPyPI first.
+#
+# This deliberately does NOT run on every push to `main`. The previous workflow
+# did, so it tried to upload the same version over and over and failed with
+# "400 File already exists" on every push that did not bump the version.
+#
+# Authentication: a project-scoped PyPI API token stored as the repository
+# secret PYPI_API_TOKEN. A PyPI *Maintainer* can create such a token; only an
+# *Owner* can configure Trusted Publishing. See the block at the bottom of this
+# file for the (preferred) switch to Trusted Publishing once Owner access
+# is available.
+
+name: Publish to PyPI
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Index to publish to"
+        required: true
+        default: testpypi
+        type: choice
+        options:
+          - testpypi
+          - pypi
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and validate distributions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build tooling
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build twine
+
+      - name: Build sdist and wheel
+        run: python -m build
+
+      - name: Validate metadata
+        run: python -m twine check --strict dist/*
+
+      - name: Check version against release tag
+        if: github.event_name == 'release'
+        run: |
+          set -euo pipefail
+          VERSION="$(python -c "ns={}; exec(open('rt_utils/_version.py').read(), ns); print(ns['__version__'])")"
+          TAG="${{ github.event.release.tag_name }}"
+          echo "rt_utils/_version.py = $VERSION"
+          echo "release tag          = $TAG"
+          if [ "$TAG" != "v$VERSION" ] && [ "$TAG" != "$VERSION" ]; then
+            echo "::error::Tag '$TAG' does not match version '$VERSION' in rt_utils/_version.py."
+            echo "::error::Bump rt_utils/_version.py and re-tag before releasing."
+            exit 1
+          fi
+
+      - name: Check this version is not already on PyPI
+        if: github.event_name == 'release'
+        run: |
+          set -euo pipefail
+          VERSION="$(python -c "ns={}; exec(open('rt_utils/_version.py').read(), ns); print(ns['__version__'])")"
+          if curl -sf "https://pypi.org/pypi/rt-utils/${VERSION}/json" > /dev/null; then
+            echo "::error::rt-utils ${VERSION} is already on PyPI. Releases cannot be replaced; bump the version."
+            exit 1
+          fi
+          echo "rt-utils ${VERSION} is not on PyPI yet."
+
+      - name: Smoke-test the built wheel
+        run: |
+          set -euo pipefail
+          python -m venv /tmp/smoke
+          /tmp/smoke/bin/pip install --upgrade pip
+          /tmp/smoke/bin/pip install dist/*.whl
+          /tmp/smoke/bin/python -c "import rt_utils; print('imported rt_utils', rt_utils.__version__)"
+          /tmp/smoke/bin/python -c "from rt_utils import RTStructBuilder, RTStructMerger; print('entry points OK')"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  publish-testpypi:
+    name: Publish to TestPyPI
+    if: github.event_name == 'workflow_dispatch' && inputs.target == 'testpypi'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/rt-utils
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          repository-url: https://test.pypi.org/legacy/
+          skip-existing: true
+
+  publish-pypi:
+    name: Publish to PyPI
+    if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.target == 'pypi')
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/rt-utils
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+
+# ---------------------------------------------------------------------------
+# Switching to Trusted Publishing (recommended, needs PyPI *Owner* access)
+#
+# 1. On https://pypi.org/manage/project/rt-utils/settings/publishing/ add a
+#    GitHub publisher:
+#       Owner: qurit    Repository: rt-utils
+#       Workflow: publish.yml    Environment: pypi
+# 2. In this file, add to the `publish-pypi` job:
+#       permissions:
+#         id-token: write
+# 3. Delete the `password:` line from the `pypa/gh-action-pypi-publish` step.
+# 4. Delete the PYPI_API_TOKEN repository secret.
+#
+# Note: the "Publishing" settings page requires the Owner role. A Maintainer
+# collaborator cannot reach it and must ask an Owner.
+# ---------------------------------------------------------------------------
