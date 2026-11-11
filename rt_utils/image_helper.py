@@ -321,6 +321,28 @@ def pixel_polygons_to_patient_coordinates(
     return converted
 
 
+def require_image_position_patient(series_slice: Dataset):
+    """Return a slice's ImagePositionPatient, or explain why it cannot continue.
+
+    ImagePositionPatient is Type 1 for the image modalities rt-utils reads:
+    required, and required to have a value. It is also what every contour
+    coordinate is computed from, so it cannot be given a default. Substituting
+    an origin would place the whole ROI somewhere else in the patient and
+    still produce an RTStruct that looks valid.
+    """
+    position = getattr(series_slice, "ImagePositionPatient", None)
+    if position is None or len(position) != 3:
+        raise AttributeError(
+            "Slice "
+            f"{getattr(series_slice, 'SOPInstanceUID', '<unknown>')} has no "
+            "usable ImagePositionPatient. It is a required element and every "
+            "contour coordinate is derived from it, so it cannot be defaulted "
+            "without placing the ROI at the wrong position in the patient."
+        )
+
+    return position
+
+
 def get_pixel_to_patient_transformation_matrix(series_data):
     """
     https://nipy.org/nibabel/dicom/dicom_orientation.html
@@ -328,7 +350,7 @@ def get_pixel_to_patient_transformation_matrix(series_data):
 
     first_slice = series_data[0]
 
-    offset = np.array(first_slice.ImagePositionPatient)
+    offset = np.array(require_image_position_patient(first_slice))
     row_spacing, column_spacing = first_slice.PixelSpacing
     slice_spacing = get_spacing_between_slices(series_data)
     row_direction, column_direction, slice_direction = get_slice_directions(first_slice)
@@ -347,7 +369,7 @@ def get_pixel_to_patient_transformation_matrix(series_data):
 def get_patient_to_pixel_transformation_matrix(series_data):
     first_slice = series_data[0]
 
-    offset = np.array(first_slice.ImagePositionPatient)
+    offset = np.array(require_image_position_patient(first_slice))
     row_spacing, column_spacing = first_slice.PixelSpacing
     slice_spacing = get_spacing_between_slices(series_data)
     row_direction, column_direction, slice_direction = get_slice_directions(first_slice)
@@ -386,7 +408,7 @@ def apply_transformation_to_3d_points(
 
 def get_slice_position(series_slice: Dataset):
     _, _, slice_direction = get_slice_directions(series_slice)
-    return np.dot(slice_direction, series_slice.ImagePositionPatient)
+    return np.dot(slice_direction, require_image_position_patient(series_slice))
 
 
 def get_slice_directions(series_slice: Dataset):
