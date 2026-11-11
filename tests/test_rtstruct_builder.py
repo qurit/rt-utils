@@ -80,7 +80,42 @@ def test_get_roi_by_name_case_insensitive(new_rtstruct: RTStruct):
     mask[50:100, 50:100, 0] = 1
     new_rtstruct.add_roi(mask, name=NAME)
 
-    assert type(new_rtstruct.get_roi_mask_by_name(name=NAME.upper())) is np.ndarray
+    loaded = new_rtstruct.get_roi_mask_by_name(name=NAME.upper(), case_sensitive=False)
+    assert type(loaded) is np.ndarray
+
+
+def test_get_roi_by_name_is_case_sensitive_by_default(new_rtstruct: RTStruct):
+    NAME = "Test ROI"
+    mask = get_empty_mask(new_rtstruct)
+    mask[50:100, 50:100, 0] = 1
+    new_rtstruct.add_roi(mask, name=NAME)
+
+    assert type(new_rtstruct.get_roi_mask_by_name(name=NAME)) is np.ndarray
+    with pytest.raises(RTStruct.ROIException):
+        new_rtstruct.get_roi_mask_by_name(name=NAME.upper())
+
+
+def test_rois_differing_only_in_case_stay_distinct(new_rtstruct: RTStruct):
+    """Two ROIs whose names differ only in case are different structures.
+
+    Matching case-insensitively by default would make the second unreachable.
+    """
+    upper_mask = get_empty_mask(new_rtstruct)
+    upper_mask[50:80, 50:80, 0] = 1
+    new_rtstruct.add_roi(upper_mask, name="Liver")
+
+    lower_mask = get_empty_mask(new_rtstruct)
+    lower_mask[200:230, 200:230, 0] = 1
+    new_rtstruct.add_roi(lower_mask, name="liver")
+
+    assert new_rtstruct.get_roi_names() == ["Liver", "liver"]
+
+    loaded_upper = new_rtstruct.get_roi_mask_by_name("Liver")
+    loaded_lower = new_rtstruct.get_roi_mask_by_name("liver")
+
+    assert not np.array_equal(loaded_upper, loaded_lower)
+    assert np.array_equal(np.argwhere(loaded_upper)[0][:2], [50, 50])
+    assert np.array_equal(np.argwhere(loaded_lower)[0][:2], [200, 200])
 
 
 def test_get_invalid_roi_by_none_name(new_rtstruct: RTStruct):
