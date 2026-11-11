@@ -147,12 +147,14 @@ class RTStruct:
         name: str = None,
         description: str = "",
         roi_generation_algorithm: Union[str, int] = 0,
+        coordinate_space: str = "patient",
     ):
         """
-        Add an ROI from contours given directly as patient-space coordinates.
+        Add an ROI from contours given directly, rather than from a mask.
 
-        ``coordinates`` is a list of contours, each a list of ``[x, y, z]``
-        points in millimetres:
+        ``coordinate_space`` selects how the points are interpreted:
+
+        ``"patient"`` (the default) takes ``[x, y, z]`` in millimetres:
 
             rtstruct.add_roi_from_coordinates(
                 coordinates=[
@@ -162,11 +164,34 @@ class RTStruct:
                 name="from-coordinates",
             )
 
+        ``"pixel"`` takes ``[column, row, slice_index]`` on the image grid,
+        which is the form an annotation tool working on the images produces:
+
+            rtstruct.add_roi_from_coordinates(
+                coordinates=[[[60, 50, 0], [120, 50, 0], [120, 100, 0]]],
+                name="from-pixels",
+                coordinate_space="pixel",
+            )
+
+        Pixel coordinates are converted to patient space with the series'
+        own transformation, so the polygon is written exactly as given rather
+        than being rasterised to a mask and traced back.
+
         Each contour is attached to the slice nearest its own position, so the
         caller does not need to know the slice ordering. Unlike add_roi this
         takes no mask, so the contours are written as given rather than being
         derived from a rasterised volume.
         """
+        if coordinate_space == "pixel":
+            coordinates = image_helper.pixel_polygons_to_patient_coordinates(
+                coordinates, self.series_data
+            )
+        elif coordinate_space != "patient":
+            raise ValueError(
+                f"Invalid coordinate space '{coordinate_space}'. "
+                "Expected one of ['patient', 'pixel']."
+            )
+
         roi_number = self._next_roi_number()
         roi_data = ROIData(
             # add_roi_from_coordinates writes the given contours directly, so
