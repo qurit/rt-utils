@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/qurit/rt-utils/main/src/rt-utils-logo.png" height="300"/>
+  <img src="https://raw.githubusercontent.com/qurit/rt-utils/main/src/RTUtils_logo.png" height="300"/>
 </p>
 <p align="center">
   <em>A minimal Python library for RT Struct manipulation</em>
@@ -190,4 +190,7 @@ If you are incorporating RT-Utils into your projects, kindly include the followi
 
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.07361/status.svg)](https://doi.org/10.21105/joss.07361)
 
+For citation please use: 
+Shrestha, A., A. Watkins, F. Yousefirizi, A. Rahmim, C. Uribe, "RT-utils: A minimal python library for RT-struct manipulation." Journal of Open Source Software, Vol. 10 (No. 107), pp. 7361, (2025). doi:10.21105/joss.07361.
+  
 Read the full paper: Asim Shrestha, Adam Watkins, Fereshteh Yousefirizi, Arman Rahmim, and Carlos Uribe [RT-utils: A Minimal Python Library for RT-struct Manipulation](https://joss.theoj.org/papers/10.21105/joss.07361)

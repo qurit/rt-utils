@@ -1,7 +1,6 @@
 import SimpleITK as sitk
 from SimpleITK import GetArrayFromImage, sitkNearestNeighbor, Image
 import numpy as np
-from torch import nn
 from rt_utils import RTStructBuilder
 
 def debug_output(seg: sitk.Image, seg_path: str, uid:str, dicom_path: str):
