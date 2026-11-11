@@ -1,4 +1,6 @@
+from io import BytesIO
 from typing import List, Union
+
 import numpy as np
 from pydicom.dataset import FileDataset
 from rt_utils.utils import ROIData
@@ -206,6 +208,20 @@ class RTStruct:
                 self.ds.save_as(file_path)
         except OSError:
             raise Exception(f"Cannot write to file path '{file_path}'")
+
+    def save_to_memory(self) -> BytesIO:
+        """
+        Write the RTStruct to an in-memory buffer and return it.
+
+        The buffer is rewound, so it can be handed straight to
+        ``pydicom.dcmread`` or to anything expecting a readable file object.
+        Useful when the result is uploaded or passed on rather than written to
+        disk.
+        """
+        buffer = BytesIO()
+        self.ds.save_as(buffer)
+        buffer.seek(0)
+        return buffer
 
     class ROIException(Exception):
         """

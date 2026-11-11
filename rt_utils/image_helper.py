@@ -1,5 +1,5 @@
 import os
-from typing import List
+from typing import List, Union
 from enum import IntEnum
 
 import cv2 as cv
@@ -11,17 +11,28 @@ from pydicom.sequence import Sequence
 from rt_utils.utils import ROIData, SOPClassUID
 
 
-def load_sorted_image_series(dicom_series_path: str):
+def load_sorted_image_series(
+    dicom_series: Union[str, os.PathLike, List[Dataset]]
+) -> List[Dataset]:
     """
-    File contains helper methods for loading / formatting DICOM images and contours
-    """
+    Load a DICOM image series and return its slices in ascending spatial order.
 
-    series_data = load_dcm_images_from_path(dicom_series_path)
+    Accepts either a path to a directory of DICOM files, or a list of datasets
+    already read into memory with pydicom.
+
+    The given list is not reordered in place; sorting is applied to a copy, so
+    the caller's list keeps whatever order it had.
+    """
+    if isinstance(dicom_series, (str, os.PathLike)):
+        series_data = load_dcm_images_from_path(dicom_series)
+    else:
+        series_data = list(dicom_series)
 
     if len(series_data) == 0:
         raise Exception("No DICOM Images found in input path")
 
-    # Sort slices in ascending order
+    # Sort slices in ascending order. In-memory datasets are sorted by the same
+    # key as files read from disk, so both inputs produce identical ordering.
     series_data.sort(key=get_slice_position, reverse=False)
 
     return series_data
