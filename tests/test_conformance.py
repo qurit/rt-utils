@@ -227,8 +227,6 @@ def test_exact_contours_round_trip_exactly(series_path):
     rtstruct = RTStructBuilder.create_new(dicom_series_path=series_path)
     mask = annulus(_grid(rtstruct))
 
-    loaded = round_trip(
-        series_path, mask, "exact_contours", approximate_contours=False
-    )
+    loaded = round_trip(series_path, mask, "exact_contours", approximate_contours=False)
 
     assert np.array_equal(mask, loaded)
