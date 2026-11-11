@@ -1,4 +1,6 @@
-from typing import List
+import os
+from typing import List, Union
+
 from pydicom.dataset import Dataset
 from pydicom.filereader import dcmread
 
@@ -15,9 +17,15 @@ class RTStructBuilder:
     """
 
     @staticmethod
-    def create_new(dicom_series_path: str) -> RTStruct:
+    def create_new(
+        dicom_series_path: Union[str, os.PathLike, List[Dataset]],
+    ) -> RTStruct:
         """
-        Method to generate a new rt struct from a DICOM series
+        Method to generate a new rt struct from a DICOM series.
+
+        ``dicom_series_path`` is either a path to a directory of DICOM files or
+        a list of datasets already read into memory with pydicom. Both are
+        sorted by slice position, so the two forms are interchangeable.
         """
 
         series_data = image_helper.load_sorted_image_series(dicom_series_path)
@@ -25,13 +33,25 @@ class RTStructBuilder:
         return RTStruct(series_data, ds)
 
     @staticmethod
-    def create_from(dicom_series_path: str, rt_struct_path: str, warn_only: bool = False) -> RTStruct:
+    def create_from(
+        dicom_series_path: Union[str, os.PathLike, List[Dataset]],
+        rt_struct_path: Union[str, os.PathLike, Dataset],
+        warn_only: bool = False,
+    ) -> RTStruct:
         """
-        Method to load an existing rt struct, given related DICOM series and existing rt struct
+        Method to load an existing rt struct, given related DICOM series and
+        existing rt struct.
+
+        Both arguments accept either a path or already-loaded pydicom objects:
+        a list of datasets for the series, and a dataset for the RTStruct.
         """
 
         series_data = image_helper.load_sorted_image_series(dicom_series_path)
-        ds = dcmread(rt_struct_path)
+        ds = (
+            rt_struct_path
+            if isinstance(rt_struct_path, Dataset)
+            else dcmread(rt_struct_path)
+        )
         RTStructBuilder.validate_rtstruct(ds)
         RTStructBuilder.validate_rtstruct_series_references(ds, series_data, warn_only)
 
@@ -53,7 +73,9 @@ class RTStructBuilder:
             raise Exception("Please check that the existing RTStruct is valid")
 
     @staticmethod
-    def validate_rtstruct_series_references(ds: Dataset, series_data: List[Dataset], warn_only: bool = False):
+    def validate_rtstruct_series_references(
+        ds: Dataset, series_data: List[Dataset], warn_only: bool = False
+    ):
         """
         Method to validate RTStruct only references dicom images found within the input series_data
         """
@@ -81,8 +103,10 @@ class RTStructBuilder:
                 return
 
         # ReferencedSOPInstanceUID is NOT available
-        msg = f"Loaded RTStruct references image(s) that are not contained in input series data. " \
-              f"Problematic image has SOP Instance Id: {contour_image.ReferencedSOPInstanceUID}"
+        msg = (
+            f"Loaded RTStruct references image(s) that are not contained in input series data. "
+            f"Problematic image has SOP Instance Id: {contour_image.ReferencedSOPInstanceUID}"
+        )
         if warning_only:
             warnings.warn(msg)
         else:
