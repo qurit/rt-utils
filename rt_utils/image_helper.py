@@ -382,9 +382,11 @@ def get_slice_mask_from_slice_contour_data(
         num_points = len(reshaped_contour_data)
         
         if num_points == 1:
-            # Single point contour - draw a point marker
+            # Single point contour - set exactly the one voxel it names.
+            # radius=0 paints a single pixel; radius=1 would paint five and
+            # inflate the smallest ROIs (fiducials, seeds, reference points).
             point = tuple(polygon.flatten()[:2])
-            cv.circle(slice_mask, point, radius=1, color=1, thickness=-1)
+            cv.circle(slice_mask, point, radius=0, color=1, thickness=-1)
         elif num_points == 2:
             # Two point contour - draw a line
             pt1 = tuple(polygon[0])
