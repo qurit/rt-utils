@@ -54,7 +54,7 @@ class RTStruct:
         use_pin_hole: bool = False,
         approximate_contours: bool = True,
         roi_generation_algorithm: Union[str, int] = 0,
-        contour_mode: str = "voxel_center",
+        contour_mode: str = "voxel_edge",
     ):
         """
         Add a Region of Interest (ROI) to the RTStruct given a 3D binary mask for each slice.
@@ -84,12 +84,23 @@ class RTStruct:
             If True, attempts to create a single continuous contour for ROIs with holes. Defaults to False.
         approximate_contours : bool, optional
             If False, skips approximation during contour generation, leading to larger contour data. Defaults to True.
+            Only applies to ``contour_mode="voxel_center"``; edge tracing
+            already emits one vertex per corner.
         roi_generation_algorithm : str or int, optional
             Identifier for the algorithm used to generate the ROI. Defaults to 0.
-        contour_mode : {"voxel_center", "voxel_edge"}, optional
-            Placement of generated contours. ``"voxel_center"`` preserves the
-            original OpenCV behavior. ``"voxel_edge"`` traces the outer edges
-            of foreground voxels. Defaults to ``"voxel_center"``.
+        contour_mode : {"voxel_edge", "voxel_center"}, optional
+            Placement of generated contours. Defaults to ``"voxel_edge"``,
+            which traces the outer edges of foreground voxels so the contour
+            encloses the area the mask actually occupies.
+
+            ``"voxel_center"`` traces through voxel centres instead, which
+            understates the structure by half a voxel on every side. The
+            effect is negligible for large structures and severe for small
+            ones: a 3x3 voxel region exports at roughly 44% of its true area.
+            It remains available for reproducing output from earlier
+            releases, where it was the default.
+
+            Both modes round trip exactly through this library.
 
         Raises
         ------

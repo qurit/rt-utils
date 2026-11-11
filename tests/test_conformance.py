@@ -202,24 +202,55 @@ def test_pin_hole_is_lossy_but_bounded(series_path):
     assert volume_relative_error(mask, loaded) <= 0.01
 
 
-def test_voxel_edge_mode_is_bounded(series_path):
-    """voxel_edge places contours on voxel boundaries rather than centres.
+def _polygon_area(points_xy: np.ndarray) -> float:
+    x, y = points_xy[:, 0], points_xy[:, 1]
+    return 0.5 * abs(np.dot(x, np.roll(y, -1)) - np.dot(y, np.roll(x, -1)))
 
-    Rasterising those contours back therefore picks up the boundary row and
-    column, so the mask grows slightly. Measured on this square: dice 0.9922,
-    volume error 1.57%. This is the documented behaviour of the mode, not a
-    defect; the assertion exists so the size of the effect cannot drift
-    unnoticed.
+
+def test_exported_contour_matches_the_true_extent(series_path):
+    """The exported contour must enclose the area the mask actually occupies.
+
+    This is the property an external consumer sees: a treatment planning
+    system reads the contour, not our mask. voxel_edge traces voxel
+    boundaries and is exact. voxel_center traces voxel centres, so it
+    understates by half a voxel on every side, which is why it is no longer
+    the default.
     """
     rtstruct = RTStructBuilder.create_new(dicom_series_path=series_path)
-    mask = solid_square(_grid(rtstruct))
+    ref = rtstruct.series_data[0]
+    spacing_row, spacing_column = (float(v) for v in ref.PixelSpacing)
 
-    loaded = round_trip(series_path, mask, "voxel_edge", contour_mode="voxel_edge")
+    side = 50
+    mask = _blank(rtstruct)
+    mask[50 : 50 + side, 50 : 50 + side, 0] = True
+    true_area = (side * spacing_row) * (side * spacing_column)
 
-    assert dice_coefficient(mask, loaded) >= 0.98
-    assert volume_relative_error(mask, loaded) <= 0.03
-    # The mode grows the mask; it must never shrink it.
-    assert loaded.sum() >= mask.sum()
+    rtstruct.add_roi(mask=mask, name="square")
+    contour = rtstruct.ds.ROIContourSequence[0].ContourSequence[0]
+    points = np.asarray(contour.ContourData, dtype=float).reshape(-1, 3)
+
+    assert _polygon_area(points[:, :2]) == pytest.approx(true_area, rel=1e-6)
+
+
+@pytest.mark.parametrize("contour_mode", ["voxel_center", "voxel_edge"])
+@pytest.mark.parametrize("shape_name", sorted(SHAPES))
+def test_shape_round_trips_exactly_in_both_modes(series_path, shape_name, contour_mode):
+    """Both contour modes must survive a round trip unchanged.
+
+    The rasteriser sets a voxel when its centre falls inside a contour, so
+    contours traced on voxel boundaries and contours traced through voxel
+    centres both read back to the mask they came from.
+    """
+    rtstruct = RTStructBuilder.create_new(dicom_series_path=series_path)
+    mask = SHAPES[shape_name](_grid(rtstruct))
+
+    loaded = round_trip(series_path, mask, shape_name, contour_mode=contour_mode)
+
+    assert np.array_equal(mask, loaded), (
+        f"{shape_name} in {contour_mode}: dice "
+        f"{dice_coefficient(mask, loaded):.4f}, volume error "
+        f"{volume_relative_error(mask, loaded):.2%}"
+    )
 
 
 def test_exact_contours_round_trip_exactly(series_path):
