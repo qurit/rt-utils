@@ -1,4 +1,10 @@
 include LICENSE
 include README.md
 include RELEASING.md
-include requirements.txt
+
+prune tests
+prune Paper
+prune src
+exclude NIFTI_conversion.py
+exclude nifti2rt.py
+exclude RTUTILS_read_world_example_for_PET.ipynb
