@@ -1,3 +1,5 @@
+import re
+
 import numpy as np
 import pytest
 
@@ -8,7 +10,16 @@ from tests.test_rtstruct_builder import get_empty_mask
 
 
 def test_package_version():
-    assert __version__ == "1.3.1"
+    """__version__ must be a valid PEP 440 release version.
+
+    This deliberately does not hardcode the number. The publish workflow
+    already fails the release if the git tag and rt_utils/_version.py
+    disagree, which is the check that matters; restating the version here
+    only meant CI broke on every bump until someone edited this line.
+    """
+    assert re.fullmatch(r"\d+\.\d+\.\d+", __version__), (
+        f"unexpected version string: {__version__!r}"
+    )
 
 
 def test_single_voxel_edge_polygon():
