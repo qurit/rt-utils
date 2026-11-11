@@ -39,6 +39,7 @@ dependencies = [
     "pydicom",
     "numpy",
     "opencv-python-headless>=4.0.0",
+    "scipy",
 ]
 dynamic = ["version"]
 

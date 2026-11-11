@@ -1,10 +1,10 @@
 from io import BytesIO
-from typing import List, Union
+from typing import Dict, List, Union
 
 import numpy as np
 from pydicom.dataset import FileDataset
 from rt_utils.utils import ROIData
-from . import ds_helper, image_helper
+from . import ds_helper, image_helper, smoothing
 
 
 class RTStruct:
@@ -55,6 +55,9 @@ class RTStruct:
         approximate_contours: bool = True,
         roi_generation_algorithm: Union[str, int] = 0,
         contour_mode: str = "voxel_edge",
+        apply_smoothing: Union[str, None] = None,
+        smoothing_function=smoothing.pipeline,
+        smoothing_parameters: Union[Dict, None] = None,
     ):
         """
         Add a Region of Interest (ROI) to the RTStruct given a 3D binary mask for each slice.
@@ -116,6 +119,25 @@ class RTStruct:
         """
         # TODO: test if name already exists
         self.validate_mask(mask)
+
+        scaling_factor = 1
+        if apply_smoothing:
+            rows = int(self.series_data[0].Rows)
+            mask = smoothing_function(
+                mask=mask,
+                apply_smoothing=apply_smoothing,
+                smoothing_parameters=smoothing_parameters,
+            )
+            # Smoothing upscales the mask in x and y. Contours are traced at
+            # that resolution and divided back down, giving a sub-voxel
+            # boundary rather than the original stair steps.
+            scaling_factor = int(mask.shape[0] / rows)
+            if scaling_factor < 1:
+                raise RTStruct.ROIException(
+                    "Smoothing must not return a mask smaller than the image; "
+                    f"got {mask.shape[0]} rows for an image with {rows}"
+                )
+
         roi_number = self._next_roi_number()
         roi_data = ROIData(
             mask,
@@ -128,6 +150,7 @@ class RTStruct:
             approximate_contours,
             roi_generation_algorithm,
             contour_mode,
+            scaling_factor,
         )
 
         self.ds.ROIContourSequence.append(
