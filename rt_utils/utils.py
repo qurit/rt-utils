@@ -55,6 +55,9 @@ class ROIData:
     approximate_contours: bool = True
     roi_generation_algorithm: Union[str, int] = 0
     contour_mode: str = "voxel_center"
+    # Set when the mask has been smoothed, which upscales it. Contour
+    # coordinates are divided by this to return to the image's own grid.
+    scaling_factor: int = 1
 
     def __post_init__(self):
         self.validate_color()

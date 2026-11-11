@@ -75,6 +75,7 @@ def get_contours_coords(roi_data: ROIData, series_data):
             mask_slice,
             roi_data.approximate_contours,
             contour_mode=roi_data.contour_mode,
+            scaling_factor=roi_data.scaling_factor,
         )
         validate_contours(contours)
 
@@ -101,11 +102,18 @@ def find_mask_contours(
     mask: np.ndarray,
     approximate_contours: bool,
     contour_mode: str = "voxel_center",
+    scaling_factor: int = 1,
 ):
+    """Trace contours of a mask, in that mask's own coordinates.
+
+    ``scaling_factor`` is greater than one when the mask has been upscaled by
+    smoothing. Coordinates are divided by it so the contour is expressed on
+    the original image grid, at sub-voxel precision.
+    """
     if contour_mode == "voxel_edge":
         contours = [polygon.tolist() for polygon in mask_to_edge_polygons(mask)]
         hierarchy = np.full((len(contours), 4), -1, dtype=np.int32)
-        return contours, hierarchy
+        return _rescale_contours(contours, scaling_factor), hierarchy
     if contour_mode != "voxel_center":
         raise ValueError(
             f"Invalid contour mode '{contour_mode}'. Expected one of "
@@ -126,7 +134,18 @@ def find_mask_contours(
         contours[i] = [[pos[0][0], pos[0][1]] for pos in contour]
     hierarchy = hierarchy[0]  # Format extra array out of data
 
-    return contours, hierarchy
+    return _rescale_contours(contours, scaling_factor), hierarchy
+
+
+def _rescale_contours(contours, scaling_factor: int):
+    """Divide contour coordinates by the factor the mask was upscaled by."""
+    if scaling_factor == 1:
+        return contours
+
+    return [
+        [[point[0] / scaling_factor, point[1] / scaling_factor] for point in contour]
+        for contour in contours
+    ]
 
 
 def mask_to_edge_polygons(mask: np.ndarray) -> List[np.ndarray]:
