@@ -71,6 +71,39 @@ rtstruct.add_roi(
 rtstruct.save('new-rt-struct')
 ```
 
+## Adding an ROI from coordinates
+If the geometry is already known in patient space, the contours can be given
+directly instead of being derived from a mask. Each contour is a list of
+`[x, y, z]` points in millimetres, and is attached to the slice nearest its own
+position.
+```Python
+from rt_utils import RTStructBuilder
+
+rtstruct = RTStructBuilder.create_new(dicom_series_path="./testlocation")
+
+rtstruct.add_roi_from_coordinates(
+  coordinates=[
+    [
+      # One contour, on one slice
+      [-20.0, -170.0, -559.0],
+      [30.0, -170.0, -559.0],
+      [30.0, -110.0, -559.0],
+      [-20.0, -110.0, -559.0],
+    ],
+    [
+      # Another contour, on the next slice
+      [-20.0, -170.0, -562.4],
+      [30.0, -170.0, -562.4],
+      [30.0, -110.0, -562.4],
+      [-20.0, -110.0, -562.4],
+    ],
+  ],
+  name="RT-Utils ROI from coordinates!",
+)
+
+rtstruct.save('new-rt-struct')
+```
+
 ## Adding to existing RT Structs
 ```Python
 from rt_utils import RTStructBuilder

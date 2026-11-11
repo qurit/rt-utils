@@ -1,6 +1,9 @@
 import datetime
+from typing import List
+
+from rt_utils import image_helper
 from rt_utils.image_helper import get_contours_coords
-from rt_utils.utils import ROIData, SOPClassUID
+from rt_utils.utils import ROIData, SOPClassUID, flatten_coordinates
 import numpy as np
 from pydicom.uid import generate_uid
 from pydicom.dataset import Dataset, FileDataset, FileMetaDataset
@@ -98,8 +101,12 @@ def add_patient_information(ds: FileDataset, series_data):
 
 def add_refd_frame_of_ref_sequence(ds: FileDataset, series_data):
     refd_frame_of_ref = Dataset()
-    refd_frame_of_ref.FrameOfReferenceUID =  getattr(series_data[0], 'FrameOfReferenceUID', generate_uid())
-    refd_frame_of_ref.RTReferencedStudySequence = create_frame_of_ref_study_sequence(series_data)
+    refd_frame_of_ref.FrameOfReferenceUID = getattr(
+        series_data[0], "FrameOfReferenceUID", generate_uid()
+    )
+    refd_frame_of_ref.RTReferencedStudySequence = create_frame_of_ref_study_sequence(
+        series_data
+    )
 
     # Add to sequence
     ds.ReferencedFrameOfReferenceSequence = Sequence()
@@ -171,10 +178,66 @@ def create_contour_sequence(roi_data: ROIData, series_data) -> Sequence:
 
         for contour_data in slice_contours:
             contour = create_contour(series_slice, contour_data)
-            if (contour.ContourGeometricType == 'CLOSED_PLANAR' and contour.NumberOfContourPoints > 2) or contour.ContourGeometricType != 'CLOSED_PLANAR':
+            if (
+                contour.ContourGeometricType == "CLOSED_PLANAR"
+                and contour.NumberOfContourPoints > 2
+            ) or contour.ContourGeometricType != "CLOSED_PLANAR":
                 contour_sequence.append(contour)
 
     return contour_sequence
+
+
+def create_roi_contour_from_coordinates(
+    coordinates: List[List[List[float]]], roi_data: ROIData, series_data
+) -> Dataset:
+    roi_contour = Dataset()
+    roi_contour.ROIDisplayColor = roi_data.color
+    roi_contour.ContourSequence = create_contour_sequence_from_coordinates(
+        coordinates, series_data
+    )
+    roi_contour.ReferencedROINumber = str(roi_data.number)
+
+    return roi_contour
+
+
+def create_contour_sequence_from_coordinates(
+    coordinates: List[List[List[float]]], series_data
+) -> Sequence:
+    """Build a ContourSequence from contours given as patient-space points.
+
+    Each contour is a list of [x, y, z] points. The slice it belongs to is the
+    one whose position is nearest the contour's own, so the caller does not
+    have to know the slice ordering.
+    """
+    contour_sequence = Sequence()
+
+    for contour_points in coordinates:
+        if len(contour_points) == 0:
+            raise ValueError("A contour must contain at least one point")
+
+        series_slice = find_closest_slice(series_data, contour_points[0])
+        contour_data = flatten_coordinates(contour_points)
+        contour_sequence.append(create_contour(series_slice, contour_data))
+
+    return contour_sequence
+
+
+def find_closest_slice(series_data, point: List[float]) -> Dataset:
+    """Return the slice whose position is nearest the given patient-space point.
+
+    Positions are compared along the slice normal rather than along z, so this
+    is correct for series that are not axial. image_helper.get_slice_position
+    sorts the series by that same projection.
+    """
+    _, _, slice_direction = image_helper.get_slice_directions(series_data[0])
+    point_position = np.dot(slice_direction, np.asarray(point, dtype=float))
+
+    return min(
+        series_data,
+        key=lambda series_slice: abs(
+            image_helper.get_slice_position(series_slice) - point_position
+        ),
+    )
 
 
 def create_contour(series_slice: Dataset, contour_data: np.ndarray) -> Dataset:

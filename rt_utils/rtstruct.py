@@ -59,9 +59,9 @@ class RTStruct:
         """
         Add a Region of Interest (ROI) to the RTStruct given a 3D binary mask for each slice.
 
-        Optionally input a color or name for the ROI. 
+        Optionally input a color or name for the ROI.
         If `use_pin_hole` is set to True, attempts to handle ROIs with holes by creating a single continuous contour.
-        If `approximate_contours` is set to False, no approximation is done during contour generation, 
+        If `approximate_contours` is set to False, no approximation is done during contour generation,
         potentially resulting in a large amount of contour data.
 
         This method updates the internal DICOM structure (RTStruct) by adding:
@@ -121,6 +121,60 @@ class RTStruct:
 
         self.ds.ROIContourSequence.append(
             ds_helper.create_roi_contour(roi_data, self.series_data)
+        )
+        self.ds.StructureSetROISequence.append(
+            ds_helper.create_structure_set_roi(roi_data)
+        )
+        self.ds.RTROIObservationsSequence.append(
+            ds_helper.create_rtroi_observation(roi_data)
+        )
+
+    def add_roi_from_coordinates(
+        self,
+        coordinates: List[List[List[float]]],
+        color: Union[str, List[int]] = None,
+        name: str = None,
+        description: str = "",
+        roi_generation_algorithm: Union[str, int] = 0,
+    ):
+        """
+        Add an ROI from contours given directly as patient-space coordinates.
+
+        ``coordinates`` is a list of contours, each a list of ``[x, y, z]``
+        points in millimetres:
+
+            rtstruct.add_roi_from_coordinates(
+                coordinates=[
+                    [[-20.0, -170.0, -559.0], [30.0, -170.0, -559.0],
+                     [30.0, -110.0, -559.0], [-20.0, -110.0, -559.0]],
+                ],
+                name="from-coordinates",
+            )
+
+        Each contour is attached to the slice nearest its own position, so the
+        caller does not need to know the slice ordering. Unlike add_roi this
+        takes no mask, so the contours are written as given rather than being
+        derived from a rasterised volume.
+        """
+        roi_number = self._next_roi_number()
+        roi_data = ROIData(
+            # add_roi_from_coordinates writes the given contours directly, so
+            # no mask is rasterised. ROIData still requires the field.
+            np.zeros(1),
+            color,
+            roi_number,
+            name,
+            self.frame_of_reference_uid,
+            description,
+            False,
+            True,
+            roi_generation_algorithm,
+        )
+
+        self.ds.ROIContourSequence.append(
+            ds_helper.create_roi_contour_from_coordinates(
+                coordinates, roi_data, self.series_data
+            )
         )
         self.ds.StructureSetROISequence.append(
             ds_helper.create_structure_set_roi(roi_data)
@@ -227,4 +281,5 @@ class RTStruct:
         """
         Exception class for invalid ROI masks
         """
+
         pass
