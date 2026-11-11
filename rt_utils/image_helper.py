@@ -12,7 +12,7 @@ from rt_utils.utils import ROIData, SOPClassUID
 
 
 def load_sorted_image_series(
-    dicom_series: Union[str, os.PathLike, List[Dataset]]
+    dicom_series: Union[str, os.PathLike, List[Dataset]],
 ) -> List[Dataset]:
     """
     Load a DICOM image series and return its slices in ascending spatial order.
@@ -176,9 +176,7 @@ def mask_to_edge_polygons(mask: np.ndarray) -> List[np.ndarray]:
                 break
             if len(ends) > 1:
                 ends.sort(
-                    key=lambda end: np.arctan2(
-                        end[1] - current[1], end[0] - current[0]
-                    )
+                    key=lambda end: np.arctan2(end[1] - current[1], end[0] - current[0])
                 )
             current = ends.pop(0)
             if not ends:
@@ -271,9 +269,9 @@ def get_pixel_to_patient_transformation_matrix(series_data):
     row_direction, column_direction, slice_direction = get_slice_directions(first_slice)
 
     mat = np.identity(4, dtype=np.float32)
-    #The following might appear counter-intuitive, i.e. multiplying the row direction with the column spacing and vice-versa
-    #But is the correct way to create the transformation matrix, see https://nipy.org/nibabel/dicom/dicom_orientation.html
-    mat[:3, 0] = row_direction * column_spacing 
+    # The following might appear counter-intuitive, i.e. multiplying the row direction with the column spacing and vice-versa
+    # But is the correct way to create the transformation matrix, see https://nipy.org/nibabel/dicom/dicom_orientation.html
+    mat[:3, 0] = row_direction * column_spacing
     mat[:3, 1] = column_direction * row_spacing
     mat[:3, 2] = slice_direction * slice_spacing
     mat[:3, 3] = offset
@@ -295,8 +293,8 @@ def get_patient_to_pixel_transformation_matrix(series_data):
     # inv(M) = [ inv(rotation&scaling)   -inv(rotation&scaling) * translation ]
     #          [          0                                1                  ]
 
-    #The following might appear counter-intuitive, i.e. dividing the row direction with the column spacing and vice-versa
-    #But is the correct way to create the inverse transformation matrix, see https://nipy.org/nibabel/dicom/dicom_orientation.html
+    # The following might appear counter-intuitive, i.e. dividing the row direction with the column spacing and vice-versa
+    # But is the correct way to create the inverse transformation matrix, see https://nipy.org/nibabel/dicom/dicom_orientation.html
     linear = np.identity(3, dtype=np.float32)
     linear[0, :3] = row_direction / column_spacing
     linear[1, :3] = column_direction / row_spacing
@@ -376,22 +374,43 @@ def get_slice_contour_data(series_slice: Dataset, contour_sequence: Sequence):
     return slice_contour_data
 
 
+# Contours are rasterised at this multiple of the image resolution, then read
+# back at the positions corresponding to voxel centres. cv2.fillPoly fills
+# vertex to vertex inclusive, so rasterising at image resolution adds a row and
+# column whenever a contour runs along voxel boundaries rather than centres.
+CONTOUR_SUPERSAMPLE = 2
+
+
 def get_slice_mask_from_slice_contour_data(
     series_slice: Dataset, slice_contour_data, transformation_matrix: np.ndarray
 ):
-    # Go through all contours in a slice, create polygons in correct space and with a correct format 
-    # and append to polygons array (appropriate for fillPoly) 
+    """Rasterise a slice's contours into a binary mask.
+
+    A voxel is set when its centre lies inside a contour. Polygons are filled
+    at CONTOUR_SUPERSAMPLE times the image resolution and then sampled at the
+    voxel centres, because cv2.fillPoly treats its vertices as inclusive: a
+    contour tracing voxel boundaries would otherwise gain a row and a column.
+
+    Contours of one or two points describe no area, so they are drawn directly
+    at image resolution as a point and a line.
+    """
     slice_mask = create_empty_slice_mask(series_slice).astype(np.uint8)
-    polygons = []
-    
+    scale = CONTOUR_SUPERSAMPLE
+    supersampled_polygons = []
+
     for contour_coords in slice_contour_data:
-        reshaped_contour_data = np.reshape(contour_coords, [len(contour_coords) // 3, 3])
-        translated_contour_data = apply_transformation_to_3d_points(reshaped_contour_data, transformation_matrix)
-        polygon = [np.around([translated_contour_data[:, :2]]).astype(np.int32)]
+        reshaped_contour_data = np.reshape(
+            contour_coords, [len(contour_coords) // 3, 3]
+        )
+        translated_contour_data = apply_transformation_to_3d_points(
+            reshaped_contour_data, transformation_matrix
+        )
+        points = translated_contour_data[:, :2]
+        polygon = np.around([points]).astype(np.int32)
         polygon = np.array(polygon).squeeze()
-        
+
         num_points = len(reshaped_contour_data)
-        
+
         if num_points == 1:
             # Single point contour - set exactly the one voxel it names.
             # radius=0 paints a single pixel; radius=1 would paint five and
@@ -404,14 +423,18 @@ def get_slice_mask_from_slice_contour_data(
             pt2 = tuple(polygon[1])
             cv.line(slice_mask, pt1, pt2, color=1, thickness=1)
         else:
-            # Three or more points - use fillPoly
-            polygons.append(polygon)
-    
-    # Fill all valid polygons (3+ points) at once
-    if polygons:
-        cv.fillPoly(img=slice_mask, pts=polygons, color=1)
-    
+            supersampled_polygons.append(np.around(points * scale).astype(np.int32))
+
+    if supersampled_polygons:
+        supersampled = np.zeros(
+            (slice_mask.shape[0] * scale, slice_mask.shape[1] * scale), dtype=np.uint8
+        )
+        cv.fillPoly(img=supersampled, pts=supersampled_polygons, color=1)
+        # Voxel centre i sits at supersampled coordinate i * scale.
+        np.maximum(slice_mask, supersampled[::scale, ::scale], out=slice_mask)
+
     return slice_mask
+
 
 def create_empty_series_mask(series_data):
     ref_dicom_image = series_data[0]

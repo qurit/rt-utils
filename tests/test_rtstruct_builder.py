@@ -39,7 +39,9 @@ def test_add_empty_roi(new_rtstruct: RTStruct):
     mask = get_empty_mask(new_rtstruct)
     new_rtstruct.add_roi(mask)
     assert len(new_rtstruct.ds.ROIContourSequence) == 1
-    assert len(new_rtstruct.ds.ROIContourSequence[0].ContourSequence) == 0  # No slices added
+    assert (
+        len(new_rtstruct.ds.ROIContourSequence[0].ContourSequence) == 0
+    )  # No slices added
     assert len(new_rtstruct.ds.StructureSetROISequence) == 1
     assert len(new_rtstruct.ds.RTROIObservationsSequence) == 1
 
@@ -271,12 +273,33 @@ def test_contour_data_sizes(new_rtstruct: RTStruct):
     mask[50:100, 50:100, 0] = 1
     mask[60:150, 40:120, 0] = 1
 
-    # Given we've added the same mask with and without contour approximation
-    new_rtstruct.add_roi(mask)
-    new_rtstruct.add_roi(mask, approximate_contours=False)
+    # Given we've added the same mask with and without contour approximation.
+    # approximate_contours only applies to contour_mode="voxel_center";
+    # "voxel_edge" traces minimal edge polygons and ignores it.
+    new_rtstruct.add_roi(mask, contour_mode="voxel_center")
+    new_rtstruct.add_roi(mask, approximate_contours=False, contour_mode="voxel_center")
 
     # Then using approximation leads to less data within the contour data
     assert get_data_len_by_index(new_rtstruct, 0) < get_data_len_by_index(
+        new_rtstruct, 1
+    )
+
+
+def test_voxel_edge_ignores_contour_approximation(new_rtstruct: RTStruct):
+    """voxel_edge traces minimal edge polygons, so approximation is moot.
+
+    approximate_contours selects an OpenCV chain approximation method, which
+    only applies to the voxel_center path. Edge tracing already emits one
+    vertex per corner.
+    """
+    mask = get_empty_mask(new_rtstruct)
+    mask[50:100, 50:100, 0] = 1
+    mask[60:150, 40:120, 0] = 1
+
+    new_rtstruct.add_roi(mask, contour_mode="voxel_edge")
+    new_rtstruct.add_roi(mask, approximate_contours=False, contour_mode="voxel_edge")
+
+    assert get_data_len_by_index(new_rtstruct, 0) == get_data_len_by_index(
         new_rtstruct, 1
     )
 
@@ -321,9 +344,9 @@ def test_single_point_contour_round_trips_to_one_voxel(new_rtstruct: RTStruct):
     new_rtstruct.add_roi(mask, name="single-voxel")
     loaded_mask = new_rtstruct.get_roi_mask_by_name("single-voxel")
 
-    assert loaded_mask.sum() == 1, (
-        f"expected exactly 1 voxel, got {int(loaded_mask.sum())}"
-    )
+    assert (
+        loaded_mask.sum() == 1
+    ), f"expected exactly 1 voxel, got {int(loaded_mask.sum())}"
     assert loaded_mask[100, 100, 0]
 
 
@@ -340,7 +363,7 @@ def test_roi_number_does_not_collide_after_external_deletion(
     """
     for index, name in enumerate(["A", "B", "C"]):
         mask = get_empty_mask(new_rtstruct)
-        mask[50 + index * 40 : 70 + index * 40, 50 : 70, 0] = 1
+        mask[50 + index * 40 : 70 + index * 40, 50:70, 0] = 1
         new_rtstruct.add_roi(mask, name=name)
 
     assert [int(r.ROINumber) for r in new_rtstruct.ds.StructureSetROISequence] == [
