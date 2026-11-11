@@ -23,6 +23,26 @@ class RTStruct:
         """
         self.ds.SeriesDescription = description
 
+    def _next_roi_number(self) -> int:
+        """Return an ROINumber not already used in this structure set.
+
+        Counting the sequence is not enough. An ROI deleted in another
+        application leaves a gap, so len(StructureSetROISequence) + 1 can
+        collide with an ROINumber that is still in use. ROINumber is the key
+        that ties StructureSetROISequence to ROIContourSequence, so a
+        duplicate silently associates two ROIs with the same contours.
+
+        DICOM numbers ROIs from 1, so an empty structure set yields 1.
+        """
+        used = []
+        for structure_roi in self.ds.StructureSetROISequence:
+            try:
+                used.append(int(structure_roi.ROINumber))
+            except (AttributeError, TypeError, ValueError):
+                continue
+
+        return max(used, default=0) + 1
+
     def add_roi(
         self,
         mask: np.ndarray,
@@ -83,7 +103,7 @@ class RTStruct:
         """
         # TODO: test if name already exists
         self.validate_mask(mask)
-        roi_number = len(self.ds.StructureSetROISequence) + 1
+        roi_number = self._next_roi_number()
         roi_data = ROIData(
             mask,
             color,

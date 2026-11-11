@@ -327,6 +327,53 @@ def test_single_point_contour_round_trips_to_one_voxel(new_rtstruct: RTStruct):
     assert loaded_mask[100, 100, 0]
 
 
+def test_roi_number_does_not_collide_after_external_deletion(
+    new_rtstruct: RTStruct,
+):
+    """ROINumber must stay unique when an ROI was deleted elsewhere.
+
+    Deleting an ROI in another application leaves a gap in the numbering.
+    Deriving the next number from len(StructureSetROISequence) then reuses a
+    number that is still in use, and since ROINumber is what ties
+    StructureSetROISequence to ROIContourSequence, two ROIs end up sharing
+    one set of contours.
+    """
+    for index, name in enumerate(["A", "B", "C"]):
+        mask = get_empty_mask(new_rtstruct)
+        mask[50 + index * 40 : 70 + index * 40, 50 : 70, 0] = 1
+        new_rtstruct.add_roi(mask, name=name)
+
+    assert [int(r.ROINumber) for r in new_rtstruct.ds.StructureSetROISequence] == [
+        1,
+        2,
+        3,
+    ]
+
+    # Simulate another application removing the middle ROI.
+    del new_rtstruct.ds.StructureSetROISequence[1]
+    del new_rtstruct.ds.ROIContourSequence[1]
+
+    mask = get_empty_mask(new_rtstruct)
+    mask[170:190, 50:70, 0] = 1
+    new_rtstruct.add_roi(mask, name="D")
+
+    numbers = [int(r.ROINumber) for r in new_rtstruct.ds.StructureSetROISequence]
+    assert len(numbers) == len(set(numbers)), f"duplicate ROINumber: {numbers}"
+    assert numbers == [1, 3, 4]
+    assert new_rtstruct.get_roi_names() == ["A", "C", "D"]
+
+
+def test_first_roi_number_is_one(new_rtstruct: RTStruct):
+    """DICOM numbers ROIs from 1, so an empty structure set must yield 1."""
+    assert len(new_rtstruct.ds.StructureSetROISequence) == 0
+
+    mask = get_empty_mask(new_rtstruct)
+    mask[50:100, 50:100, 0] = 1
+    new_rtstruct.add_roi(mask, name="first")
+
+    assert int(new_rtstruct.ds.StructureSetROISequence[0].ROINumber) == 1
+
+
 def run_mask_iou_test(
     rtstruct: RTStruct,
     mask,
