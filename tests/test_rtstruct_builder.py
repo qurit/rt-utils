@@ -268,6 +268,30 @@ def get_data_len_by_index(rt_struct: RTStruct, i: int):
     return len(rt_struct.ds.ROIContourSequence[i].ContourSequence[0].ContourData)
 
 
+def test_single_point_contour_round_trips_to_one_voxel(new_rtstruct: RTStruct):
+    """A one-voxel ROI must read back as exactly one voxel.
+
+    A single-point contour is rasterised with cv.circle. radius=0 paints one
+    pixel; radius=1 paints five, which inflates the smallest structures such
+    as fiducial markers, seed positions and reference points.
+
+    This also guards the OpenCV 4.x path: there, passing a 1-point contour to
+    cv.fillPoly raises "(-215:Assertion failed) p.checkVector(2, CV_32S) >= 0",
+    while OpenCV 5.x accepts it silently.
+    """
+    mask = get_empty_mask(new_rtstruct)
+    mask[100, 100, 0] = True
+    assert mask.sum() == 1
+
+    new_rtstruct.add_roi(mask, name="single-voxel")
+    loaded_mask = new_rtstruct.get_roi_mask_by_name("single-voxel")
+
+    assert loaded_mask.sum() == 1, (
+        f"expected exactly 1 voxel, got {int(loaded_mask.sum())}"
+    )
+    assert loaded_mask[100, 100, 0]
+
+
 def run_mask_iou_test(
     rtstruct: RTStruct,
     mask,

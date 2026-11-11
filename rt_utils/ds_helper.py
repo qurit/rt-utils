@@ -186,14 +186,22 @@ def create_contour(series_slice: Dataset, contour_data: np.ndarray) -> Dataset:
     contour_image_sequence = Sequence()
     contour_image_sequence.append(contour_image)
 
+    number_of_points = len(contour_data) // 3  # Each point has an x, y and z value
+
+    # PS3.3 C.8.8.6.1: CLOSED_PLANAR requires at least three points. A contour
+    # of one or two points is a POINT or an OPEN_PLANAR, and labelling it
+    # CLOSED_PLANAR produces a dataset some treatment planning systems reject.
+    if number_of_points == 1:
+        geometric_type = "POINT"
+    elif number_of_points == 2:
+        geometric_type = "OPEN_PLANAR"
+    else:
+        geometric_type = "CLOSED_PLANAR"
+
     contour = Dataset()
     contour.ContourImageSequence = contour_image_sequence
-    contour.ContourGeometricType = (
-        "CLOSED_PLANAR"  # TODO figure out how to get this value
-    )
-    contour.NumberOfContourPoints = (
-        len(contour_data) / 3
-    )  # Each point has an x, y, and z value
+    contour.ContourGeometricType = geometric_type
+    contour.NumberOfContourPoints = number_of_points
 
     # Rounds ContourData to 10 decimal places to ensure it is <16 bytes length, as per NEMA DICOM standard guidelines.
     contour.ContourData = [round(val, 10) for val in contour_data]
