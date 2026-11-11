@@ -256,6 +256,52 @@ def validate_contours(contours: list):
         )
 
 
+def pixel_polygons_to_patient_coordinates(
+    polygons: List[List[List[float]]], series_data
+) -> List[List[List[float]]]:
+    """Convert polygons given on the image grid into patient-space millimetres.
+
+    Each polygon is a list of ``[column, row, slice_index]`` points. The slice
+    index selects which slice the point lies on; it is not a millimetre value.
+
+    Converting rather than rasterising means the polygon is preserved exactly,
+    instead of being turned into a mask and traced back.
+    """
+    transformation_matrix = get_pixel_to_patient_transformation_matrix(series_data)
+
+    converted = []
+    for polygon in polygons:
+        if len(polygon) == 0:
+            raise ValueError("A polygon must contain at least one point")
+
+        points = np.asarray(polygon, dtype=float)
+        if points.ndim != 2 or points.shape[1] != 3:
+            raise ValueError(
+                "Each polygon point must be [column, row, slice_index]; "
+                f"got an array of shape {points.shape}"
+            )
+
+        slice_indices = points[:, 2]
+        if not np.all(slice_indices == slice_indices[0]):
+            raise ValueError(
+                "All points of a polygon must lie on one slice; "
+                f"got slice indices {sorted(set(slice_indices.tolist()))}"
+            )
+
+        index = int(round(float(slice_indices[0])))
+        if not 0 <= index < len(series_data):
+            raise ValueError(
+                f"Slice index {index} is outside the series, which has "
+                f"{len(series_data)} slice(s)"
+            )
+
+        converted.append(
+            apply_transformation_to_3d_points(points, transformation_matrix).tolist()
+        )
+
+    return converted
+
+
 def get_pixel_to_patient_transformation_matrix(series_data):
     """
     https://nipy.org/nibabel/dicom/dicom_orientation.html

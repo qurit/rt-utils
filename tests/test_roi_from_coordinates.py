@@ -137,3 +137,67 @@ def test_nearest_slice_is_orientation_aware(oriented_rtstruct: RTStruct):
         chosen = ds_helper.find_closest_slice(oriented_rtstruct.series_data, point)
 
         assert chosen.SOPInstanceUID == expected_slice.SOPInstanceUID
+
+
+# --- polygons given on the image grid --------------------------------------
+
+
+def test_pixel_polygon_lands_where_it_was_drawn(new_rtstruct: RTStruct, series_path):
+    """A polygon in pixel coordinates must rasterise back to its own extent."""
+    polygon = [[60, 50, 0], [120, 50, 0], [120, 100, 0], [60, 100, 0]]
+
+    new_rtstruct.add_roi_from_coordinates(
+        [polygon], name="pixels", coordinate_space="pixel"
+    )
+
+    mask = new_rtstruct.get_roi_mask_by_name("pixels")
+    filled = np.argwhere(mask[:, :, 0])
+
+    # Inclusive of both bounds: 61 columns by 51 rows.
+    assert int(mask.sum()) == 61 * 51
+    assert filled[:, 0].min() == 50 and filled[:, 0].max() == 100
+    assert filled[:, 1].min() == 60 and filled[:, 1].max() == 120
+
+
+def test_pixel_and_patient_spaces_agree(new_rtstruct: RTStruct, series_path):
+    """The same polygon expressed either way must produce the same contour."""
+    pixel_polygon = [[60, 50, 0], [120, 50, 0], [120, 100, 0], [60, 100, 0]]
+    patient_polygon = image_helper.pixel_polygons_to_patient_coordinates(
+        [pixel_polygon], new_rtstruct.series_data
+    )[0]
+
+    from_pixels = RTStructBuilder.create_new(dicom_series_path=series_path)
+    from_pixels.add_roi_from_coordinates(
+        [pixel_polygon], name="roi", coordinate_space="pixel"
+    )
+    from_patient = RTStructBuilder.create_new(dicom_series_path=series_path)
+    from_patient.add_roi_from_coordinates([patient_polygon], name="roi")
+
+    assert np.array_equal(
+        from_pixels.get_roi_mask_by_name("roi"),
+        from_patient.get_roi_mask_by_name("roi"),
+    )
+
+
+def test_pixel_polygon_spanning_slices_is_rejected(new_rtstruct: RTStruct):
+    with pytest.raises(ValueError, match="one slice"):
+        new_rtstruct.add_roi_from_coordinates(
+            [[[60, 50, 0], [120, 50, 1]]], name="bad", coordinate_space="pixel"
+        )
+
+
+def test_pixel_polygon_outside_the_series_is_rejected(new_rtstruct: RTStruct):
+    outside = len(new_rtstruct.series_data) + 5
+    with pytest.raises(ValueError, match="outside the series"):
+        new_rtstruct.add_roi_from_coordinates(
+            [[[60, 50, outside], [120, 50, outside], [120, 100, outside]]],
+            name="bad",
+            coordinate_space="pixel",
+        )
+
+
+def test_unknown_coordinate_space_is_rejected(new_rtstruct: RTStruct):
+    with pytest.raises(ValueError, match="Invalid coordinate space"):
+        new_rtstruct.add_roi_from_coordinates(
+            [[[0, 0, 0]]], name="bad", coordinate_space="world"
+        )
