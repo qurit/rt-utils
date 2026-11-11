@@ -262,17 +262,71 @@ class RTStruct:
 
         return True
 
-    def get_roi_names(self) -> List[str]:
-        """
-        Returns a list of the names of all ROI within the RTStruct
-        """
+    CONTOUR_GEOMETRIC_TYPES = (
+        "CLOSED_PLANAR",
+        "OPEN_PLANAR",
+        "OPEN_NONPLANAR",
+        "POINT",
+    )
 
+    def get_roi_names(self, geometry: str = "ALL") -> List[str]:
+        """
+        Returns a list of the names of all ROI within the RTStruct.
+
+        ``geometry`` restricts the result to ROIs containing contours of one
+        ContourGeometricType: ``"CLOSED_PLANAR"``, ``"OPEN_PLANAR"``,
+        ``"OPEN_NONPLANAR"`` or ``"POINT"``. The default, ``"ALL"``, applies
+        no filter.
+
+        An ROI matches when **any** of its contours has that type. A single
+        ROI can mix types across slices, so classifying it by its first
+        contour alone would hide it from a filter it genuinely matches.
+        """
         if not self.ds.StructureSetROISequence:
             return []
 
+        if geometry == "ALL":
+            return [
+                structure_roi.ROIName
+                for structure_roi in self.ds.StructureSetROISequence
+            ]
+
+        if geometry not in self.CONTOUR_GEOMETRIC_TYPES:
+            raise ValueError(
+                f"Unrecognised geometric type '{geometry}'. Expected 'ALL' or "
+                f"one of {list(self.CONTOUR_GEOMETRIC_TYPES)}."
+            )
+
+        matching_roi_numbers = self._roi_numbers_with_geometry(geometry)
+
         return [
-            structure_roi.ROIName for structure_roi in self.ds.StructureSetROISequence
+            structure_roi.ROIName
+            for structure_roi in self.ds.StructureSetROISequence
+            if str(structure_roi.ROINumber) in matching_roi_numbers
         ]
+
+    def _roi_numbers_with_geometry(self, geometry: str) -> set:
+        """ROINumbers of ROIs with at least one contour of the given type.
+
+        ROIContourSequence is matched to StructureSetROISequence through
+        ReferencedROINumber. The two sequences are not required to be in the
+        same order, so pairing them by position would attribute geometry to
+        the wrong ROI.
+        """
+        matching = set()
+
+        for roi_contour in getattr(self.ds, "ROIContourSequence", []):
+            contour_sequence = getattr(roi_contour, "ContourSequence", None)
+            if not contour_sequence:
+                continue
+
+            if any(
+                getattr(contour, "ContourGeometricType", None) == geometry
+                for contour in contour_sequence
+            ):
+                matching.add(str(roi_contour.ReferencedROINumber))
+
+        return matching
 
     def get_roi_mask_by_name(self, name, case_sensitive: bool = True) -> np.ndarray:
         """
