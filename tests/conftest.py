@@ -85,6 +85,11 @@ def build_series(
         ds.file_meta = pydicom.dataset.FileMetaDataset()
         ds.file_meta.TransferSyntaxUID = pydicom.uid.ExplicitVRLittleEndian
         ds.file_meta.MediaStorageSOPClassUID = pydicom.uid.CTImageStorage
+        ds.file_meta.MediaStorageSOPInstanceUID = (
+            sop_instance_uids[index]
+            if sop_instance_uids is not None
+            else pydicom.uid.generate_uid()
+        )
 
         ds.SOPClassUID = pydicom.uid.CTImageStorage
         ds.SOPInstanceUID = (
@@ -125,3 +130,35 @@ def build_series(
         series.append(ds)
 
     return series
+
+
+# pydicom 3 replaced save_as's write_like_original with enforce_file_format.
+# Python 3.9 resolves to pydicom 2, so tests that write files need both.
+PYDICOM_3 = int(str(pydicom.__version__).split(".")[0]) >= 3
+
+
+def save_dataset(ds: pydicom.Dataset, path, with_file_meta: bool = True) -> None:
+    """Write a dataset, under either pydicom major version.
+
+    ``with_file_meta=False`` writes the bare dataset with no preamble and no
+    file meta, as some equipment and some anonymisation tools do. Such a file
+    states no transfer syntax, so reading it needs force=True.
+    """
+    path = str(path)
+
+    if PYDICOM_3:
+        if with_file_meta:
+            ds.save_as(path, enforce_file_format=True)
+        else:
+            ds.save_as(
+                path, enforce_file_format=False, little_endian=True, implicit_vr=False
+            )
+        return
+
+    if with_file_meta:
+        ds.save_as(path, write_like_original=False)
+        return
+
+    ds.is_little_endian = True
+    ds.is_implicit_VR = False
+    ds.save_as(path, write_like_original=True)

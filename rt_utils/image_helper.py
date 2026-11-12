@@ -13,6 +13,7 @@ from rt_utils.utils import ROIData, SOPClassUID
 
 def load_sorted_image_series(
     dicom_series: Union[str, os.PathLike, List[Dataset]],
+    force: bool = False,
 ) -> List[Dataset]:
     """
     Load a DICOM image series and return its slices in ascending spatial order.
@@ -20,11 +21,15 @@ def load_sorted_image_series(
     Accepts either a path to a directory of DICOM files, or a list of datasets
     already read into memory with pydicom.
 
+    ``force`` is passed to pydicom when reading from a path, so that files
+    without the standard preamble or file meta can still be read. It has no
+    effect on datasets supplied directly.
+
     The given list is not reordered in place; sorting is applied to a copy, so
     the caller's list keeps whatever order it had.
     """
     if isinstance(dicom_series, (str, os.PathLike)):
-        series_data = load_dcm_images_from_path(dicom_series)
+        series_data = load_dcm_images_from_path(dicom_series, force=force)
     else:
         series_data = list(dicom_series)
 
@@ -104,20 +109,77 @@ def reject_slices_sharing_a_position(series_data: List[Dataset]) -> None:
         )
 
 
-def load_dcm_images_from_path(dicom_series_path: str) -> List[Dataset]:
+def load_dcm_images_from_path(
+    dicom_series_path: str, force: bool = False
+) -> List[Dataset]:
+    """Read every file under a path that belongs to an image series.
+
+    A file is part of the series when it carries pixel data and states its
+    orientation in the patient. Screenshots, secondary captures, reports and
+    dose maps stored beside the images carry no ImageOrientationPatient, so
+    they are not slices of the series; they used to be sorted into the stack
+    and fail later with "'FileDataset' object has no attribute
+    'ImageOrientationPatient'".
+
+    ImagePositionPatient is deliberately not part of this test. A file that
+    is a slice but omits it must raise and say so, rather than be dropped
+    from the series as though it were never there; see
+    require_image_position_patient.
+
+    ``force`` is passed to pydicom's dcmread. It allows files without the
+    standard preamble or file meta to be read, which some equipment and some
+    anonymisation tools produce. It is off by default because it also causes
+    unrelated files to be parsed rather than skipped; the attribute checks
+    above are what stop those being taken for slices.
+    """
     series_data = []
+    images_without_orientation = 0
     for root, _, files in os.walk(dicom_series_path):
         for file in files:
             try:
-                ds = dcmread(os.path.join(root, file))
-                if hasattr(ds, "pixel_array"):
-                    series_data.append(ds)
+                ds = dcmread(os.path.join(root, file), force=force)
+                if not has_pixel_data(ds):
+                    continue
+                if not hasattr(ds, "ImageOrientationPatient"):
+                    images_without_orientation += 1
+                    continue
+                series_data.append(ds)
 
             except Exception:
                 # Not a valid DICOM file
                 continue
 
+    if not series_data and images_without_orientation:
+        raise Exception(
+            f"Found {images_without_orientation} image(s) under "
+            f"'{dicom_series_path}', but none has an Image Orientation "
+            "(Patient) attribute, so none can be placed in the patient. "
+            "This is what a folder of secondary captures, screenshots or "
+            "reports looks like; an image series states its orientation."
+        )
+
     return series_data
+
+
+PIXEL_DATA_ELEMENTS = ("PixelData", "FloatPixelData", "DoubleFloatPixelData")
+
+
+def has_pixel_data(ds: Dataset) -> bool:
+    """Whether a dataset carries pixel data, without decoding it.
+
+    This asks only whether the element is present. Reading ``pixel_array``
+    instead would decode every slice in the directory merely to decide
+    whether each file is an image, and would then exclude a perfectly good
+    series whenever the pixels could not be decoded -- a compressed transfer
+    syntax with no handler installed, or a file with no file meta and so no
+    stated transfer syntax. Either made a whole series invisible, reported as
+    "No DICOM Images found in input path".
+
+    Nothing here needs the pixel values. Contours are derived entirely from
+    the geometry: Rows, Columns, PixelSpacing, ImageOrientationPatient and
+    ImagePositionPatient.
+    """
+    return any(element in ds for element in PIXEL_DATA_ELEMENTS)
 
 
 def get_contours_coords(roi_data: ROIData, series_data):
