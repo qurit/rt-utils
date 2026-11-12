@@ -49,13 +49,15 @@ Repository = "https://github.com/qurit/rt-utils"
 Issues = "https://github.com/qurit/rt-utils/issues"
 
 [project.optional-dependencies]
-# Extras for rt_utils.nifti2rt, which is not imported by `rt_utils/__init__.py`.
+# Extras for rt_utils.nifti, which is not imported by `rt_utils/__init__.py`.
 nifti = ["SimpleITK"]
 dev = [
     "pytest",
     "build",
     "twine",
     "black",
+    # So the rt_utils.nifti tests run in CI rather than being skipped.
+    "SimpleITK",
 ]
 
 [tool.setuptools.dynamic]
