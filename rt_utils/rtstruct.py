@@ -57,6 +57,7 @@ class RTStruct:
         use_pin_hole: bool = False,
         approximate_contours: bool = True,
         roi_generation_algorithm: Union[str, int] = 0,
+        roi_interpreted_type: str = "",
         contour_mode: str = "voxel_edge",
         apply_smoothing: Union[str, None] = None,
         smoothing_function=smoothing.pipeline,
@@ -104,6 +105,18 @@ class RTStruct:
             already emits one vertex per corner.
         roi_generation_algorithm : str or int, optional
             Identifier for the algorithm used to generate the ROI. Defaults to 0.
+        roi_interpreted_type : str, optional
+            RTROIInterpretedType: what kind of structure this is, such as
+            ``"PTV"``, ``"ORGAN"``, ``"EXTERNAL"`` or ``"BRACHY_CHANNEL"``.
+            Planning systems use it to decide how a structure is treated --
+            which ones are targets, which are organs at risk, which define
+            the patient outline. Defaults to ``""``, meaning unstated, which
+            is what earlier versions always wrote.
+
+            PS3.3 C.8.8.8 gives these as Defined Terms, so the list is
+            extensible and the value is not validated against it;
+            ``rt_utils.utils.ROI_INTERPRETED_TYPES`` holds the standard ones
+            for reference.
         contour_mode : {"voxel_edge", "voxel_center"}, optional
             Placement of generated contours. Defaults to ``"voxel_edge"``,
             which traces the outer edges of foreground voxels so the contour
@@ -163,8 +176,9 @@ class RTStruct:
             use_pin_hole,
             approximate_contours,
             roi_generation_algorithm,
-            contour_mode,
-            scaling_factor,
+            contour_mode=contour_mode,
+            scaling_factor=scaling_factor,
+            roi_interpreted_type=roi_interpreted_type,
         )
 
         self.ds.ROIContourSequence.append(

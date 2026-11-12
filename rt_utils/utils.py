@@ -33,6 +33,36 @@ COLOR_PALETTE = [
 ]
 
 ROI_GENERATION_ALGORITHMS = ["AUTOMATIC", "SEMIAUTOMATIC", "MANUAL"]
+
+# PS3.3 C.8.8.8 lists these as Defined Terms for RTROIInterpretedType, which
+# means the list is extensible rather than closed: a site may use a term not
+# named here, so these are not validated against. They are the ones a
+# planning system is most likely to understand.
+ROI_INTERPRETED_TYPES = [
+    "EXTERNAL",
+    "PTV",
+    "CTV",
+    "GTV",
+    "TREATED_VOLUME",
+    "IRRAD_VOLUME",
+    "BOLUS",
+    "AVOIDANCE",
+    "ORGAN",
+    "MARKER",
+    "REGISTRATION",
+    "ISOCENTER",
+    "CONTRAST_AGENT",
+    "CAVITY",
+    "BRACHY_CHANNEL",
+    "BRACHY_ACCESSORY",
+    "BRACHY_SRC_APP",
+    "BRACHY_CHNL_SHLD",
+    "SUPPORT",
+    "FIXATION",
+    "DOSE_REGION",
+    "CONTROL",
+    "DOSE_MEASUREMENT",
+]
 CONTOUR_MODES = ["voxel_center", "voxel_edge"]
 
 
@@ -58,6 +88,9 @@ class ROIData:
     approximate_contours: bool = True
     roi_generation_algorithm: Union[str, int] = 0
     contour_mode: str = "voxel_center"
+    # RTROIInterpretedType: what kind of structure this is, e.g. "PTV" or
+    # "ORGAN". Empty means unstated, which is what was always written before.
+    roi_interpreted_type: str = ""
     # Set when the mask has been smoothed, which upscales it. Contour
     # coordinates are divided by this to return to the image's own grid.
     scaling_factor: int = 1
