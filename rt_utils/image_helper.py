@@ -595,29 +595,43 @@ def create_series_mask_from_contour_sequence(series_data, contour_sequence: Sequ
 
     # Iterate through each slice of the series, If it is a part of the contour, add the contour mask
     for i, series_slice in enumerate(series_data):
-        slice_contour_data = get_slice_contour_data(series_slice, contour_sequence)
-        if len(slice_contour_data):
+        slice_contours = get_slice_contours(series_slice, contour_sequence)
+        if len(slice_contours):
             # Measured from this slice's own origin, so an unevenly spaced
             # series does not shift the contour within the slice.
             transformation_matrix = get_patient_to_pixel_transformation_matrix(
                 series_data, origin_slice=series_slice
             )
-            mask[:, :, i] = get_slice_mask_from_slice_contour_data(
-                series_slice, slice_contour_data, transformation_matrix
+            mask[:, :, i] = get_slice_mask_from_slice_contours(
+                series_slice, slice_contours, transformation_matrix
             )
     return mask
 
 
-def get_slice_contour_data(series_slice: Dataset, contour_sequence: Sequence):
-    slice_contour_data = []
+def get_slice_contours(series_slice: Dataset, contour_sequence: Sequence):
+    """The contours drawn on one slice, as whole datasets.
+
+    The dataset is kept rather than just its ContourData because
+    ContourGeometricType decides how the contour is rasterised: a closed
+    contour bounds a region, an open one is a path with no interior.
+    """
+    slice_contours = []
 
     # Traverse through sequence data and get all contour data pertaining to the given slice
     for contour in contour_sequence:
         for contour_image in contour.ContourImageSequence:
             if contour_image.ReferencedSOPInstanceUID == series_slice.SOPInstanceUID:
-                slice_contour_data.append(contour.ContourData)
+                slice_contours.append(contour)
 
-    return slice_contour_data
+    return slice_contours
+
+
+def get_slice_contour_data(series_slice: Dataset, contour_sequence: Sequence):
+    """The ContourData of the contours drawn on one slice."""
+    return [
+        contour.ContourData
+        for contour in get_slice_contours(series_slice, contour_sequence)
+    ]
 
 
 # Contours are rasterised at this multiple of the image resolution, then read
@@ -627,24 +641,36 @@ def get_slice_contour_data(series_slice: Dataset, contour_sequence: Sequence):
 CONTOUR_SUPERSAMPLE = 2
 
 
-def get_slice_mask_from_slice_contour_data(
-    series_slice: Dataset, slice_contour_data, transformation_matrix: np.ndarray
+OPEN_GEOMETRIC_TYPES = ("OPEN_PLANAR", "OPEN_NONPLANAR")
+
+
+def get_slice_mask_from_slice_contours(
+    series_slice: Dataset, slice_contours, transformation_matrix: np.ndarray
 ):
     """Rasterise a slice's contours into a binary mask.
 
-    A voxel is set when its centre lies inside a contour. Polygons are filled
-    at CONTOUR_SUPERSAMPLE times the image resolution and then sampled at the
-    voxel centres, because cv2.fillPoly treats its vertices as inclusive: a
-    contour tracing voxel boundaries would otherwise gain a row and a column.
+    A voxel is set when its centre lies inside a closed contour. Polygons are
+    filled at CONTOUR_SUPERSAMPLE times the image resolution and then sampled
+    at the voxel centres, because cv2.fillPoly treats its vertices as
+    inclusive: a contour tracing voxel boundaries would otherwise gain a row
+    and a column.
 
-    Contours of one or two points describe no area, so they are drawn directly
-    at image resolution as a point and a line.
+    ContourGeometricType decides what a contour means. OPEN_PLANAR and
+    OPEN_NONPLANAR are paths with no interior, so they are drawn as
+    polylines. Filling them instead closes the path and claims everything
+    between its ends: a C-shaped applicator channel of about 65 voxels came
+    back as a solid block of 579.
+
+    Contours of one or two points describe no area either, so they are drawn
+    directly at image resolution as a point and a line.
     """
     slice_mask = create_empty_slice_mask(series_slice).astype(np.uint8)
     scale = CONTOUR_SUPERSAMPLE
     supersampled_polygons = []
 
-    for contour_coords in slice_contour_data:
+    for contour in slice_contours:
+        contour_coords = getattr(contour, "ContourData", contour)
+        geometric_type = getattr(contour, "ContourGeometricType", "CLOSED_PLANAR")
         reshaped_contour_data = np.reshape(
             contour_coords, [len(contour_coords) // 3, 3]
         )
@@ -668,6 +694,10 @@ def get_slice_mask_from_slice_contour_data(
             pt1 = tuple(polygon[0])
             pt2 = tuple(polygon[1])
             cv.line(slice_mask, pt1, pt2, color=1, thickness=1)
+        elif geometric_type in OPEN_GEOMETRIC_TYPES:
+            # An open contour is a path, not a boundary. Drawn at image
+            # resolution: a path has no interior to sample more finely.
+            cv.polylines(slice_mask, [polygon], isClosed=False, color=1, thickness=1)
         else:
             supersampled_polygons.append(np.around(points * scale).astype(np.int32))
 
@@ -680,6 +710,20 @@ def get_slice_mask_from_slice_contour_data(
         np.maximum(slice_mask, supersampled[::scale, ::scale], out=slice_mask)
 
     return slice_mask
+
+
+def get_slice_mask_from_slice_contour_data(
+    series_slice: Dataset, slice_contour_data, transformation_matrix: np.ndarray
+):
+    """Rasterise raw ContourData, with no geometric type to go on.
+
+    Kept for callers holding ContourData rather than whole contours. Without
+    ContourGeometricType every contour is taken to be closed, which is what
+    this did before open contours were distinguished.
+    """
+    return get_slice_mask_from_slice_contours(
+        series_slice, slice_contour_data, transformation_matrix
+    )
 
 
 def create_empty_series_mask(series_data):
