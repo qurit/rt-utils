@@ -31,11 +31,77 @@ def load_sorted_image_series(
     if len(series_data) == 0:
         raise Exception("No DICOM Images found in input path")
 
+    series_data = drop_repeated_instances(series_data)
+
     # Sort slices in ascending order. In-memory datasets are sorted by the same
     # key as files read from disk, so both inputs produce identical ordering.
     series_data.sort(key=get_slice_position, reverse=False)
 
+    reject_slices_sharing_a_position(series_data)
+
     return series_data
+
+
+def drop_repeated_instances(series_data: List[Dataset]) -> List[Dataset]:
+    """Keep one copy of each SOPInstanceUID.
+
+    A directory tree is walked in full, so a series that also exists in a
+    backup folder, an export alongside the original, or a nested copy is read
+    more than once. Each copy is the same image, so the stack came out a
+    whole multiple too long and every mask was then rejected for having the
+    wrong number of layers.
+
+    A slice with no SOPInstanceUID cannot be compared and is kept.
+    """
+    seen = set()
+    unique = []
+    for series_slice in series_data:
+        identifier = getattr(series_slice, "SOPInstanceUID", None)
+        if identifier is not None:
+            if identifier in seen:
+                continue
+            seen.add(identifier)
+        unique.append(series_slice)
+
+    return unique
+
+
+# Two slice positions closer together than this are treated as the same
+# location. Slice spacing is given in millimetres and no real series steps by
+# a micron, so this only absorbs floating point noise.
+POSITION_TOLERANCE_MM = 1e-3
+
+
+def reject_slices_sharing_a_position(series_data: List[Dataset]) -> None:
+    """Refuse a set of images that is not a single stack.
+
+    Every slice must occupy its own position along the slice normal. Two
+    different images at one position means the input holds more than one
+    volume: separate acquisitions, echoes or phases gathered in one folder,
+    or two series that happen to overlap.
+
+    Such input used to be stacked into a single axis, so a 128 slice scan
+    acquired twice became a 256 slice series. The mask then had to be built
+    against a volume that does not exist, and contours were attached to
+    whichever of the two images sorted first.
+
+    The series must already be sorted, so equal positions are adjacent.
+    """
+    for previous, current in zip(series_data, series_data[1:]):
+        gap = abs(get_slice_position(current) - get_slice_position(previous))
+        if gap > POSITION_TOLERANCE_MM:
+            continue
+
+        raise Exception(
+            "Input contains more than one image at the same slice position "
+            f"({get_slice_position(current):.4f} mm along the slice normal): "
+            f"{getattr(previous, 'SOPInstanceUID', '<unknown>')} and "
+            f"{getattr(current, 'SOPInstanceUID', '<unknown>')}. "
+            "rt-utils builds one 3D volume, so each position must appear "
+            "once. This usually means the input holds several acquisitions, "
+            "echoes or phases, or more than one series; select a single "
+            "series before loading it."
+        )
 
 
 def load_dcm_images_from_path(dicom_series_path: str) -> List[Dataset]:
