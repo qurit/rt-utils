@@ -258,8 +258,10 @@ def draw_line_upwards_from_point(
     line_width = 2
     end = (start[0], start[1] - 1)
     mask = mask.astype(np.uint8)  # Type that OpenCV expects
-    # Draw one point at a time until we hit a point that already has the desired value
-    while mask[end] != fill_value:
+    # Draw one point at a time until we hit a point that already has the desired value.
+    # OpenCV points are (x, y) = (column, row), while the mask is indexed
+    # (row, column), so the two are swapped when sampling it.
+    while mask[end[1], end[0]] != fill_value:
         cv.line(mask, start, end, fill_value, line_width)
 
         # Update start and end to the next positions
@@ -524,10 +526,18 @@ def get_slice_mask_from_slice_contour_data(
 
 
 def create_empty_series_mask(series_data):
+    """Allocate a mask for a whole series, shaped (Rows, Columns, Slices).
+
+    The in-plane axes are ordered the way pydicom reads ``pixel_array``, so a
+    mask indexes the same way as the images it was drawn on. Every coordinate
+    this module computes follows the same order: axis 0 is the row index,
+    which runs down a column, and axis 1 is the column index, which runs along
+    a row.
+    """
     ref_dicom_image = series_data[0]
     mask_dims = (
-        int(ref_dicom_image.Columns),
         int(ref_dicom_image.Rows),
+        int(ref_dicom_image.Columns),
         len(series_data),
     )
     mask = np.zeros(mask_dims).astype(bool)
@@ -535,7 +545,8 @@ def create_empty_series_mask(series_data):
 
 
 def create_empty_slice_mask(series_slice):
-    mask_dims = (int(series_slice.Columns), int(series_slice.Rows))
+    """Allocate one slice's mask, shaped (Rows, Columns)."""
+    mask_dims = (int(series_slice.Rows), int(series_slice.Columns))
     mask = np.zeros(mask_dims).astype(bool)
     return mask
 

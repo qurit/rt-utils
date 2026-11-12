@@ -9,7 +9,7 @@ from rt_utils.rtstruct import RTStruct
 
 def _block(rtstruct: RTStruct, offset: int = 50) -> np.ndarray:
     ref = rtstruct.series_data[0]
-    dims = (int(ref.Columns), int(ref.Rows), len(rtstruct.series_data))
+    dims = (int(ref.Rows), int(ref.Columns), len(rtstruct.series_data))
     mask = np.zeros(dims, dtype=bool)
     mask[offset : offset + 50, offset : offset + 50, 0] = True
     return mask
@@ -17,7 +17,7 @@ def _block(rtstruct: RTStruct, offset: int = 50) -> np.ndarray:
 
 def _single_voxel(rtstruct: RTStruct, slice_index: int = 0) -> np.ndarray:
     ref = rtstruct.series_data[0]
-    dims = (int(ref.Columns), int(ref.Rows), len(rtstruct.series_data))
+    dims = (int(ref.Rows), int(ref.Columns), len(rtstruct.series_data))
     mask = np.zeros(dims, dtype=bool)
     mask[200, 200, slice_index] = True
     return mask
@@ -51,7 +51,7 @@ def test_an_roi_mixing_types_matches_either(new_rtstruct: RTStruct):
     filter it genuinely matches.
     """
     ref = new_rtstruct.series_data[0]
-    dims = (int(ref.Columns), int(ref.Rows), len(new_rtstruct.series_data))
+    dims = (int(ref.Rows), int(ref.Columns), len(new_rtstruct.series_data))
     mask = np.zeros(dims, dtype=bool)
     mask[50:100, 50:100, 0] = True  # a planar region
     mask[200, 200, 1] = True  # a single voxel on the next slice

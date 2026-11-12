@@ -25,6 +25,35 @@ RT-Utils provides a builder class to faciliate the creation and loading of an RT
 
 The format for the ROI mask is an nd numpy array of type bool. It is an array of 2d binary masks, one plane for each slice location within the DICOM series. The slices should be sorted in ascending order within the mask. Through these masks, we extract the contours of the regions of interest and place them within the RT Struct file. Note that there is currently only support for the use of one frame of reference UID and structered set ROI sequence. Also note that holes within the ROI may be handled poorly.
 
+### Mask layout
+
+A mask is indexed `(Rows, Columns, Slices)`:
+
+| axis | index | runs |
+| --- | --- | --- |
+| 0 | row | down a column, along `ImageOrientationPatient[3:6]` |
+| 1 | column | along a row, along `ImageOrientationPatient[0:3]` |
+| 2 | slice | through the series in ascending slice position |
+
+The first two axes are ordered exactly as pydicom reads `pixel_array`, so a
+mask produced by segmenting the series already has the right layout:
+
+```Python
+mask = np.stack([slice.pixel_array for slice in series], axis=-1) > threshold
+```
+
+Axis 2 follows the series sorted by spatial position, which is the order
+`RTStruct.series_data` is in. That is not necessarily the order the files sit
+in on disk, nor InstanceNumber order.
+
+A mask from somewhere else may need rearranging first. A NIfTI volume carries
+its own axis order and its own direction for each axis in its affine, and
+neither is guaranteed to match the DICOM series; feeding one straight to
+`add_roi` is what makes an ROI come back rotated, flipped or offset. Convert
+deliberately rather than by trial and error — resample the volume onto the
+series grid with a library that reads both affines, such as SimpleITK or
+nibabel, then transpose the result into the layout above.
+
 ## Installation
 ```bash
 pip install rt_utils

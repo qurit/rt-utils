@@ -75,8 +75,18 @@ class RTStruct:
         Parameters
         ----------
         mask : np.ndarray
-            3D boolean array indicating the ROI. Its shape must match
-            the underlying DICOM series in the third dimension.
+            3D boolean array indicating the ROI, shaped
+            ``(Rows, Columns, Slices)``. The in-plane axes are ordered the way
+            pydicom reads ``pixel_array``: axis 0 is the row index and axis 1
+            the column index, so a mask segmented from the series already has
+            the right layout. Slices run along axis 2 in the series' own
+            ascending spatial order, matching ``series_data``.
+
+            A mask from another source may need rearranging first. A NIfTI
+            volume in particular carries its own axis order and direction in
+            its affine, and neither is guaranteed to match the series; passing
+            one straight through is what makes an ROI come back rotated or
+            flipped.
         color : str or list of int, optional
             Color representation for the ROI (e.g., "red" or [255, 0, 0]). Defaults to None.
         name : str, optional
@@ -109,7 +119,8 @@ class RTStruct:
         ------
         ROIException
             - If the mask is not a 3D boolean array.
-            - If the mask's shape does not match the loaded DICOM series dimensions.
+            - If the mask's shape does not match the loaded DICOM series
+              dimensions, in plane or in the number of slices.
             - If the mask is empty (no voxels set to True).
 
         Returns
@@ -258,13 +269,15 @@ class RTStruct:
             )
 
         reference_slice = self.series_data[0]
-        expected_in_plane = (int(reference_slice.Columns), int(reference_slice.Rows))
+        expected_in_plane = (int(reference_slice.Rows), int(reference_slice.Columns))
         if np.shape(mask)[:2] != expected_in_plane:
             raise RTStruct.ROIException(
                 "Mask must have the same in-plane dimensions as the input series. "
                 f"Expected {expected_in_plane}, got {np.shape(mask)[:2]}. "
-                "Masks are indexed as (Columns, Rows, Slices); note that this is "
-                "the transpose of the layout a DICOM pixel_array is read in."
+                "Masks are indexed as (Rows, Columns, Slices), the same layout a "
+                "DICOM pixel_array is read in, so a mask segmented from the "
+                "series already has the right shape. A mask that came from "
+                "elsewhere, such as a NIfTI volume, may need transposing first."
             )
 
         if np.sum(mask) == 0:

@@ -12,8 +12,8 @@ from rt_utils.image_helper import (
 def create_full_series_mask(series_data):
     ref_dicom_image = series_data[0]
     mask_dims = (
-        int(ref_dicom_image.Columns),
         int(ref_dicom_image.Rows),
+        int(ref_dicom_image.Columns),
         len(series_data),
     )
     mask = np.ones(mask_dims).astype(bool)

@@ -35,7 +35,7 @@ def _series_without(tmp_path, series_path: str, element: str) -> str:
 
 def _mask_for(rtstruct):
     ref = rtstruct.series_data[0]
-    dims = (int(ref.Columns), int(ref.Rows), len(rtstruct.series_data))
+    dims = (int(ref.Rows), int(ref.Columns), len(rtstruct.series_data))
     mask = np.zeros(dims, dtype=bool)
     mask[50:100, 50:100, 0] = True
     return mask
@@ -102,20 +102,5 @@ def test_mask_with_wrong_in_plane_shape_is_rejected(new_rtstruct):
     assert "(156, 105)" in message
 
 
-def test_mask_shape_is_checked_against_a_non_square_series(one_slice_series_path):
-    """The expected shape is (Columns, Rows), which only differs when non-square."""
-    rtstruct = RTStructBuilder.create_new(dicom_series_path=one_slice_series_path)
-    reference = rtstruct.series_data[0]
-    columns, rows = int(reference.Columns), int(reference.Rows)
-    assert columns != rows, "this fixture is expected to be non-square"
-
-    correct = np.zeros((columns, rows, len(rtstruct.series_data)), dtype=bool)
-    correct[10:20, 10:20, 0] = True
-    rtstruct.add_roi(mask=correct, name="ok")
-    assert rtstruct.get_roi_names() == ["ok"]
-
-    # The transpose must be rejected rather than silently mangled.
-    transposed = np.zeros((rows, columns, len(rtstruct.series_data)), dtype=bool)
-    transposed[10:20, 10:20, 0] = True
-    with pytest.raises(Exception, match="in-plane dimensions"):
-        rtstruct.add_roi(mask=transposed, name="transposed")
+# Which of the two in-plane orders is correct, and what happens on a non-square
+# series, is covered in test_mask_orientation.py.
