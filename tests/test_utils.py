@@ -17,9 +17,9 @@ def test_package_version():
     disagree, which is the check that matters; restating the version here
     only meant CI broke on every bump until someone edited this line.
     """
-    assert re.fullmatch(r"\d+\.\d+\.\d+", __version__), (
-        f"unexpected version string: {__version__!r}"
-    )
+    assert re.fullmatch(
+        r"\d+\.\d+\.\d+", __version__
+    ), f"unexpected version string: {__version__!r}"
 
 
 def test_single_voxel_edge_polygon():
