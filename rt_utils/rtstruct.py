@@ -386,6 +386,21 @@ class RTStruct:
         were never drawn on, as long as the positions are close; by
         identifier, that case raises instead.
         """
+        structure_roi = self._find_structure_roi(name, case_sensitive)
+        if structure_roi is None:
+            raise RTStruct.ROIException(
+                f"ROI of name `{name}` does not exist in RTStruct"
+            )
+
+        contour_sequence = ds_helper.get_contour_sequence_by_roi_number(
+            self.ds, structure_roi.ROINumber
+        )
+        return image_helper.create_series_mask_from_contour_sequence(
+            self.series_data, contour_sequence, match_by=match_by
+        )
+
+    def _find_structure_roi(self, name, case_sensitive: bool):
+        """The StructureSetROISequence entry with this name, or None."""
         target = name
         if not case_sensitive and isinstance(name, str):
             target = name.casefold()
@@ -396,14 +411,53 @@ class RTStruct:
                 roi_name = roi_name.casefold()
 
             if roi_name == target:
-                contour_sequence = ds_helper.get_contour_sequence_by_roi_number(
-                    self.ds, structure_roi.ROINumber
-                )
-                return image_helper.create_series_mask_from_contour_sequence(
-                    self.series_data, contour_sequence, match_by=match_by
-                )
+                return structure_roi
 
-        raise RTStruct.ROIException(f"ROI of name `{name}` does not exist in RTStruct")
+        return None
+
+    def delete_roi(self, name, case_sensitive: bool = True) -> None:
+        """Remove the ROI with the given name from the structure set.
+
+        An ROI is spread across three sequences, tied together by ROINumber:
+        StructureSetROISequence names it, ROIContourSequence holds its
+        geometry, and RTROIObservationsSequence its interpretation. All three
+        entries are removed, because leaving any behind produces a structure
+        set that viewers and planning systems read inconsistently -- contours
+        belonging to an ROI that no longer has a name, or a name with nothing
+        to draw.
+
+        Numbering is deliberately left alone. ROINumber is the key those
+        sequences are joined by, so renumbering the survivors to close the
+        gap would silently re-point every reference. A later add_roi takes
+        the next number above the highest still in use, so the gap is never
+        reused.
+
+        Matching follows get_roi_mask_by_name: exact by default, with
+        case_sensitive=False to ignore case.
+        """
+        structure_roi = self._find_structure_roi(name, case_sensitive)
+        if structure_roi is None:
+            raise RTStruct.ROIException(
+                f"ROI of name `{name}` does not exist in RTStruct"
+            )
+
+        roi_number = str(structure_roi.ROINumber)
+
+        self.ds.StructureSetROISequence = [
+            roi
+            for roi in self.ds.StructureSetROISequence
+            if str(roi.ROINumber) != roi_number
+        ]
+        self.ds.ROIContourSequence = [
+            roi
+            for roi in getattr(self.ds, "ROIContourSequence", [])
+            if str(getattr(roi, "ReferencedROINumber", "")) != roi_number
+        ]
+        self.ds.RTROIObservationsSequence = [
+            roi
+            for roi in getattr(self.ds, "RTROIObservationsSequence", [])
+            if str(getattr(roi, "ReferencedROINumber", "")) != roi_number
+        ]
 
     def save(self, file_path: str):
         """
