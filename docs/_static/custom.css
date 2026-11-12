@@ -1,0 +1,114 @@
+/* RT-Utils documentation — small refinements on top of Furo. */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
+
+:root {
+  --rtu-violet: #5b35c7;
+  --rtu-cyan: #0891b2;
+}
+
+body[data-theme="dark"] {
+  --rtu-violet: #c4b5fd;
+  --rtu-cyan: #67e8f9;
+}
+
+@media (prefers-color-scheme: dark) {
+  body:not([data-theme="light"]) {
+    --rtu-violet: #c4b5fd;
+    --rtu-cyan: #67e8f9;
+  }
+}
+
+/* The logo is a tall square; keep it from dominating the sidebar. */
+.sidebar-logo {
+  max-width: 11rem;
+  margin: 0 auto 0.5rem;
+}
+
+/* Landing page hero ------------------------------------------------------ */
+
+.rtu-hero {
+  text-align: center;
+  padding: 1.5rem 0 0.5rem;
+}
+
+.rtu-hero .rtu-tagline {
+  font-size: 1.3rem;
+  font-weight: 500;
+  color: var(--color-foreground-secondary);
+  margin: 0.25rem 0 0.75rem;
+}
+
+.rtu-badges img {
+  margin: 0 0.15rem;
+  vertical-align: middle;
+}
+
+/* Cards ------------------------------------------------------------------ */
+
+.sd-card {
+  border-radius: 0.6rem;
+  border: 1px solid var(--color-background-border);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.sd-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(91, 53, 199, 0.16);
+}
+
+.sd-card .sd-card-title {
+  font-weight: 600;
+  color: var(--color-brand-content);
+}
+
+/* Code ------------------------------------------------------------------- */
+
+div.highlight {
+  border-radius: 0.5rem;
+}
+
+code.literal {
+  border-radius: 0.3rem;
+}
+
+/* API signatures --------------------------------------------------------- */
+
+dl.py.class > dt,
+dl.py.method > dt,
+dl.py.function > dt,
+dl.py.attribute > dt {
+  border-left: 3px solid var(--rtu-violet);
+  border-radius: 0 0.35rem 0.35rem 0;
+}
+
+/* Tables ----------------------------------------------------------------- */
+
+table.docutils {
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+table.docutils th {
+  background: var(--color-background-secondary);
+  font-weight: 600;
+}
+
+/* Diagrams: inline SVGs use currentColor so they follow the theme. */
+
+.rtu-figure {
+  text-align: center;
+  margin: 1.5rem 0;
+}
+
+.rtu-figure svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.rtu-figure figcaption,
+.rtu-figure .caption {
+  font-size: 0.85rem;
+  color: var(--color-foreground-secondary);
+  margin-top: 0.5rem;
+}
