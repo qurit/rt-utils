@@ -16,7 +16,7 @@ import numpy as np
 import pytest
 
 from rt_utils import RTStructBuilder
-from tests.conftest import build_series
+from tests.conftest import build_series, save_dataset
 
 sitk = pytest.importorskip("SimpleITK", reason="SimpleITK is an optional extra")
 
@@ -220,9 +220,7 @@ def test_a_series_path_works_as_well_as_datasets(tmp_path):
     series_dir = tmp_path / "series"
     series_dir.mkdir()
     for index, ds in enumerate(series_data):
-        ds.save_as(
-            os.path.join(series_dir, f"s{index:03}.dcm"), enforce_file_format=True
-        )
+        save_dataset(ds, os.path.join(series_dir, f"s{index:03}.dcm"))
 
     mask = _known_mask()
     path = tmp_path / "seg.nii.gz"
