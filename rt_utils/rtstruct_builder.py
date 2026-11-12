@@ -19,6 +19,7 @@ class RTStructBuilder:
     @staticmethod
     def create_new(
         dicom_series_path: Union[str, os.PathLike, List[Dataset]],
+        force: bool = False,
     ) -> RTStruct:
         """
         Method to generate a new rt struct from a DICOM series.
@@ -26,9 +27,15 @@ class RTStructBuilder:
         ``dicom_series_path`` is either a path to a directory of DICOM files or
         a list of datasets already read into memory with pydicom. Both are
         sorted by slice position, so the two forms are interchangeable.
+
+        ``force`` is passed to pydicom when reading from a path, allowing
+        files without the standard preamble or file meta to be read. Use it
+        for equipment or anonymisation tools that write non-conformant files.
         """
 
-        series_data = image_helper.load_sorted_image_series(dicom_series_path)
+        series_data = image_helper.load_sorted_image_series(
+            dicom_series_path, force=force
+        )
         ds = ds_helper.create_rtstruct_dataset(series_data)
         return RTStruct(series_data, ds)
 
@@ -37,6 +44,7 @@ class RTStructBuilder:
         dicom_series_path: Union[str, os.PathLike, List[Dataset]],
         rt_struct_path: Union[str, os.PathLike, Dataset],
         warn_only: bool = False,
+        force: bool = False,
     ) -> RTStruct:
         """
         Method to load an existing rt struct, given related DICOM series and
@@ -44,13 +52,19 @@ class RTStructBuilder:
 
         Both arguments accept either a path or already-loaded pydicom objects:
         a list of datasets for the series, and a dataset for the RTStruct.
+
+        ``force`` is passed to pydicom when reading from a path, for the
+        series and for the RTStruct alike, allowing files without the
+        standard preamble or file meta to be read.
         """
 
-        series_data = image_helper.load_sorted_image_series(dicom_series_path)
+        series_data = image_helper.load_sorted_image_series(
+            dicom_series_path, force=force
+        )
         ds = (
             rt_struct_path
             if isinstance(rt_struct_path, Dataset)
-            else dcmread(rt_struct_path)
+            else dcmread(rt_struct_path, force=force)
         )
         RTStructBuilder.validate_rtstruct(ds)
         RTStructBuilder.validate_rtstruct_series_references(ds, series_data, warn_only)
