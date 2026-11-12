@@ -55,8 +55,6 @@ def load_dcm_images_from_path(dicom_series_path: str) -> List[Dataset]:
 
 
 def get_contours_coords(roi_data: ROIData, series_data):
-    transformation_matrix = get_pixel_to_patient_transformation_matrix(series_data)
-
     series_contours = []
     for i, series_slice in enumerate(series_data):
         mask_slice = roi_data.mask[:, :, i]
@@ -79,12 +77,20 @@ def get_contours_coords(roi_data: ROIData, series_data):
         )
         validate_contours(contours)
 
+        # Each slice is positioned from its own ImagePositionPatient rather
+        # than from the first slice plus i * average spacing. The two agree
+        # only when the series is evenly spaced; where it is not, the average
+        # places the contour on neither the slice it came from nor any other.
+        transformation_matrix = get_pixel_to_patient_transformation_matrix(
+            series_data, origin_slice=series_slice
+        )
+
         # Format for DICOM
         formatted_contours = []
         for contour in contours:
-            # Add z index
+            # The origin is this slice, so the index into the stack is 0.
             contour = np.concatenate(
-                (np.array(contour), np.full((len(contour), 1), i)), axis=1
+                (np.array(contour), np.zeros((len(contour), 1))), axis=1
             )
 
             transformed_contour = apply_transformation_to_3d_points(
@@ -288,8 +294,6 @@ def pixel_polygons_to_patient_coordinates(
     Converting rather than rasterising means the polygon is preserved exactly,
     instead of being turned into a mask and traced back.
     """
-    transformation_matrix = get_pixel_to_patient_transformation_matrix(series_data)
-
     converted = []
     for polygon in polygons:
         if len(polygon) == 0:
@@ -316,6 +320,13 @@ def pixel_polygons_to_patient_coordinates(
                 f"{len(series_data)} slice(s)"
             )
 
+        # Positioned from the slice the polygon names, so uneven spacing
+        # cannot move it.
+        transformation_matrix = get_pixel_to_patient_transformation_matrix(
+            series_data, origin_slice=series_data[index]
+        )
+        points = points.copy()
+        points[:, 2] = 0
         converted.append(
             apply_transformation_to_3d_points(points, transformation_matrix).tolist()
         )
@@ -345,12 +356,21 @@ def require_image_position_patient(series_slice: Dataset):
     return position
 
 
-def get_pixel_to_patient_transformation_matrix(series_data):
+def get_pixel_to_patient_transformation_matrix(series_data, origin_slice=None):
     """
     https://nipy.org/nibabel/dicom/dicom_orientation.html
+
+    ``origin_slice`` selects the slice whose ImagePositionPatient is used as
+    the origin, and so which slice index 0 refers to. It defaults to the first
+    slice of the series, making the third column step between slices by the
+    average spacing.
+
+    Passing the slice a contour actually lies on, and giving that contour a
+    slice index of 0, removes the dependence on that average. The average is
+    only equal to the real step when the slices are evenly spaced.
     """
 
-    first_slice = series_data[0]
+    first_slice = origin_slice if origin_slice is not None else series_data[0]
 
     offset = np.array(require_image_position_patient(first_slice))
     row_spacing, column_spacing = first_slice.PixelSpacing
@@ -368,8 +388,13 @@ def get_pixel_to_patient_transformation_matrix(series_data):
     return mat
 
 
-def get_patient_to_pixel_transformation_matrix(series_data):
-    first_slice = series_data[0]
+def get_patient_to_pixel_transformation_matrix(series_data, origin_slice=None):
+    """The inverse of get_pixel_to_patient_transformation_matrix.
+
+    ``origin_slice`` has the same meaning: the slice that pixel coordinates
+    are measured from.
+    """
+    first_slice = origin_slice if origin_slice is not None else series_data[0]
 
     offset = np.array(require_image_position_patient(first_slice))
     row_spacing, column_spacing = first_slice.PixelSpacing
@@ -439,12 +464,16 @@ def get_spacing_between_slices(series_data):
 
 def create_series_mask_from_contour_sequence(series_data, contour_sequence: Sequence):
     mask = create_empty_series_mask(series_data)
-    transformation_matrix = get_patient_to_pixel_transformation_matrix(series_data)
 
     # Iterate through each slice of the series, If it is a part of the contour, add the contour mask
     for i, series_slice in enumerate(series_data):
         slice_contour_data = get_slice_contour_data(series_slice, contour_sequence)
         if len(slice_contour_data):
+            # Measured from this slice's own origin, so an unevenly spaced
+            # series does not shift the contour within the slice.
+            transformation_matrix = get_patient_to_pixel_transformation_matrix(
+                series_data, origin_slice=series_slice
+            )
             mask[:, :, i] = get_slice_mask_from_slice_contour_data(
                 series_slice, slice_contour_data, transformation_matrix
             )
