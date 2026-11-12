@@ -590,12 +590,76 @@ def get_spacing_between_slices(series_data):
     return 1.0
 
 
-def create_series_mask_from_contour_sequence(series_data, contour_sequence: Sequence):
+MATCH_BY_SOP_INSTANCE_UID = "sop_instance_uid"
+MATCH_BY_POSITION = "position"
+SLICE_MATCHING_STRATEGIES = (MATCH_BY_SOP_INSTANCE_UID, MATCH_BY_POSITION)
+
+
+def contour_slice_position(contour: Dataset, series_data) -> float:
+    """Where a contour sits along the slice normal, in millimetres."""
+    _, _, slice_direction = get_slice_directions(series_data[0])
+    first_point = np.asarray(contour.ContourData[:3], dtype=float)
+    return float(np.dot(slice_direction, first_point))
+
+
+def group_contours_by_slice(series_data, contour_sequence: Sequence, match_by: str):
+    """Decide which slice each contour belongs to.
+
+    By SOPInstanceUID, a contour names its slice outright, which is what
+    DICOM intends and is unambiguous. By position, a contour goes to the
+    slice nearest its own location along the slice normal, which is the only
+    thing left when the identifiers do not line up -- most often because the
+    images were re-written by an anonymiser after the structures were drawn.
+    """
+    if match_by not in SLICE_MATCHING_STRATEGIES:
+        raise ValueError(
+            f"Invalid slice matching strategy '{match_by}'. Expected one of "
+            f"{list(SLICE_MATCHING_STRATEGIES)}."
+        )
+
+    grouped = {index: [] for index in range(len(series_data))}
+
+    if match_by == MATCH_BY_SOP_INSTANCE_UID:
+        for index, series_slice in enumerate(series_data):
+            grouped[index] = get_slice_contours(series_slice, contour_sequence)
+        return grouped
+
+    positions = np.array([get_slice_position(s) for s in series_data], dtype=float)
+    for contour in contour_sequence:
+        if not getattr(contour, "ContourData", None):
+            continue
+        distances = np.abs(positions - contour_slice_position(contour, series_data))
+        grouped[int(np.argmin(distances))].append(contour)
+
+    return grouped
+
+
+def create_series_mask_from_contour_sequence(
+    series_data,
+    contour_sequence: Sequence,
+    match_by: str = MATCH_BY_SOP_INSTANCE_UID,
+):
     mask = create_empty_series_mask(series_data)
+    grouped = group_contours_by_slice(series_data, contour_sequence, match_by)
+
+    if len(contour_sequence) and not any(grouped.values()):
+        raise Exception(
+            f"None of this ROI's {len(contour_sequence)} contour(s) could be "
+            "matched to a slice of the input series, so the mask would be "
+            "empty. Every contour names the image it was drawn on by "
+            "ReferencedSOPInstanceUID, and none of those images is in this "
+            "series. Usually this means the series given is not the one the "
+            "structures were drawn on, or the images were re-written after "
+            "the structures were made -- anonymisation tools regenerate "
+            "SOPInstanceUIDs, which breaks the link while leaving the "
+            "geometry intact. In that second case, pass "
+            'match_by="position" to match each contour to the nearest slice '
+            "instead."
+        )
 
     # Iterate through each slice of the series, If it is a part of the contour, add the contour mask
     for i, series_slice in enumerate(series_data):
-        slice_contours = get_slice_contours(series_slice, contour_sequence)
+        slice_contours = grouped[i]
         if len(slice_contours):
             # Measured from this slice's own origin, so an unevenly spaced
             # series does not shift the contour within the slice.
