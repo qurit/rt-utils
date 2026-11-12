@@ -49,10 +49,47 @@ in on disk, nor InstanceNumber order.
 A mask from somewhere else may need rearranging first. A NIfTI volume carries
 its own axis order and its own direction for each axis in its affine, and
 neither is guaranteed to match the DICOM series; feeding one straight to
-`add_roi` is what makes an ROI come back rotated, flipped or offset. Convert
-deliberately rather than by trial and error — resample the volume onto the
-series grid with a library that reads both affines, such as SimpleITK or
-nibabel, then transpose the result into the layout above.
+`add_roi` is what makes an ROI come back rotated, flipped or offset. Use the
+converter below rather than guessing a transpose.
+
+### From NIfTI
+
+`nifti_to_mask` reads the NIfTI affine and the series geometry and resamples
+between them, so the result is correct for any orientation, spacing or storage
+order:
+
+```Python
+from rt_utils import RTStructBuilder
+from rt_utils.nifti import nifti_to_mask
+
+rtstruct = RTStructBuilder.create_new(dicom_series_path=DICOM_SERIES_PATH)
+
+mask = nifti_to_mask("segmentation.nii.gz", rtstruct.series_data)
+rtstruct.add_roi(mask=mask, name="liver")
+
+rtstruct.save('new-rt-struct')
+```
+
+Pass `label=` to pull one structure out of a multi-label segmentation, as
+TotalSegmentator and similar tools produce:
+
+```Python
+mask = nifti_to_mask("segmentations.nii.gz", rtstruct.series_data, label=5)
+```
+
+Resampling uses nearest neighbour, so the result only ever contains values the
+input contained.
+
+This needs SimpleITK, which is not installed by default:
+
+```bash
+pip install rt_utils[nifti]
+```
+
+No sequence of `transpose`, `flipud` or `rot90` is a substitute. The correct
+rearrangement is whatever the two affines say it is, and it differs from file
+to file — which is why advice of that kind works for one dataset and fails on
+the next.
 
 ## Installation
 ```bash
