@@ -19,14 +19,12 @@ import pydicom
 import pytest
 
 from rt_utils import RTStructBuilder, image_helper
-from tests.conftest import build_series
+from tests.conftest import build_series, save_dataset
 
 
 def _write(series, directory):
     for index, ds in enumerate(series):
-        ds.save_as(
-            os.path.join(directory, f"slice{index:03}.dcm"), enforce_file_format=True
-        )
+        save_dataset(ds, os.path.join(directory, f"slice{index:03}.dcm"))
 
 
 def test_an_image_without_orientation_is_not_part_of_the_series(tmp_path):
@@ -37,7 +35,7 @@ def test_an_image_without_orientation_is_not_part_of_the_series(tmp_path):
     capture = build_series([0.0])[0]
     del capture.ImageOrientationPatient
     capture.SOPInstanceUID = pydicom.uid.generate_uid()
-    capture.save_as(os.path.join(tmp_path, "capture.dcm"), enforce_file_format=True)
+    save_dataset(capture, os.path.join(tmp_path, "capture.dcm"))
 
     loaded = image_helper.load_sorted_image_series(str(tmp_path))
 
@@ -49,7 +47,7 @@ def test_a_folder_of_only_unplaceable_images_says_so(tmp_path):
     """Returning nothing would be reported as 'No DICOM Images found'."""
     capture = build_series([0.0])[0]
     del capture.ImageOrientationPatient
-    capture.save_as(os.path.join(tmp_path, "capture.dcm"), enforce_file_format=True)
+    save_dataset(capture, os.path.join(tmp_path, "capture.dcm"))
 
     with pytest.raises(Exception) as error:
         image_helper.load_sorted_image_series(str(tmp_path))
@@ -79,11 +77,8 @@ def test_files_without_file_meta_need_force(tmp_path):
     for index, ds in enumerate(series):
         # Written with no preamble and no file meta, as some equipment does.
         del ds.file_meta
-        ds.save_as(
-            os.path.join(tmp_path, f"raw{index:03}.dcm"),
-            enforce_file_format=False,
-            little_endian=True,
-            implicit_vr=False,
+        save_dataset(
+            ds, os.path.join(tmp_path, f"raw{index:03}.dcm"), with_file_meta=False
         )
 
     with pytest.raises(Exception, match="No DICOM Images found"):
@@ -98,11 +93,8 @@ def test_force_reaches_the_builder(tmp_path):
     series = build_series([0.0, 2.0, 4.0])
     for index, ds in enumerate(series):
         del ds.file_meta
-        ds.save_as(
-            os.path.join(tmp_path, f"raw{index:03}.dcm"),
-            enforce_file_format=False,
-            little_endian=True,
-            implicit_vr=False,
+        save_dataset(
+            ds, os.path.join(tmp_path, f"raw{index:03}.dcm"), with_file_meta=False
         )
 
     rtstruct = RTStructBuilder.create_new(str(tmp_path), force=True)
