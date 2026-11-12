@@ -183,3 +183,59 @@ def test_loaded_mask_is_shaped_like_the_images(one_slice_series_path):
     loaded = rtstruct.get_roi_mask_by_name("roi")
 
     assert loaded.shape == (int(reference.Rows), int(reference.Columns), 1)
+
+
+# --- pin holes --------------------------------------------------------------
+#
+# draw_line_upwards_from_point sampled the mask as mask[(x, y)] while cv.line
+# wrote to it as (x, y) = (column, row), so it tested the transposed pixel.
+# A mask symmetric about y = x is unaffected, which is what every existing
+# pin hole test used, so the defect was invisible. This is #115.
+
+
+def _ring(rtstruct, symmetric: bool) -> np.ndarray:
+    reference = rtstruct.series_data[0]
+    rows, columns = int(reference.Rows), int(reference.Columns)
+    mask = np.zeros((rows, columns, len(rtstruct.series_data)), dtype=bool)
+    row_axis, column_axis = np.ogrid[:rows, :columns]
+
+    if symmetric:
+        distance = (row_axis - rows // 2) ** 2 + (column_axis - columns // 2) ** 2
+        plane = (distance <= 80**2) & (distance >= 40**2)
+    else:
+        centre_row, centre_column = rows // 3, columns * 2 // 3
+        outer = ((row_axis - centre_row) / 60.0) ** 2 + (
+            (column_axis - centre_column) / 25.0
+        ) ** 2 <= 1
+        inner = ((row_axis - centre_row) / 25.0) ** 2 + (
+            (column_axis - centre_column) / 10.0
+        ) ** 2 <= 1
+        plane = outer & ~inner
+
+    mask[:, :, 0] = plane
+    return mask
+
+
+@pytest.mark.parametrize("symmetric", [True, False], ids=["symmetric", "asymmetric"])
+def test_pin_hole_produces_a_single_contour(series_path, symmetric):
+    """use_pin_hole must reduce a region with a hole to one contour.
+
+    That is the entire purpose of the option: it cuts a channel from the hole
+    out to the boundary so the region needs no nested contour, for consumers
+    that cannot read them.
+
+    The asymmetric case is the regression. With the transposed lookup the
+    channel was never cut, the hole stayed a separate contour, and two were
+    written while the caller had asked for one. No exception was raised, and
+    the symmetric case kept passing throughout.
+    """
+    rtstruct = RTStructBuilder.create_new(dicom_series_path=series_path)
+    mask = _ring(rtstruct, symmetric)
+
+    rtstruct.add_roi(mask=mask, name="ring", use_pin_hole=True)
+
+    contours = rtstruct.ds.ROIContourSequence[0].ContourSequence
+    assert len(contours) == 1, (
+        f"expected one contour after cutting a pin hole, got {len(contours)}; "
+        "the hole was left as a nested contour"
+    )
