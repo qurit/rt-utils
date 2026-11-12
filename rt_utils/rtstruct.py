@@ -1,3 +1,4 @@
+import logging
 from io import BytesIO
 from typing import Dict, List, Union
 
@@ -5,6 +6,8 @@ import numpy as np
 from pydicom.dataset import FileDataset
 from rt_utils.utils import ROIData
 from . import ds_helper, image_helper, smoothing
+
+logger = logging.getLogger(__name__)
 
 
 class RTStruct:
@@ -281,7 +284,7 @@ class RTStruct:
             )
 
         if np.sum(mask) == 0:
-            print("[INFO]: ROI mask is empty")
+            logger.info("ROI mask is empty")
 
         return True
 
@@ -413,7 +416,7 @@ class RTStruct:
         try:
             # Using 'with' to handle file opening and closing automatically
             with open(file_path, "w") as file:
-                print("Writing file to", file_path)
+                logger.info("Writing RTStruct to %s", file_path)
                 self.ds.save_as(file_path)
         except OSError:
             raise Exception(f"Cannot write to file path '{file_path}'")
