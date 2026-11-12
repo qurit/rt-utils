@@ -1,9 +1,12 @@
+import logging
 from typing import List, Union
 from random import randrange
 
 import numpy as np
 from pydicom.uid import PYDICOM_IMPLEMENTATION_UID
 from dataclasses import dataclass
+
+logger = logging.getLogger(__name__)
 
 COLOR_PALETTE = [
     [255, 0, 255],
@@ -126,11 +129,11 @@ class ROIData:
         elif isinstance(self.roi_generation_algorithm, str):
             # users can pick a str if they want to use a value other than the three default values
             if self.roi_generation_algorithm not in ROI_GENERATION_ALGORITHMS:
-                print(
-                    "Got self.roi_generation_algorithm {}. Some viewers might complain about this option. "
-                    "Better options might be 0='AUTOMATIC', 1='SEMIAUTOMATIC', or 2='MANUAL'.".format(
-                        self.roi_generation_algorithm
-                    )
+                logger.warning(
+                    "Got roi_generation_algorithm %s. Some viewers might "
+                    "complain about this option. Better options might be "
+                    "0='AUTOMATIC', 1='SEMIAUTOMATIC', or 2='MANUAL'.",
+                    self.roi_generation_algorithm,
                 )
 
         else:

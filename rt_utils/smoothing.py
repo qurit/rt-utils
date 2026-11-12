@@ -17,6 +17,8 @@ from typing import Dict, Tuple, Union
 import numpy as np
 from scipy import ndimage
 
+logger = logging.getLogger(__name__)
+
 # A set of parameters that is known to work well.
 default_smoothing_parameters_2d = {
     "scaling_iterations": 2,
@@ -166,7 +168,7 @@ def pipeline(
     ndimage_gaussian_filter = smoothing_parameters["ndimage_gaussian_filter"]
     threshold = smoothing_parameters["threshold"]
 
-    logging.info("Original mask shape %s", mask.shape)
+    logger.info("Original mask shape %s", mask.shape)
     cropped_mask, bbox = crop_mask(mask, crop_margins=crop_margins)
     final_shape, final_bbox = get_final_mask_shape_and_bbox(
         mask=mask,
@@ -177,7 +179,7 @@ def pipeline(
 
     iteration = iteration_2d if apply_smoothing == "2d" else iteration_3d
     for i in range(scaling_iterations):
-        logging.info("Scaling iteration %d of %d", i + 1, scaling_iterations)
+        logger.info("Scaling iteration %d of %d", i + 1, scaling_iterations)
         cropped_mask = iteration(
             cropped_mask,
             np_kron=np_kron,
