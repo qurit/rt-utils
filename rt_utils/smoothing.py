@@ -33,10 +33,12 @@ default_smoothing_parameters_2d = {
 def kron_upscale(mask: np.ndarray, params: Dict) -> np.ndarray:
     """Upscale a mask in x and y, leaving z alone.
 
-    1|2       1|1|2|2
-    3|4  -->  1|1|2|2
-              3|3|4|4
-              3|3|4|4
+    ::
+
+        1|2       1|1|2|2
+        3|4  -->  1|1|2|2
+                  3|3|4|4
+                  3|3|4|4
     """
     scaling_array = (params["scaling_factor"], params["scaling_factor"], 1)
 

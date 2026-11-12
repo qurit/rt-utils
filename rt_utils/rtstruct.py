@@ -205,7 +205,7 @@ class RTStruct:
 
         ``coordinate_space`` selects how the points are interpreted:
 
-        ``"patient"`` (the default) takes ``[x, y, z]`` in millimetres:
+        ``"patient"`` (the default) takes ``[x, y, z]`` in millimetres::
 
             rtstruct.add_roi_from_coordinates(
                 coordinates=[
@@ -216,7 +216,8 @@ class RTStruct:
             )
 
         ``"pixel"`` takes ``[column, row, slice_index]`` on the image grid,
-        which is the form an annotation tool working on the images produces:
+        which is the form an annotation tool working on the images
+        produces::
 
             rtstruct.add_roi_from_coordinates(
                 coordinates=[[[60, 50, 0], [120, 50, 0], [120, 100, 0]]],

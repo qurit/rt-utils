@@ -7,7 +7,8 @@
 <p align="center">
     <img src="https://github.com/qurit/rt-utils/workflows/Python%20application/badge.svg" height="18">
     <img src="https://img.shields.io/pypi/pyversions/rt-utils" alt="Python version" height="18">
-    <a href="https://pypi.org/project/rt-utils"><img src="https://badge.fury.io/py/rt-utils.svg" alt="PyPI version" height="18"></a>  
+    <a href="https://pypi.org/project/rt-utils"><img src="https://badge.fury.io/py/rt-utils.svg" alt="PyPI version" height="18"></a>
+    <a href="https://rt-utils.readthedocs.io/en/latest/"><img src="https://readthedocs.org/projects/rt-utils/badge/?version=latest" alt="Documentation status" height="18"></a>  
     <img alt="PyPI - License" src="https://img.shields.io/github/license/qurit/rt-utils?color=g" height="18" />
   
 </p>
@@ -19,6 +20,12 @@
 
 RT-Utils is motivated to allow physicians and other users to view the results of segmentation performed on a series of DICOM images. RT-Utils allows you to create or load RT Structs, extract 3d masks from RT Struct ROIs, easily add one or more regions of interest, and save the resulting RT Struct in just a few lines!
 You can also use the RT-Utils for merging two existing RT Structs to one file.
+
+## 📖 Documentation
+
+**[rt-utils.readthedocs.io](https://rt-utils.readthedocs.io/en/latest/)** — guides, concepts and the full API reference.
+
+Worth reading before your first `add_roi`: [Mask layout](https://rt-utils.readthedocs.io/en/latest/concepts/mask-layout.html), which explains the `(Rows, Columns, Slices)` convention and what goes wrong when a mask comes from somewhere else. If something looks wrong already, start at [Troubleshooting](https://rt-utils.readthedocs.io/en/latest/guide/troubleshooting.html).
 
 ## How it works
 RT-Utils provides a builder class to faciliate the creation and loading of an RT Struct. From there, you can add ROIs through binary masks and optionally input the colour of the region along with the region name.
@@ -126,12 +133,13 @@ rtstruct.add_roi(
   name="RT-Utils ROI!"
 )
 
-# By default contours pass through the centres of boundary voxels, preserving
-# historical behavior. To place contours on the outer voxel edges instead:
+# Contours are traced along the outer voxel edges by default, so they enclose
+# the area the mask occupies. To reproduce the contours written before 2.0.0,
+# which pass through the centres of the boundary voxels:
 rtstruct.add_roi(
   mask=MASK_FROM_ML_MODEL,
-  name="Voxel-edge ROI",
-  contour_mode="voxel_edge"
+  name="Voxel-centre ROI",
+  contour_mode="voxel_center"
 )
 
 rtstruct.save('new-rt-struct')
@@ -264,9 +272,6 @@ The add_roi method of our RTStruct class has a multitude of optional parameters 
 ## 🚀 New features
 - nifti to rtstruct conversion has been added.
 - conversion from DICOM to NIFTI for PET and corresponding RT-struct file has been added as an example usage with no issues of shift or mismatch between the masks.
-
-## Examples
-You can find the comparison between RT-utils and other conversion techniques in this public repository: https://github.com/qurit/dicom_nifti_conversion_project 
 
 ## Examples
 You can find the comparison between RT-utils and other conversion techniques in this public repository: https://github.com/qurit/dicom_nifti_conversion_project.

@@ -1,0 +1,28 @@
+# Read the Docs build configuration.
+# https://docs.readthedocs.io/en/stable/config-file/v2.html
+
+version: 2
+
+build:
+  os: ubuntu-24.04
+  tools:
+    python: "3.12"
+
+sphinx:
+  configuration: docs/conf.py
+  # Fail the build on a broken reference or a page missing from a toctree,
+  # rather than publishing a site with dead links in it.
+  fail_on_warning: true
+
+formats:
+  - pdf
+  - epub
+
+python:
+  install:
+    - requirements: docs/requirements.txt
+    # The API reference is generated from docstrings, so the package and its
+    # runtime dependencies have to be importable. SimpleITK is not needed:
+    # rt_utils.nifti imports it lazily, inside the functions that use it.
+    - method: pip
+      path: .
