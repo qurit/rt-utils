@@ -24,7 +24,7 @@ from rt_utils.rtstruct import RTStruct
 def _grid(rtstruct: RTStruct):
     """Mask dimensions for a series, matching create_empty_series_mask."""
     ref = rtstruct.series_data[0]
-    return int(ref.Columns), int(ref.Rows), len(rtstruct.series_data)
+    return int(ref.Rows), int(ref.Columns), len(rtstruct.series_data)
 
 
 def _blank(rtstruct: RTStruct) -> np.ndarray:
@@ -172,8 +172,10 @@ def test_shape_round_trips_exactly(series_path, shape_name):
 def test_shape_round_trips_on_non_square_series(one_slice_series_path, shape_name):
     """The same must hold when Rows and Columns differ.
 
-    Masks are allocated as (Columns, Rows, Slices), so a non-square series is
-    where an axis-order mistake would show up.
+    Masks are allocated as (Rows, Columns, Slices), so a non-square series is
+    where an axis-order mistake would show up. Absolute placement against the
+    DICOM standard is covered in test_mask_orientation.py; this only checks
+    that a mask survives the round trip unchanged.
     """
     rtstruct = RTStructBuilder.create_new(dicom_series_path=one_slice_series_path)
     dims = _grid(rtstruct)

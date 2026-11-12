@@ -306,8 +306,8 @@ def test_voxel_edge_ignores_contour_approximation(new_rtstruct: RTStruct):
 
 def test_nonstandard_image_orientation(oriented_rtstruct: RTStruct):
     mask = get_empty_mask(oriented_rtstruct)
-    mask[10:70, 5:15, 1] = 1
-    mask[60:70, 5:40, 1] = 1
+    mask[10:40, 5:15, 1] = 1
+    mask[30:40, 5:40, 1] = 1
 
     IOU_threshold = 1.0  # Expected accuracy
     run_mask_iou_test(oriented_rtstruct, mask, IOU_threshold)
@@ -315,8 +315,8 @@ def test_nonstandard_image_orientation(oriented_rtstruct: RTStruct):
 
 def test_one_slice_image(one_slice_rtstruct: RTStruct):
     mask = get_empty_mask(one_slice_rtstruct)
-    mask[10:70, 5:15, 0] = 1
-    mask[60:70, 5:40, 0] = 1
+    mask[10:40, 5:15, 0] = 1
+    mask[30:40, 5:40, 0] = 1
 
     IOU_threshold = 1.0  # Expected accuracy
     run_mask_iou_test(one_slice_rtstruct, mask, IOU_threshold)
@@ -424,8 +424,8 @@ def run_mask_iou_test(
 def get_empty_mask(rtstruct) -> np.ndarray:
     ref_dicom_image = rtstruct.series_data[0]
     mask_dims = (
-        int(ref_dicom_image.Columns),
         int(ref_dicom_image.Rows),
+        int(ref_dicom_image.Columns),
         len(rtstruct.series_data),
     )
     mask = np.zeros(mask_dims)

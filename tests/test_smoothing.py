@@ -17,7 +17,7 @@ from rt_utils.rtstruct import RTStruct
 def _staircase(rtstruct: RTStruct) -> np.ndarray:
     """A deliberately stair-stepped diagonal edge."""
     ref = rtstruct.series_data[0]
-    dims = (int(ref.Columns), int(ref.Rows), len(rtstruct.series_data))
+    dims = (int(ref.Rows), int(ref.Columns), len(rtstruct.series_data))
     mask = np.zeros(dims, dtype=bool)
     for step in range(10):
         mask[100 + step * 8 : 108 + step * 8, 100 : 100 + (step + 1) * 8, :] = True
@@ -98,7 +98,7 @@ def test_smoothing_an_empty_mask_is_rejected(series_path):
     rtstruct = RTStructBuilder.create_new(dicom_series_path=series_path)
     ref = rtstruct.series_data[0]
     empty = np.zeros(
-        (int(ref.Columns), int(ref.Rows), len(rtstruct.series_data)), dtype=bool
+        (int(ref.Rows), int(ref.Columns), len(rtstruct.series_data)), dtype=bool
     )
 
     with pytest.raises(Exception):

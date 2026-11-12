@@ -16,7 +16,7 @@ from rt_utils.rtstruct import RTStruct
 
 def _mask_for(rtstruct: RTStruct) -> np.ndarray:
     ref = rtstruct.series_data[0]
-    dims = (int(ref.Columns), int(ref.Rows), len(rtstruct.series_data))
+    dims = (int(ref.Rows), int(ref.Columns), len(rtstruct.series_data))
     mask = np.zeros(dims, dtype=bool)
     mask[50:100, 50:100, 0] = True
     return mask

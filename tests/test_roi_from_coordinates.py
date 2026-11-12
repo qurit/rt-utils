@@ -103,7 +103,7 @@ def test_mixing_with_add_roi_keeps_numbers_unique(new_rtstruct: RTStruct):
     """Both entry points share one numbering sequence."""
     ref = new_rtstruct.series_data[0]
     mask = np.zeros(
-        (int(ref.Columns), int(ref.Rows), len(new_rtstruct.series_data)), dtype=bool
+        (int(ref.Rows), int(ref.Columns), len(new_rtstruct.series_data)), dtype=bool
     )
     mask[50:100, 50:100, 0] = True
 
