@@ -10,5 +10,8 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
+    # Without this the workspace is empty, black finds no Python files,
+    # and the job passes green having checked nothing.
+    - uses: actions/checkout@v4
     - name: Run Black Code Formatter
       uses: psf/black@stable
