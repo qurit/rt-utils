@@ -282,7 +282,7 @@ def create_rtroi_observation(roi_data: ROIData) -> Dataset:
     # TODO figure out how to get observation description
     rtroi_observation.ROIObservationDescription = "Type:Soft,Range:*/*,Fill:0,Opacity:0.0,Thickness:1,LineThickness:2,read-only:false"
     rtroi_observation.private_creators = "Qurit Lab"
-    rtroi_observation.RTROIInterpretedType = ""
+    rtroi_observation.RTROIInterpretedType = roi_data.roi_interpreted_type
     rtroi_observation.ROIInterpreter = ""
     return rtroi_observation
 
