@@ -351,7 +351,12 @@ class RTStruct:
 
         return matching
 
-    def get_roi_mask_by_name(self, name, case_sensitive: bool = True) -> np.ndarray:
+    def get_roi_mask_by_name(
+        self,
+        name,
+        case_sensitive: bool = True,
+        match_by: str = image_helper.MATCH_BY_SOP_INSTANCE_UID,
+    ) -> np.ndarray:
         """
         Returns the 3D binary mask of the ROI with the given input name.
 
@@ -363,6 +368,20 @@ class RTStruct:
         several ROIs whose names differ only in case, and those are distinct
         structures. With case_sensitive=False the first one in
         StructureSetROISequence wins and the others become unreachable.
+
+        ``match_by`` decides how each contour is tied to a slice.
+
+        ``"sop_instance_uid"`` (the default) uses the image the contour names
+        in its ContourImageSequence. That is what DICOM intends and it is
+        unambiguous.
+
+        ``"position"`` instead assigns each contour to the slice nearest its
+        own position along the slice normal. Use it when the identifiers no
+        longer line up although the geometry is unchanged, which is what
+        anonymisation tools cause by regenerating SOPInstanceUIDs. It is not
+        the default because it will happily match contours to a series they
+        were never drawn on, as long as the positions are close; by
+        identifier, that case raises instead.
         """
         target = name
         if not case_sensitive and isinstance(name, str):
@@ -378,7 +397,7 @@ class RTStruct:
                     self.ds, structure_roi.ROINumber
                 )
                 return image_helper.create_series_mask_from_contour_sequence(
-                    self.series_data, contour_sequence
+                    self.series_data, contour_sequence, match_by=match_by
                 )
 
         raise RTStruct.ROIException(f"ROI of name `{name}` does not exist in RTStruct")
