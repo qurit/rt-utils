@@ -12,7 +12,7 @@ from rt_utils import RTStructBuilder
 
 rtstruct = RTStructBuilder.create_new(dicom_series_path="./series")
 
-# mask is a 3D boolean array shaped (Rows, Columns, Slices) — see below
+# mask is a 3D boolean array shaped (Rows, Columns, Slices); see below
 rtstruct.add_roi(mask=mask, name="GTV", color=[255, 0, 255])
 
 rtstruct.save("structures")       # writes structures.dcm
@@ -23,7 +23,7 @@ structure set that references those images. `add_roi` traces the contours of
 each slice of the mask and writes them in patient coordinates.
 
 :::{important}
-The mask is indexed `(Rows, Columns, Slices)` — the same layout
+The mask is indexed `(Rows, Columns, Slices)`, the same layout
 `pydicom`'s `pixel_array` is read in. A mask segmented from the series already
 has the right shape; a mask from a NIfTI file or another tool probably does
 not. {doc}`concepts/mask-layout` explains what goes wrong and how to convert.
@@ -64,7 +64,7 @@ plt.show()
 
 Because the mask and `pixel_array` share their in-plane layout, the two
 overlay directly with no transposing. If the contour lands somewhere
-unexpected, that is the first thing to check — see
+unexpected, that is the first thing to check. See
 {doc}`guide/troubleshooting`.
 
 ## A complete round trip

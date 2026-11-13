@@ -68,7 +68,7 @@ read accurately whichever convention they used.
 Internally, polygons are filled at twice the image resolution and then sampled
 at the voxel centres. `cv2.fillPoly` treats its vertices as inclusive, so
 filling at image resolution would add a row and a column to any contour that
-runs along voxel boundaries — a single voxel coming back as four.
+runs along voxel boundaries, with a single voxel coming back as four.
 
 :::{admonition} Why the old default survived so long
 :class: seealso
@@ -76,8 +76,8 @@ runs along voxel boundaries — a single voxel coming back as four.
 Writing contours through voxel centres shrank every structure by half a voxel
 per side; reading them back with an inclusive fill grew it again by the same
 amount. The two errors cancelled inside the library and reappeared for every
-other consumer of the file. A round-trip test cannot detect a symmetric error
-— which is why the geometry tests in this project assert absolute position
+other consumer of the file. A round-trip test cannot detect a symmetric
+error, which is why the geometry tests in this project assert absolute position
 against PS3.3 C.7.6.2.1.1 rather than comparing a mask to itself.
 :::
 
@@ -121,9 +121,9 @@ Organ structures are closed, which is why they always looked right.
 
 ## Holes and nested contours
 
-A structure with a hole — an annulus, a vessel wall — is written as nested
-closed contours: an outer boundary and an inner one. That is the correct DICOM
-representation, and RT-Utils reads it back correctly.
+A structure with a hole, such as an annulus or a vessel wall, is written as
+nested closed contours: an outer boundary and an inner one. That is the
+correct DICOM representation, and RT-Utils reads it back correctly.
 
 Some viewers cannot draw nested contours. For those, `use_pin_hole=True` cuts
 a one-voxel channel from each hole out to the outer boundary, so each region

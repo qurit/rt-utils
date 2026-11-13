@@ -18,7 +18,7 @@ The list is sorted by slice position, using the same key as files read from
 disk, so a path and a list of datasets are interchangeable.
 
 :::{note}
-Your list is not reordered in place — sorting is applied to a copy, so the
+Your list is not reordered in place. Sorting is applied to a copy, so the
 list you passed keeps whatever order it had.
 :::
 
@@ -76,7 +76,7 @@ bucket.put(f"{prefix}/structures.dcm", rtstruct.save_to_memory().read())
 
 ## Why this exists
 
-DICOM arrives over the network as often as it arrives on disk — from a PACS,
+DICOM arrives over the network as often as it arrives on disk: from a PACS,
 a DICOMweb endpoint, an object store, a queue. Writing it to a temporary
 directory first so a library can read it back is wasted work, and in a
 container with a read-only filesystem it is not possible at all.

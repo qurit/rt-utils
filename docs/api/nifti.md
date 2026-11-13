@@ -2,7 +2,7 @@
 
 :::{note}
 Needs SimpleITK: `pip install "rt-utils[nifti]"`. The import is lazy, so the
-module can be imported — and documented — without it.
+module can be imported, and documented, without it.
 :::
 
 ```{eval-rst}

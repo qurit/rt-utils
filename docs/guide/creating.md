@@ -12,7 +12,7 @@ rtstruct = RTStructBuilder.create_new(dicom_series_path="./series")
 ```
 
 The series can be a directory path, an `os.PathLike`, or a list of datasets
-already read with pydicom — see {doc}`in-memory`. Either way it is sorted by
+already read with pydicom (see {doc}`in-memory`). Either way it is sorted by
 slice position, so the two forms are interchangeable.
 
 To add to a structure set that already exists, use
@@ -61,7 +61,7 @@ successive ROIs are visually distinct without you choosing anything.
 
 ### `name`
 
-Defaults to `ROI-{number}`. Names are not checked for uniqueness — two ROIs
+Defaults to `ROI-{number}`. Names are not checked for uniqueness. Two ROIs
 may share a name, and they then become difficult to tell apart in a viewer and
 ambiguous to {meth}`~rt_utils.rtstruct.RTStruct.get_roi_mask_by_name`, which
 returns the first match.
@@ -72,8 +72,8 @@ Free text, written to `ROIDescription`. Empty by default.
 
 ### `roi_interpreted_type`
 
-Sets `RTROIInterpretedType` — what kind of structure this is, so a planning
-system can tell a target from an organ at risk:
+Sets `RTROIInterpretedType`, which says what kind of structure this is, so a
+planning system can tell a target from an organ at risk:
 
 ```{code-block} python
 rtstruct.add_roi(mask=ptv,    name="PTV",    roi_interpreted_type="PTV")
@@ -85,7 +85,7 @@ PS3.3 C.8.8.8 gives these as *Defined Terms*, meaning the list is extensible,
 so the value is not validated. {data}`rt_utils.utils.ROI_INTERPRETED_TYPES`
 holds the standard ones for reference.
 
-Defaults to `""` (unstated), which is what every version before 2.4.0 wrote —
+Defaults to `""` (unstated), which is what every version before 2.4.0 wrote,
 leaving every structure to be reclassified by hand after import.
 
 ### `contour_mode`
@@ -121,7 +121,7 @@ than the voxel grid. See {doc}`smoothing`.
 
 `ROINumber` is the key joining the three sequences that make up a structure
 set, so RT-Utils never reuses one. A new ROI takes `max(existing) + 1`, not
-`len(sequence) + 1` — those differ as soon as anything has been deleted, and a
+`len(sequence) + 1`. Those differ as soon as anything has been deleted, and a
 collision would silently give two ROIs the same contours.
 
 Gaps left by {meth}`~rt_utils.rtstruct.RTStruct.delete_roi` are therefore

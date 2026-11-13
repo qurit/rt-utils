@@ -21,7 +21,7 @@ Masks are indexed the way `pixel_array` is read. A mask from a NIfTI file, or
 from a tool with its own conventions, probably is not. See
 {doc}`../concepts/mask-layout`.
 
-For NIfTI, use {func}`~rt_utils.nifti.nifti_to_mask` — not a transpose. The
+For NIfTI, use {func}`~rt_utils.nifti.nifti_to_mask`, not a transpose. The
 correct rearrangement differs from file to file.
 
 Check it before writing anything:
@@ -40,7 +40,7 @@ way.
 **The mask's axis 2 was not in the series' spatial order.**
 
 `series_data` is sorted by position along the slice normal. That is not the
-order of a directory listing, and not `InstanceNumber` order — which descends
+order of a directory listing, and not `InstanceNumber` order, which descends
 in plenty of real acquisitions. Build the volume from `series_data`:
 
 ```{code-block} python
@@ -73,7 +73,7 @@ leaving the geometry intact. For that case:
 mask = rtstruct.get_roi_mask_by_name("GTV", match_by="position")
 ```
 
-Read the caveats in {doc}`../concepts/slice-matching` first — position
+Read the caveats in {doc}`../concepts/slice-matching` first. Position
 matching always succeeds, including when it should not.
 
 :::{note}
@@ -84,8 +84,8 @@ from a structure genuinely absent from the patient.
 ## An open contour comes back as a solid blob
 
 **Fixed in 2.3.0.** `ContourGeometricType` was ignored on read, so an
-`OPEN_PLANAR` path — a brachytherapy channel, a catheter, a vessel centreline
-— had the entire area between its two ends filled in. A C-shaped channel of 65
+`OPEN_PLANAR` path (a brachytherapy channel, a catheter, a vessel centreline)
+had the entire area between its two ends filled in. A C-shaped channel of 65
 voxels came back as a solid 579.
 
 Upgrade. Closed contours were never affected, which is why organ structures
@@ -95,7 +95,7 @@ always looked right.
 
 The mask's slice count does not match the series.
 
-**If the number is a whole multiple of the real one** — twice, three times —
+**If the number is a whole multiple of the real one**, twice or three times,
 the directory contains copies of the series, in a backup folder or a nested
 export. Fixed in 2.3.0, where copies sharing a `SOPInstanceUID` are collapsed.
 
@@ -111,7 +111,7 @@ would interleave two volumes. Separate them first.
 
 ## `No DICOM Images found in input path`
 
-**The path holds no images** — or none RT-Utils recognises as such.
+**The path holds no images**, or none RT-Utils recognises as such.
 
 Files without `ImageOrientationPatient` are skipped: secondary captures,
 screenshots, dose reports, structure sets. Those carry no geometry to contour
@@ -133,7 +133,7 @@ pixel values; presence of the element is now enough.
 ## `Mask must have the same in-plane dimensions as the input series`
 
 The mask is sized for a different series, or is transposed on a non-square
-one. The expected shape is `(Rows, Columns)` — the `pixel_array` layout.
+one. The expected shape is `(Rows, Columns)`, the `pixel_array` layout.
 
 :::{warning}
 On a **square** series this check cannot catch a transpose: `512 × 512`
@@ -158,7 +158,7 @@ See {doc}`../concepts/contour-placement`.
 ## A single voxel comes back as four, or five
 
 **As four:** a contour tracing voxel boundaries, rasterised with an inclusive
-fill. Fixed in 2.0.0 — contours are now sampled at voxel centres.
+fill. Fixed in 2.0.0; contours are now sampled at voxel centres.
 
 **As five:** a point contour drawn as a radius-1 circle. Fixed in 1.4.0; a
 `POINT` now sets exactly the voxel it names.
@@ -166,8 +166,8 @@ fill. Fixed in 2.0.0 — contours are now sampled at voxel centres.
 ## Contours are at positions no slice occupies
 
 **Fixed in 2.3.0.** Coordinates came from the first slice's position plus
-`index × average_spacing`. On an unevenly spaced series — a scout image in the
-folder, a varying increment, a partly culled stack — every slice between the
+`index × average_spacing`. On an unevenly spaced series (a scout image in the
+folder, a varying increment, a partly culled stack) every slice between the
 first and the last was written somewhere no slice is. A stack at z = 0, 2, 4,
 20 put the z = 2 contour at z = 6.67.
 
@@ -177,8 +177,9 @@ to miss in a viewer.
 ## Merging raises `TypeError`, or structures share a number
 
 **Fixed in 2.4.0.** The duplicate-name path in `RTStructMerger` had never run
-successfully, so merging two sets that both contained a `Liver` — the ordinary
-case — raised. Numbering also collided wherever the destination had a gap.
+successfully, so merging two sets that both contained a `Liver`, which is the
+ordinary case, raised. Numbering also collided wherever the destination had
+a gap.
 
 ## Nothing is printed any more
 

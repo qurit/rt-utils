@@ -31,7 +31,7 @@ An ROI lives in three sequences joined by `ROINumber`:
 `StructureSetROISequence` names it, `ROIContourSequence` holds its geometry,
 and `RTROIObservationsSequence` its interpretation.
 {meth}`~rt_utils.rtstruct.RTStruct.delete_roi` removes all three. Leaving any
-behind produces a structure set viewers read inconsistently — contours
+behind produces a structure set viewers read inconsistently: contours
 belonging to an ROI with no name, or a name with nothing to draw.
 
 A name that does not exist raises `RTStruct.ROIException`.
@@ -79,7 +79,7 @@ rtstruct.add_roi(mask=edited, name="GTV", color=color)
 
 ## Renaming
 
-RT-Utils has no rename method. Edit the dataset directly — `ROIName` lives in
+RT-Utils has no rename method. Edit the dataset directly, since `ROIName` is in
 `StructureSetROISequence`:
 
 ```{code-block} python

@@ -51,8 +51,8 @@ liver  = nifti_to_mask("segmentations.nii.gz", rtstruct.series_data, label=5)
 spleen = nifti_to_mask("segmentations.nii.gz", rtstruct.series_data, label=1)
 ```
 
-Without `label`, **any** non-zero voxel is foreground — right for a
-single-structure mask, wrong for a label map.
+Without `label`, **any** non-zero voxel is foreground, which is right for a
+single-structure mask and wrong for a label map.
 
 A label not present in the resampled volume raises, listing the labels that
 are:
@@ -85,7 +85,7 @@ rtstruct.save("structures")
 
 1. Reads the NIfTI with SimpleITK, which converts NIfTI's RAS convention to
    the LPS convention DICOM uses.
-2. Builds an empty reference image describing the series' grid — size,
+2. Builds an empty reference image describing the series' grid: size,
    spacing, origin and direction, taken from `ImageOrientationPatient`,
    `ImagePositionPatient` and `PixelSpacing`.
 3. Resamples the volume onto that grid with an identity transform, since both
@@ -112,7 +112,7 @@ between two real ones.
 
 **Different patient, different geometry.**
 : Nothing checks that the NIfTI and the series describe the same patient. If
-  the two were never spatially aligned, resampling will produce a mask — just
+  the two were never spatially aligned, resampling will produce a mask, just
   not a meaningful one.
 
 ## Going the other way
