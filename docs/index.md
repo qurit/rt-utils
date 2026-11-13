@@ -16,7 +16,7 @@ hide-toc: true
 </div>
 ```
 
-RT-Utils reads and writes the DICOM **RT Structure Set** — the file a treatment
+RT-Utils reads and writes the DICOM **RT Structure Set**, the file a treatment
 planning system stores contoured anatomy in. It turns an RTStruct into a NumPy
 mask you can compute on, and turns a mask back into a conformant RTStruct a
 planning system or viewer will open.
@@ -46,7 +46,7 @@ pip install rt-utils
 :link: quickstart
 :link-type: doc
 
-Create a structure set, add an ROI and read one back — the whole round trip in
+Create a structure set, add an ROI and read one back: the whole round trip in
 a few lines.
 :::
 
@@ -103,7 +103,7 @@ RT-Utils is deliberately small. It does not plan, does not compute dose, and
 does not resample images. A few limits are worth knowing before you start:
 
 - One frame of reference and one image series per structure set. A structure
-  set spanning several series is only partly supported — see
+  set spanning several series is only partly supported. See
   {doc}`guide/troubleshooting`.
 - Nested contours (a hole inside a structure) are written as nested closed
   contours. Viewers that cannot draw those need `use_pin_hole=True`.
@@ -112,7 +112,7 @@ does not resample images. A few limits are worth knowing before you start:
 
 ## Citing
 
-If RT-Utils contributes to published work, please cite the JOSS paper — see
+If RT-Utils contributes to published work, please cite the JOSS paper. See
 {doc}`citing`.
 
 ```{toctree}

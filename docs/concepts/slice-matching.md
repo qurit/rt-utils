@@ -26,8 +26,8 @@ drawn before.
 :::{warning}
 Position matching is not the default because it always succeeds. It will
 happily attach contours to a series they were never drawn on, as long as the
-positions are close — two scans of the same patient at the same couch
-positions, for instance. Matching by identifier raises in that case instead.
+positions are close, as with two scans of the same patient at the same couch
+positions. Matching by identifier raises in that case instead.
 
 Do not reach for it to work around a structure set that spans several series,
 either: overlapping series will attract each other's contours.
@@ -110,7 +110,7 @@ Two integrity checks run while the series is loaded:
 ## Which files count as images
 
 Whether a file is an image is decided by the **presence** of a pixel data
-element — `PixelData`, `FloatPixelData` or `DoubleFloatPixelData` — not by
+element (`PixelData`, `FloatPixelData` or `DoubleFloatPixelData`), not by
 decoding it.
 
 Nothing in RT-Utils reads pixel values, so a compressed transfer syntax with

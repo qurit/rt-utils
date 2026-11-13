@@ -45,12 +45,12 @@ Every mask RT-Utils accepts or returns is a 3D boolean array indexed
     <line x1="50" y1="80" x2="50" y2="300" marker-end="url(#rtu-arrow)"/>
   </g>
   <text x="180" y="48" text-anchor="middle" font-size="13" fill="currentColor"
-        font-family="system-ui, sans-serif" font-weight="600">axis 1 — column</text>
+        font-family="system-ui, sans-serif" font-weight="600">axis 1 · column</text>
   <text x="300" y="64" font-size="11" fill="currentColor" opacity="0.7"
         font-family="system-ui, sans-serif">IOP[0:3]</text>
   <text x="34" y="190" text-anchor="middle" font-size="13" fill="currentColor"
         font-family="system-ui, sans-serif" font-weight="600"
-        transform="rotate(-90 34 190)">axis 0 — row</text>
+        transform="rotate(-90 34 190)">axis 0 · row</text>
   <text x="56" y="318" font-size="11" fill="currentColor" opacity="0.7"
         font-family="system-ui, sans-serif">IOP[3:6]</text>
   <text x="180" y="186" text-anchor="middle" font-size="11" fill="currentColor"
@@ -72,7 +72,7 @@ Every mask RT-Utils accepts or returns is a 3D boolean array indexed
   </g>
   <text x="404" y="208" text-anchor="middle" font-size="13" fill="currentColor"
         font-family="system-ui, sans-serif" font-weight="600"
-        transform="rotate(-90 404 208)">axis 2 — slice</text>
+        transform="rotate(-90 404 208)">axis 2 · slice</text>
   <text x="712" y="292" font-size="11" fill="currentColor" opacity="0.7"
         font-family="system-ui, sans-serif">k = 0</text>
   <text x="712" y="172" font-size="11" fill="currentColor" opacity="0.7"
@@ -81,7 +81,7 @@ Every mask RT-Utils accepts or returns is a 3D boolean array indexed
         opacity="0.75" font-family="system-ui, sans-serif">ascending slice position</text>
 </svg>
 <p class="caption">The first two axes are the image grid as pydicom reads it.
-The third runs through the series in spatial order — not file order, not
+The third runs through the series in spatial order, not file order and not
 <code>InstanceNumber</code> order.</p>
 </div>
 ```
@@ -112,8 +112,8 @@ plt.contour(mask[:, :, k])         # no transpose
 normal, ascending. That is the order axis 2 must be in.
 
 It is **not** necessarily the order the files appear in a directory listing,
-and it is not `InstanceNumber` order — `InstanceNumber` descends in plenty of
-real acquisitions. If you build a volume yourself, iterate `series_data`
+and it is not `InstanceNumber` order, which descends in plenty of real
+acquisitions. If you build a volume yourself, iterate `series_data`
 rather than globbing the directory:
 
 ```{code-block} python
@@ -136,7 +136,7 @@ in, and a volume can disagree on both at once.
 :::{danger}
 There is no fixed sequence of `transpose`, `flipud` and `rot90` that converts
 correctly. The right rearrangement is whatever the two geometries say it is,
-and it differs from file to file — which is exactly why advice of that kind
+and it differs from file to file. That is exactly why advice of that kind
 works on one dataset and silently fails on the next.
 :::
 
@@ -166,7 +166,7 @@ anything and raises `RTStruct.ROIException` if:
 - `mask.shape[2]` is not the number of slices in the series;
 - `mask.shape[:2]` is not `(Rows, Columns)` of the series.
 
-An empty mask is logged, not raised — a structure legitimately absent from a
+An empty mask is logged, not raised. A structure legitimately absent from a
 patient is not an error.
 
 :::{warning}
@@ -181,7 +181,7 @@ orientation.
 Before 2.2.0 masks were *allocated and validated* as `(Columns, Rows, Slices)`
 while every geometric computation used the opposite order. On a square series
 the two are indistinguishable, which is how the discrepancy survived from 2020.
-On a non-square series it was wrong in both directions — ROIs past the shorter
+On a non-square series it was wrong in both directions: ROIs past the shorter
 dimension read back as zero voxels, and correct masks were rejected.
 
 If you transposed your masks to work around that on a non-square series,

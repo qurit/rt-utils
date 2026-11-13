@@ -1,7 +1,7 @@
 # Merging structure sets
 
-Two structure sets for one image series — one for organs at risk, one for
-targets — can be combined into a single file:
+Two structure sets for one image series, one for organs at risk and one for
+targets, can be combined into a single file:
 
 ```{code-block} python
 from rt_utils import RTStructMerger
@@ -31,14 +31,14 @@ Two things are fixed up as structures are moved across:
 
 **`ROINumber`.**
 : Each incoming ROI is renumbered to one above the highest already in use in
-  the destination — not to `len(sequence) + 1`, which collides wherever the
+  the destination, not to `len(sequence) + 1`, which collides wherever the
   destination has a gap. `ROINumber` is what joins the three sequences, so a
   collision would silently give two ROIs the same contours.
 
 **`ROIName`.**
 : Two sets for one series routinely name the same organ the same way. A name
-  already taken gets a counting suffix — `Liver`, then `Liver_2`, then
-  `Liver_3` — so merging a third set does not produce a second `Liver_2`.
+  already taken gets a counting suffix: `Liver`, then `Liver_2`, then
+  `Liver_3`, so merging a third set does not produce a second `Liver_2`.
 
 :::{note}
 Both of these were broken before 2.4.0. The rename path did
@@ -59,7 +59,7 @@ merged = RTStructMerger.merge_rtstructs("./series", "tmp-merged.dcm", "nodes.dcm
 merged.save("all-structures")
 ```
 
-Merging is not associative in naming — the order decides which copy keeps the
+Merging is not associative in naming. The order decides which copy keeps the
 plain name and which gets the suffix.
 
 ## Copying individual structures
@@ -81,5 +81,5 @@ target.save("targets-plus-organs")
 ```
 
 This round trips each structure through a mask, so it quantises to the voxel
-grid — see {doc}`../concepts/contour-placement`. `merge_rtstructs` moves the
+grid; see {doc}`../concepts/contour-placement`. `merge_rtstructs` moves the
 contour data itself and does not.

@@ -31,7 +31,7 @@ volume before and after if it matters.
 
 The upscaled mask is only an intermediate. Contour coordinates are divided by
 the scaling factor before they are written, so the output is in the image's
-own coordinates — there is no change of grid to account for downstream.
+own coordinates, so there is no change of grid to account for downstream.
 
 The returned structure set is unaffected in every other way: the mask you
 passed is not modified, and the slice count does not change.
@@ -84,7 +84,7 @@ rtstruct.add_roi(
 ```
 
 Memory is the practical limit. A 512 × 512 slice at the default 9× in plane
-is 21 megavoxels per slice before cropping — which is why cropping to the
+is 21 megavoxels per slice before cropping, which is why cropping to the
 bounding box happens first.
 
 ## Substituting your own
@@ -113,7 +113,8 @@ returns something smaller than the image raises
 ## When not to use it
 
 Smoothing is a cosmetic operation on the boundary. It does not add
-information, and it will not rescue a bad segmentation. For a small structure
-— a few voxels across — the blur removes a meaningful fraction of the volume.
+information, and it will not rescue a bad segmentation. For a small structure,
+one only a few voxels across, the blur removes a meaningful fraction of the
+volume.
 
 Smoothing an empty mask raises `ValueError`.

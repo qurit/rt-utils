@@ -17,7 +17,7 @@ rtstruct = RTStructBuilder.create_from(
 The images are not optional. Contours name their slices by identifier, and
 every coordinate is interpreted through the series geometry.
 
-The loaded structure set is also writable — `add_roi` and `delete_roi` work on
+The loaded structure set is also writable. `add_roi` and `delete_roi` work on
 it, so this is how you add to an existing set.
 
 ### Validation
@@ -35,7 +35,7 @@ rtstruct = RTStructBuilder.create_from(
 ```
 
 Use `warn_only` when a set legitimately spans more than the series you are
-working with — but note the limits in {doc}`troubleshooting`.
+working with, but note the limits in {doc}`troubleshooting`.
 
 ## Listing structures
 
@@ -88,7 +88,7 @@ structures were drawn. Read the caveats in
 
 ## Working with the series
 
-`rtstruct.series_data` is the sorted list of slice datasets — the same order
+`rtstruct.series_data` is the sorted list of slice datasets, in the same order
 axis 2 of every mask is in:
 
 ```{code-block} python
@@ -138,7 +138,7 @@ plt.show()
 ```
 
 No transpose, no flip. If one appears to be needed, something upstream is
-wrong — see {doc}`troubleshooting`.
+wrong; see {doc}`troubleshooting`.
 
 ## Exporting every structure
 
@@ -153,6 +153,6 @@ masks = {
 np.savez_compressed("masks.npz", **masks)
 ```
 
-A label map, where each structure gets an integer, loses overlaps — structures
-in radiotherapy overlap constantly, a PTV inside a BODY. Keep them separate
-unless you know they are disjoint.
+A label map, where each structure gets an integer, loses overlaps, and
+structures in radiotherapy overlap constantly, a PTV inside a BODY. Keep
+them separate unless you know they are disjoint.

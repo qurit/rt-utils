@@ -29,8 +29,8 @@ and 134 tests passed over it, because the same wrong transform was used to
 read and to write. The error cancelled inside the library and reappeared for
 every other consumer of the file. The averaged-slice-spacing bug fixed in
 2.3.0 was the same shape, and so was the half-voxel contour offset fixed in
-2.0.0 — writing shrank every structure by half a voxel and reading grew it
-back.
+2.0.0, where writing shrank every structure by half a voxel and reading grew
+it back.
 
 So: **a geometry test asserts absolute position against the DICOM standard**,
 PS3.3 C.7.6.2.1.1, not against what the library itself produces.
@@ -49,7 +49,7 @@ expected = (
 assert np.allclose(written_point, expected, atol=1e-6)
 ```
 
-Round-trip tests are still worth having — the conformance suite is one — but
+Round-trip tests are still worth having, and the conformance suite is one, but
 they are a regression net, not a correctness proof.
 
 ## Fixtures
@@ -71,7 +71,7 @@ series = build_series(
 Non-square and unevenly spaced series are where the interesting bugs live. A
 square, evenly spaced series cannot distinguish a transpose from the truth.
 
-`save_dataset(ds, path)` writes a dataset to disk — use it rather than
+`save_dataset(ds, path)` writes a dataset to disk. Use it rather than
 `save_as` directly, because `enforce_file_format` exists only in pydicom 3 and
 Python 3.9 resolves to pydicom 2.
 
@@ -87,7 +87,8 @@ Python 3.9 resolves to pydicom 2.
   ```
 
 - CI covers Python 3.9 to 3.13, plus a job pinned to OpenCV 4.x. The 4.x path
-  is where several contour bugs actually bit — OpenCV 5 is more permissive.
+  is where several contour bugs actually bit, since OpenCV 5 is more
+  permissive.
 
 ## Building the documentation
 
@@ -106,8 +107,8 @@ sphinx-build -b html -W docs docs/_build/html
 ```
 
 The API reference comes from the docstrings in the source, so documenting a
-new public function means writing its docstring in NumPy style — nothing to
-add here.
+new public function means writing its docstring in NumPy style. Nothing needs
+adding here.
 
 ## Releasing
 

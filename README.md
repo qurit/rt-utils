@@ -23,7 +23,7 @@ You can also use the RT-Utils for merging two existing RT Structs to one file.
 
 ## 📖 Documentation
 
-**[rt-utils.readthedocs.io](https://rt-utils.readthedocs.io/en/latest/)** — guides, concepts and the full API reference.
+**[rt-utils.readthedocs.io](https://rt-utils.readthedocs.io/en/latest/)**: guides, concepts and the full API reference.
 
 Worth reading before your first `add_roi`: [Mask layout](https://rt-utils.readthedocs.io/en/latest/concepts/mask-layout.html), which explains the `(Rows, Columns, Slices)` convention and what goes wrong when a mask comes from somewhere else. If something looks wrong already, start at [Troubleshooting](https://rt-utils.readthedocs.io/en/latest/guide/troubleshooting.html).
 
@@ -95,7 +95,7 @@ pip install rt_utils[nifti]
 
 No sequence of `transpose`, `flipud` or `rot90` is a substitute. The correct
 rearrangement is whatever the two affines say it is, and it differs from file
-to file — which is why advice of that kind works for one dataset and fails on
+to file. That is why advice of that kind works for one dataset and fails on
 the next.
 
 ## Installation

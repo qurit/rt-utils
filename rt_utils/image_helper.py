@@ -170,7 +170,7 @@ def has_pixel_data(ds: Dataset) -> bool:
     This asks only whether the element is present. Reading ``pixel_array``
     instead would decode every slice in the directory merely to decide
     whether each file is an image, and would then exclude a perfectly good
-    series whenever the pixels could not be decoded -- a compressed transfer
+    series whenever the pixels could not be decoded: a compressed transfer
     syntax with no handler installed, or a file with no file meta and so no
     stated transfer syntax. Either made a whole series invisible, reported as
     "No DICOM Images found in input path".
@@ -608,7 +608,7 @@ def group_contours_by_slice(series_data, contour_sequence: Sequence, match_by: s
     By SOPInstanceUID, a contour names its slice outright, which is what
     DICOM intends and is unambiguous. By position, a contour goes to the
     slice nearest its own location along the slice normal, which is the only
-    thing left when the identifiers do not line up -- most often because the
+    thing left when the identifiers do not line up, most often because the
     images were re-written by an anonymiser after the structures were drawn.
     """
     if match_by not in SLICE_MATCHING_STRATEGIES:
@@ -650,7 +650,7 @@ def create_series_mask_from_contour_sequence(
             "ReferencedSOPInstanceUID, and none of those images is in this "
             "series. Usually this means the series given is not the one the "
             "structures were drawn on, or the images were re-written after "
-            "the structures were made -- anonymisation tools regenerate "
+            "the structures were made, since anonymisation tools regenerate "
             "SOPInstanceUIDs, which breaks the link while leaving the "
             "geometry intact. In that second case, pass "
             'match_by="position" to match each contour to the nearest slice '

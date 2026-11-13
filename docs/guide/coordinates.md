@@ -31,7 +31,7 @@ rtstruct.add_roi_from_coordinates(
 ```
 
 Each contour is attached to the slice **nearest its own position**, measured
-along the slice normal — so this works on oblique and non-axial series, and
+along the slice normal, so this works on oblique and non-axial series, and
 you do not need to know the slice ordering.
 
 ## Pixel coordinates
@@ -49,8 +49,8 @@ rtstruct.add_roi_from_coordinates(
 ```
 
 :::{note}
-The order here is `[column, row, ...]` — the `(x, y)` convention of image
-tools and OpenCV — not the `(row, column)` order a mask is indexed in.
+The order here is `[column, row, ...]`, the `(x, y)` convention of image
+tools and OpenCV, not the `(row, column)` order a mask is indexed in.
 
 It is the one place in the library where the two differ, because it is the
 form annotation tools actually emit.
@@ -100,7 +100,7 @@ rtstruct.add_roi_from_coordinates(
 
 - A contour must contain at least one point; an empty one raises `ValueError`.
 - No mask validation runs, because there is no mask. Nothing checks that your
-  points fall inside the image — contours outside the imaged volume are
+  points fall inside the image, and contours outside the imaged volume are
   written as given.
 - Smoothing, pin holes and `contour_mode` do not apply; they are all mask
   operations.

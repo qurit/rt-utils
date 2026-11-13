@@ -108,7 +108,7 @@ class RTStruct:
         roi_interpreted_type : str, optional
             RTROIInterpretedType: what kind of structure this is, such as
             ``"PTV"``, ``"ORGAN"``, ``"EXTERNAL"`` or ``"BRACHY_CHANNEL"``.
-            Planning systems use it to decide how a structure is treated --
+            Planning systems use it to decide how a structure is treated:
             which ones are targets, which are organs at risk, which define
             the patient outline. Defaults to ``""``, meaning unstated, which
             is what earlier versions always wrote.
@@ -437,7 +437,7 @@ class RTStruct:
         StructureSetROISequence names it, ROIContourSequence holds its
         geometry, and RTROIObservationsSequence its interpretation. All three
         entries are removed, because leaving any behind produces a structure
-        set that viewers and planning systems read inconsistently -- contours
+        set that viewers and planning systems read inconsistently: contours
         belonging to an ROI that no longer has a name, or a name with nothing
         to draw.
 

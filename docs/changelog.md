@@ -13,9 +13,9 @@ If you are upgrading from 1.x, read {doc}`concepts/mask-layout` and
 
 **Added**
 
-- {meth}`~rt_utils.rtstruct.RTStruct.delete_roi` — `add_roi` finally has an
-  inverse. All three sequences are cleaned up; numbering is left with a gap on
-  purpose.
+- {meth}`~rt_utils.rtstruct.RTStruct.delete_roi`, so that `add_roi` finally
+  has an inverse. All three sequences are cleaned up, and numbering is left
+  with a gap on purpose.
 - `roi_interpreted_type` on {meth}`~rt_utils.rtstruct.RTStruct.add_roi`, which
   sets `RTROIInterpretedType` so a planning system can tell a target from an
   organ at risk. Previously always written empty.
@@ -27,7 +27,7 @@ If you are upgrading from 1.x, read {doc}`concepts/mask-layout` and
 
 **Fixed**
 
-- `RTStructMerger` could not merge two sets that shared an ROI name — the
+- `RTStructMerger` could not merge two sets that shared an ROI name. The
   rename path added a string to a `Dataset` rather than to its `ROIName`, and
   had never run successfully.
 - `RTStructMerger` could assign a colliding `ROINumber` where the destination
@@ -39,7 +39,7 @@ Four silent wrong-data fixes and a supported NIfTI converter.
 
 **Added**
 
-- {func}`rt_utils.nifti.nifti_to_mask` — resamples a NIfTI segmentation onto
+- {func}`rt_utils.nifti.nifti_to_mask` resamples a NIfTI segmentation onto
   the series grid, reading both affines. `label=` selects one structure from a
   multi-label file.
 - `match_by="position"` on
@@ -77,7 +77,7 @@ A square series is unaffected in plane. On a non-square series it was wrong in
 both directions: ROIs past the shorter dimension were silently dropped on
 read, and correct masks were rejected on write.
 
-`use_pin_hole` was affected on square series too — it sampled the mask
+`use_pin_hole` was affected on square series too. It sampled the mask
 transposed, so on any region not symmetric about `y = x` the channel was never
 cut.
 
@@ -104,7 +104,7 @@ remove the transpose.
 
 **Fixed**
 
-- A series missing `StudyID` no longer raises — it is Type 2, permitted to be
+- A series missing `StudyID` no longer raises. It is Type 2, permitted to be
   empty.
 - A series missing `ImagePositionPatient` now explains itself. It is Type 1
   and cannot be defaulted; substituting an origin would relocate the whole
@@ -114,8 +114,8 @@ remove the transpose.
 
 **The default contour placement changed.** `contour_mode` now defaults to
 `"voxel_edge"`. Contours had been traced through voxel *centres*, which
-understates a structure by half a voxel on every side — 55 % of the area of a
-3 × 3 voxel region.
+understates a structure by half a voxel on every side, which is 55 % of the
+area of a 3 × 3 voxel region.
 
 **Contours are now rasterised by voxel centre.** A voxel is set when its
 centre lies inside the contour, which is correct for contours written either
