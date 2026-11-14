@@ -9,7 +9,7 @@ If you are upgrading from 1.x, read {doc}`concepts/mask-layout` and
 {doc}`concepts/contour-placement`. Those are where the behaviour changed.
 :::
 
-## Unreleased
+## 2.5.0
 
 **Added**
 
