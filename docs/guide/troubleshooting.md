@@ -117,6 +117,14 @@ Files without `ImageOrientationPatient` are skipped: secondary captures,
 screenshots, dose reports, structure sets. Those carry no geometry to contour
 against.
 
+:::{note}
+A multi-frame file has no top-level `ImageOrientationPatient` either, and
+before 2.5.0 it was skipped for that reason: a reconstructed SPECT, or an
+Enhanced CT, MR or PET, produced this message although the path held nothing
+else. Such a file is now split into one slice per frame. See
+{doc}`../concepts/multi-frame`.
+:::
+
 For files written without the standard preamble or file meta:
 
 ```{code-block} python
@@ -129,6 +137,25 @@ pixels, so a compressed transfer syntax with no handler installed made a
 perfectly good series vanish behind this message. Nothing in RT-Utils reads
 pixel values; presence of the element is now enough.
 :::
+
+## `NM image ... holds projection data, not a reconstructed volume`
+
+The NM file is the **acquisition**, not the reconstruction. Its frames are one
+view of the object per gantry angle, per detector head and per energy window,
+and a projection has no position along a slice normal, so nothing can be
+contoured on it.
+
+Contour the reconstructed series instead, the one whose `ImageType` contains
+`RECON TOMO`, or the CT of the same study:
+
+```{code-block} python
+import pydicom
+print(pydicom.dcmread(path, stop_before_pixels=True).ImageType)
+# ['ORIGINAL', 'PRIMARY', 'TOMO', 'EMISSION']        <- projections
+# ['ORIGINAL', 'PRIMARY', 'RECON TOMO', 'EMISSION']  <- what you want
+```
+
+See {doc}`../concepts/multi-frame`.
 
 ## `Mask must have the same in-plane dimensions as the input series`
 
@@ -224,9 +251,11 @@ Use `use_pin_hole=True` when writing. See
   Do **not** reach for `match_by="position"` here. Overlapping series would
   attract each other's contours.
 
-**A volume stored in a single file.**
-: Some SPECT and enhanced multi-frame objects hold the whole volume in one
-  file. RT-Utils assumes one file per slice.
+**NM projections, gated and multi-energy-window files.**
+: A volume held in one file is read since 2.5.0, but only where its frames are
+  slices of one stack. A tomographic NM acquisition stores its projections,
+  one per gantry angle, and those are not slices of anything. Contour the
+  reconstruction instead. See {doc}`../concepts/multi-frame`.
 
 **Contours outside the imaged volume.**
 : A couch, an applicator or a bolus contoured beyond the image extent has

@@ -9,6 +9,25 @@ If you are upgrading from 1.x, read {doc}`concepts/mask-layout` and
 {doc}`concepts/contour-placement`. Those are where the behaviour changed.
 :::
 
+## Unreleased
+
+**Added**
+
+- Multi-frame image series: a reconstructed SPECT held in one NM file, and
+  Enhanced CT, MR and PET. Such a file is split into one slice per frame on
+  load, and contours reference a slice by `ReferencedFrameNumber` alongside
+  `ReferencedSOPInstanceUID`. Previously the file was skipped for having no
+  top-level `ImageOrientationPatient`, and loading failed with `No DICOM
+  Images found in input path`. See {doc}`concepts/multi-frame`.
+- `dicom_series_path` may name a single file, not only a directory, since a
+  whole series can live in one.
+
+**Changed**
+
+- An NM file holding projections rather than a reconstruction is refused with
+  an explanation, as are gated and multi-energy-window files. Their frames are
+  not slices of one volume, so contours cannot be placed on them.
+
 ## 2.4.0
 
 **Added**

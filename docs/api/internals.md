@@ -17,6 +17,17 @@ contours from masks and rasterising them back.
    :member-order: bysource
 ```
 
+## rt_utils.multiframe
+
+Splitting a multi-frame image, such as a reconstructed SPECT or an Enhanced
+CT, into one slice per frame. See {doc}`../concepts/multi-frame`.
+
+```{eval-rst}
+.. automodule:: rt_utils.multiframe
+   :members:
+   :member-order: bysource
+```
+
 ## rt_utils.ds_helper
 
 Building the DICOM datasets and sequences that make up a structure set.

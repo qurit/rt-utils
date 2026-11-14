@@ -95,6 +95,8 @@ Every public class and function, generated from the docstrings in the source.
   - {meth}`RTStruct.delete_roi <rt_utils.rtstruct.RTStruct.delete_roi>`
 * - Combine two structure sets for one series
   - {meth}`RTStructMerger.merge_rtstructs <rt_utils.rtstruct_merger.RTStructMerger.merge_rtstructs>`
+* - Contour a series held in one file, such as a SPECT or an Enhanced CT
+  - {doc}`concepts/multi-frame`
 ```
 
 ## What it does not do
@@ -130,6 +132,7 @@ quickstart
 concepts/mask-layout
 concepts/contour-placement
 concepts/slice-matching
+concepts/multi-frame
 ```
 
 ```{toctree}
