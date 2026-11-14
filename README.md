@@ -145,6 +145,26 @@ rtstruct.add_roi(
 rtstruct.save('new-rt-struct')
 ```
 
+## Series held in a single file (SPECT, Enhanced CT/MR/PET)
+A reconstructed SPECT is one NM file holding every slice, and Enhanced CT, MR
+and PET store a volume in one file too. Point RT-Utils at the folder, or at the
+file itself, and the frames are split into slices for you:
+
+```Python
+rtstruct = RTStructBuilder.create_new(dicom_series_path="./spect/NM_1000")
+
+len(rtstruct.series_data)   # one entry per slice, not one per file
+```
+
+Masks keep their usual `(Rows, Columns, Slices)` shape, with one layer per
+frame, and contours reference each slice by `ReferencedFrameNumber`.
+
+Note that only a *reconstruction* is a stack of slices. The projections of a
+tomographic NM acquisition (`ImageType` containing `TOMO` rather than
+`RECON TOMO`) are one frame per gantry angle, so nothing can be contoured on
+them; RT-Utils says so rather than placing contours somewhere the image never
+was. See the [multi-frame documentation](https://rt-utils.readthedocs.io/en/latest/concepts/multi-frame.html).
+
 ## Adding an ROI from coordinates
 If the geometry is already known in patient space, the contours can be given
 directly instead of being derived from a mask. Each contour is a list of

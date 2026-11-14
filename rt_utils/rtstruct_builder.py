@@ -24,9 +24,14 @@ class RTStructBuilder:
         """
         Method to generate a new rt struct from a DICOM series.
 
-        ``dicom_series_path`` is either a path to a directory of DICOM files or
-        a list of datasets already read into memory with pydicom. Both are
-        sorted by slice position, so the two forms are interchangeable.
+        ``dicom_series_path`` is a path to a directory of DICOM files, a path
+        to a single DICOM file, or a list of datasets already read into memory
+        with pydicom. All are sorted by slice position, so the forms are
+        interchangeable.
+
+        A multi-frame image is split into one slice per frame, so a series
+        held in a single file, a reconstructed SPECT or an Enhanced CT, MR or
+        PET, is read like any other. See rt_utils.multiframe.
 
         ``force`` is passed to pydicom when reading from a path, allowing
         files without the standard preamble or file meta to be read. Use it
@@ -51,7 +56,9 @@ class RTStructBuilder:
         existing rt struct.
 
         Both arguments accept either a path or already-loaded pydicom objects:
-        a list of datasets for the series, and a dataset for the RTStruct.
+        a list of datasets for the series, and a dataset for the RTStruct. The
+        series may be a single multi-frame file, which is split into one slice
+        per frame as it is for create_new.
 
         ``force`` is passed to pydicom when reading from a path, for the
         series and for the RTStruct alike, allowing files without the

@@ -1,4 +1,5 @@
 import os
+import warnings
 from typing import List, Union
 from enum import IntEnum
 
@@ -8,6 +9,7 @@ from pydicom import dcmread
 from pydicom.dataset import Dataset
 from pydicom.sequence import Sequence
 
+from rt_utils import multiframe
 from rt_utils.utils import ROIData, SOPClassUID
 
 
@@ -18,8 +20,13 @@ def load_sorted_image_series(
     """
     Load a DICOM image series and return its slices in ascending spatial order.
 
-    Accepts either a path to a directory of DICOM files, or a list of datasets
-    already read into memory with pydicom.
+    Accepts a path to a directory of DICOM files, a path to a single DICOM
+    file, or a list of datasets already read into memory with pydicom.
+
+    A multi-frame image, such as a reconstructed SPECT stored as one NM file
+    or an Enhanced CT, MR or PET, is split into one slice per frame, so a
+    series held in a single file is read the same way as one held in a file
+    per slice. See rt_utils.multiframe.
 
     ``force`` is passed to pydicom when reading from a path, so that files
     without the standard preamble or file meta can still be read. It has no
@@ -31,7 +38,7 @@ def load_sorted_image_series(
     if isinstance(dicom_series, (str, os.PathLike)):
         series_data = load_dcm_images_from_path(dicom_series, force=force)
     else:
-        series_data = list(dicom_series)
+        series_data = multiframe.expand_datasets(dicom_series)
 
     if len(series_data) == 0:
         raise Exception("No DICOM Images found in input path")
@@ -57,11 +64,20 @@ def drop_repeated_instances(series_data: List[Dataset]) -> List[Dataset]:
     wrong number of layers.
 
     A slice with no SOPInstanceUID cannot be compared and is kept.
+
+    Every frame of a multi-frame image carries the SOPInstanceUID of the file
+    it came from, since the identifier belongs to the instance and not to the
+    frame. The frame number is part of the identity here, so splitting one
+    SPECT file into its slices does not collapse the volume to a single
+    slice.
     """
     seen = set()
     unique = []
     for series_slice in series_data:
         identifier = getattr(series_slice, "SOPInstanceUID", None)
+        frame_number = multiframe.get_frame_number(series_slice)
+        if frame_number is not None:
+            identifier = (identifier, frame_number)
         if identifier is not None:
             if identifier in seen:
                 continue
@@ -114,12 +130,27 @@ def load_dcm_images_from_path(
 ) -> List[Dataset]:
     """Read every file under a path that belongs to an image series.
 
+    The path may name a directory, which is walked in full, or a single DICOM
+    file. A single file is worth naming directly because a whole series can
+    live in one: a reconstructed SPECT is one NM file holding every slice.
+
     A file is part of the series when it carries pixel data and states its
     orientation in the patient. Screenshots, secondary captures, reports and
     dose maps stored beside the images carry no ImageOrientationPatient, so
     they are not slices of the series; they used to be sorted into the stack
     and fail later with "'FileDataset' object has no attribute
     'ImageOrientationPatient'".
+
+    A multi-frame image is the exception to that test. It states its geometry
+    per frame, or once for the whole stack in a place of its own, so it has no
+    ImageOrientationPatient at the top level and was dropped here as though it
+    were not an image at all. Such a file is split into its frames instead.
+
+    A multi-frame file whose frames are not slices of one volume, SPECT
+    projections being the common case, is skipped with a warning when the path
+    holds a usable series as well, since a study folder may hold both. When it
+    is all the path holds, it raises instead: the reason it cannot be used is
+    worth more than "No DICOM Images found in input path".
 
     ImagePositionPatient is deliberately not part of this test. A file that
     is a slice but omits it must raise and say so, rather than be dropped
@@ -134,20 +165,39 @@ def load_dcm_images_from_path(
     """
     series_data = []
     images_without_orientation = 0
-    for root, _, files in os.walk(dicom_series_path):
-        for file in files:
-            try:
-                ds = dcmread(os.path.join(root, file), force=force)
-                if not has_pixel_data(ds):
-                    continue
-                if not hasattr(ds, "ImageOrientationPatient"):
-                    images_without_orientation += 1
-                    continue
-                series_data.append(ds)
+    unusable_multiframes = []
+    for path in walk_dicom_files(dicom_series_path):
+        try:
+            ds = dcmread(path, force=force)
+        except Exception:
+            # Not a valid DICOM file
+            continue
 
-            except Exception:
-                # Not a valid DICOM file
-                continue
+        if not has_pixel_data(ds):
+            continue
+
+        if multiframe.is_multiframe(ds):
+            try:
+                series_data.extend(multiframe.expand(ds))
+            except Exception as error:
+                unusable_multiframes.append(error)
+            continue
+
+        if not hasattr(ds, "ImageOrientationPatient"):
+            images_without_orientation += 1
+            continue
+
+        series_data.append(ds)
+
+    if unusable_multiframes:
+        if not series_data:
+            raise unusable_multiframes[0]
+
+        for error in unusable_multiframes:
+            warnings.warn(
+                f"Skipped a multi-frame image under '{dicom_series_path}' "
+                f"while loading the series: {error}"
+            )
 
     if not series_data and images_without_orientation:
         raise Exception(
@@ -159,6 +209,19 @@ def load_dcm_images_from_path(
         )
 
     return series_data
+
+
+def walk_dicom_files(dicom_series_path) -> List[str]:
+    """Every file to try reading, for a path naming a directory or a file."""
+    if os.path.isfile(dicom_series_path):
+        return [str(dicom_series_path)]
+
+    paths = []
+    for root, _, files in os.walk(dicom_series_path):
+        for file in files:
+            paths.append(os.path.join(root, file))
+
+    return paths
 
 
 PIXEL_DATA_ELEMENTS = ("PixelData", "FloatPixelData", "DoubleFloatPixelData")
@@ -678,16 +741,47 @@ def get_slice_contours(series_slice: Dataset, contour_sequence: Sequence):
     The dataset is kept rather than just its ContourData because
     ContourGeometricType decides how the contour is rasterised: a closed
     contour bounds a region, an open one is a path with no interior.
+
+    A frame of a multi-frame image shares its SOPInstanceUID with every other
+    frame of the same file, so the identifier alone names the file rather than
+    the slice. Referenced Frame Number is what distinguishes them, and a
+    contour that names a frame belongs only to that frame.
     """
     slice_contours = []
 
     # Traverse through sequence data and get all contour data pertaining to the given slice
     for contour in contour_sequence:
         for contour_image in contour.ContourImageSequence:
-            if contour_image.ReferencedSOPInstanceUID == series_slice.SOPInstanceUID:
-                slice_contours.append(contour)
+            if contour_image.ReferencedSOPInstanceUID != series_slice.SOPInstanceUID:
+                continue
+            if not referenced_frame_matches(contour_image, series_slice):
+                continue
+
+            slice_contours.append(contour)
 
     return slice_contours
+
+
+def referenced_frame_matches(contour_image: Dataset, series_slice: Dataset) -> bool:
+    """Whether a contour's Referenced Frame Number names this slice.
+
+    A contour drawn on a single-frame image names no frame, and a structure
+    set written before frames were understood names none either. Both are
+    taken to mean the whole image, which is the only reading available and is
+    what keeps older structure sets loading.
+    """
+    referenced_frames = getattr(contour_image, "ReferencedFrameNumber", None)
+    if referenced_frames in (None, ""):
+        return True
+
+    frame_number = multiframe.get_frame_number(series_slice)
+    if frame_number is None:
+        return True
+
+    if isinstance(referenced_frames, (str, int, float)):
+        referenced_frames = [referenced_frames]
+
+    return any(int(frame) == frame_number for frame in referenced_frames)
 
 
 def get_slice_contour_data(series_slice: Dataset, contour_sequence: Sequence):

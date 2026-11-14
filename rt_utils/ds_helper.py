@@ -1,7 +1,7 @@
 import datetime
 from typing import List
 
-from rt_utils import image_helper
+from rt_utils import image_helper, multiframe
 from rt_utils.image_helper import get_contours_coords
 from rt_utils.utils import ROIData, SOPClassUID, flatten_coordinates
 import numpy as np
@@ -140,12 +140,28 @@ def create_contour_image_sequence(series_data) -> Sequence:
 
     # Add each referenced image
     for series in series_data:
-        contour_image = Dataset()
-        contour_image.ReferencedSOPClassUID = series.SOPClassUID
-        contour_image.ReferencedSOPInstanceUID = series.SOPInstanceUID
-        contour_image_sequence.append(contour_image)
+        contour_image_sequence.append(create_contour_image(series))
 
     return contour_image_sequence
+
+
+def create_contour_image(series_slice: Dataset) -> Dataset:
+    """Reference one image of the series.
+
+    A slice of a multi-frame image is named by the file's SOPInstanceUID
+    together with Referenced Frame Number (PS3.3 C.8.8.6). Without the frame
+    number, every slice of a SPECT volume would reference the same thing, and
+    a reader would have no way to tell which slice a contour was drawn on.
+    """
+    contour_image = Dataset()
+    contour_image.ReferencedSOPClassUID = series_slice.SOPClassUID
+    contour_image.ReferencedSOPInstanceUID = series_slice.SOPInstanceUID
+
+    frame_number = multiframe.get_frame_number(series_slice)
+    if frame_number is not None:
+        contour_image.ReferencedFrameNumber = str(frame_number)
+
+    return contour_image
 
 
 def create_structure_set_roi(roi_data: ROIData) -> Dataset:
@@ -244,13 +260,9 @@ def find_closest_slice(series_data, point: List[float]) -> Dataset:
 
 
 def create_contour(series_slice: Dataset, contour_data: np.ndarray) -> Dataset:
-    contour_image = Dataset()
-    contour_image.ReferencedSOPClassUID = series_slice.SOPClassUID
-    contour_image.ReferencedSOPInstanceUID = series_slice.SOPInstanceUID
-
     # Contour Image Sequence
     contour_image_sequence = Sequence()
-    contour_image_sequence.append(contour_image)
+    contour_image_sequence.append(create_contour_image(series_slice))
 
     number_of_points = len(contour_data) // 3  # Each point has an x, y and z value
 
