@@ -8,299 +8,101 @@
     <img src="https://github.com/qurit/rt-utils/workflows/Python%20application/badge.svg" height="18">
     <img src="https://img.shields.io/pypi/pyversions/rt-utils" alt="Python version" height="18">
     <a href="https://pypi.org/project/rt-utils"><img src="https://badge.fury.io/py/rt-utils.svg" alt="PyPI version" height="18"></a>
-    <a href="https://rt-utils.readthedocs.io/en/latest/"><img src="https://readthedocs.org/projects/rt-utils/badge/?version=latest" alt="Documentation status" height="18"></a>  
+    <a href="https://rt-utils.readthedocs.io/en/latest/"><img src="https://readthedocs.org/projects/rt-utils/badge/?version=latest" alt="Documentation status" height="18"></a>
     <img alt="PyPI - License" src="https://img.shields.io/github/license/qurit/rt-utils?color=g" height="18" />
-  
 </p>
- 
+
 ---
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14902966.svg)](https://doi.org/10.5281/zenodo.14902966)
 
+RT-Utils reads and writes the DICOM **RT Structure Set**, the file a treatment planning system stores contoured anatomy in. It turns an RTStruct into a NumPy mask you can compute on, and turns a mask from a segmentation model back into a conformant RTStruct that a planning system or viewer will open.
 
-RT-Utils is motivated to allow physicians and other users to view the results of segmentation performed on a series of DICOM images. RT-Utils allows you to create or load RT Structs, extract 3d masks from RT Struct ROIs, easily add one or more regions of interest, and save the resulting RT Struct in just a few lines!
-You can also use the RT-Utils for merging two existing RT Structs to one file.
+## Installation
 
-## 📖 Documentation
+```bash
+pip install rt-utils
+```
 
-**[rt-utils.readthedocs.io](https://rt-utils.readthedocs.io/en/latest/)**: guides, concepts and the full API reference.
+NIfTI conversion needs SimpleITK, which is an optional extra:
 
-Worth reading before your first `add_roi`: [Mask layout](https://rt-utils.readthedocs.io/en/latest/concepts/mask-layout.html), which explains the `(Rows, Columns, Slices)` convention and what goes wrong when a mask comes from somewhere else. If something looks wrong already, start at [Troubleshooting](https://rt-utils.readthedocs.io/en/latest/guide/troubleshooting.html).
+```bash
+pip install "rt-utils[nifti]"
+```
 
-## How it works
-RT-Utils provides a builder class to faciliate the creation and loading of an RT Struct. From there, you can add ROIs through binary masks and optionally input the colour of the region along with the region name.
+Python 3.9 and newer.
 
-The format for the ROI mask is an nd numpy array of type bool. It is an array of 2d binary masks, one plane for each slice location within the DICOM series. The slices should be sorted in ascending order within the mask. Through these masks, we extract the contours of the regions of interest and place them within the RT Struct file. Note that there is currently only support for the use of one frame of reference UID and structered set ROI sequence. Also note that holes within the ROI may be handled poorly.
+## Writing a mask into a structure set
 
-### Mask layout
+```python
+from rt_utils import RTStructBuilder
+
+rtstruct = RTStructBuilder.create_new(dicom_series_path="./series")
+
+# Your segmentation, as a boolean array shaped (Rows, Columns, Slices)
+rtstruct.add_roi(mask=MASK_FROM_ML_MODEL, name="GTV", color=[255, 0, 255])
+
+rtstruct.save("new-rt-struct")
+```
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/qurit/rt-utils/main/src/liver-contour.png" width="1000"/>
+</p>
+<p align="center">
+  An ROI written from a liver segmentation model, as viewed in Slicer. (The underlying patient data has been hidden.)
+</p>
+
+## Reading one back as a mask
+
+```python
+from rt_utils import RTStructBuilder
+
+rtstruct = RTStructBuilder.create_from(
+    dicom_series_path="./series",
+    rt_struct_path="./series/rt-struct.dcm",
+)
+
+print(rtstruct.get_roi_names())
+mask = rtstruct.get_roi_mask_by_name("GTV")   # (Rows, Columns, Slices), bool
+```
+
+## Mask layout
 
 A mask is indexed `(Rows, Columns, Slices)`:
 
 | axis | index | runs |
 | --- | --- | --- |
-| 0 | row | down a column, along `ImageOrientationPatient[3:6]` |
-| 1 | column | along a row, along `ImageOrientationPatient[0:3]` |
+| 0 | row | down a column |
+| 1 | column | along a row |
 | 2 | slice | through the series in ascending slice position |
 
-The first two axes are ordered exactly as pydicom reads `pixel_array`, so a
-mask produced by segmenting the series already has the right layout:
+The first two axes are ordered exactly as pydicom reads `pixel_array`, so a mask produced by segmenting the series already has the right layout. A mask from elsewhere, a NIfTI volume in particular, carries its own axis order and direction and may need rearranging first: see [Mask layout](https://rt-utils.readthedocs.io/en/latest/concepts/mask-layout.html), and use [`nifti_to_mask`](https://rt-utils.readthedocs.io/en/latest/guide/nifti.html) rather than guessing a transpose.
 
-```Python
-mask = np.stack([slice.pixel_array for slice in series], axis=-1) > threshold
-```
+## What else it does
 
-Axis 2 follows the series sorted by spatial position, which is the order
-`RTStruct.series_data` is in. That is not necessarily the order the files sit
-in on disk, nor InstanceNumber order.
+- [Convert a NIfTI segmentation](https://rt-utils.readthedocs.io/en/latest/guide/nifti.html) onto the series grid, reading both affines, with `label=` to select one structure from a multi-label file
+- [Write contours from coordinates](https://rt-utils.readthedocs.io/en/latest/guide/coordinates.html) in patient or pixel space, rather than from a mask
+- [Work entirely in memory](https://rt-utils.readthedocs.io/en/latest/guide/in-memory.html), passing pydicom datasets in and getting a `BytesIO` out
+- [Manage ROIs](https://rt-utils.readthedocs.io/en/latest/guide/managing-rois.html): colours, names, `delete_roi`, and `RTROIInterpretedType` so a planning system can tell a target from an organ at risk
+- [Smooth masks](https://rt-utils.readthedocs.io/en/latest/guide/smoothing.html) before contouring, with a hook for your own implementation
+- [Merge two structure sets](https://rt-utils.readthedocs.io/en/latest/guide/merging.html) drawn on the same series
+- [Read a series held in a single file](https://rt-utils.readthedocs.io/en/latest/concepts/multi-frame.html): a reconstructed SPECT, or an Enhanced CT, MR or PET
 
-A mask from somewhere else may need rearranging first. A NIfTI volume carries
-its own axis order and its own direction for each axis in its affine, and
-neither is guaranteed to match the DICOM series; feeding one straight to
-`add_roi` is what makes an ROI come back rotated, flipped or offset. Use the
-converter below rather than guessing a transpose.
+## 📖 Documentation
 
-### From NIfTI
+**[rt-utils.readthedocs.io](https://rt-utils.readthedocs.io/en/latest/)**: quickstart, guides, concepts and the full API reference.
 
-`nifti_to_mask` reads the NIfTI affine and the series geometry and resamples
-between them, so the result is correct for any orientation, spacing or storage
-order:
-
-```Python
-from rt_utils import RTStructBuilder
-from rt_utils.nifti import nifti_to_mask
-
-rtstruct = RTStructBuilder.create_new(dicom_series_path=DICOM_SERIES_PATH)
-
-mask = nifti_to_mask("segmentation.nii.gz", rtstruct.series_data)
-rtstruct.add_roi(mask=mask, name="liver")
-
-rtstruct.save('new-rt-struct')
-```
-
-Pass `label=` to pull one structure out of a multi-label segmentation, as
-TotalSegmentator and similar tools produce:
-
-```Python
-mask = nifti_to_mask("segmentations.nii.gz", rtstruct.series_data, label=5)
-```
-
-Resampling uses nearest neighbour, so the result only ever contains values the
-input contained.
-
-This needs SimpleITK, which is not installed by default:
-
-```bash
-pip install rt_utils[nifti]
-```
-
-No sequence of `transpose`, `flipud` or `rot90` is a substitute. The correct
-rearrangement is whatever the two affines say it is, and it differs from file
-to file. That is why advice of that kind works for one dataset and fails on
-the next.
-
-## Installation
-```bash
-pip install rt_utils
-```
-
-## Installation in editable mode
-```bash
-git clone https://github.com/qurit/rt-utils.git
-cd rt-utils
-pip install -e .
-```
-
-
-## Creating new RT Structs
-```Python
-from rt_utils import RTStructBuilder
-
-# Create new RT Struct. Requires the DICOM series path for the RT Struct.
-rtstruct = RTStructBuilder.create_new(dicom_series_path="./testlocation")
-
-# ...
-# Create mask through means such as ML
-# ...
-
-# Add the 3D mask as an ROI.
-# The colour, description, and name will be auto generated
-rtstruct.add_roi(mask=MASK_FROM_ML_MODEL)
-
-# Add another ROI, this time setting the color, description, and name
-rtstruct.add_roi(
-  mask=MASK_FROM_ML_MODEL, 
-  color=[255, 0, 255], 
-  name="RT-Utils ROI!"
-)
-
-# Contours are traced along the outer voxel edges by default, so they enclose
-# the area the mask occupies. To reproduce the contours written before 2.0.0,
-# which pass through the centres of the boundary voxels:
-rtstruct.add_roi(
-  mask=MASK_FROM_ML_MODEL,
-  name="Voxel-centre ROI",
-  contour_mode="voxel_center"
-)
-
-rtstruct.save('new-rt-struct')
-```
-
-## Series held in a single file (SPECT, Enhanced CT/MR/PET)
-A reconstructed SPECT is one NM file holding every slice, and Enhanced CT, MR
-and PET store a volume in one file too. Point RT-Utils at the folder, or at the
-file itself, and the frames are split into slices for you:
-
-```Python
-rtstruct = RTStructBuilder.create_new(dicom_series_path="./spect/NM_1000")
-
-len(rtstruct.series_data)   # one entry per slice, not one per file
-```
-
-Masks keep their usual `(Rows, Columns, Slices)` shape, with one layer per
-frame, and contours reference each slice by `ReferencedFrameNumber`.
-
-Note that only a *reconstruction* is a stack of slices. The projections of a
-tomographic NM acquisition (`ImageType` containing `TOMO` rather than
-`RECON TOMO`) are one frame per gantry angle, so nothing can be contoured on
-them; RT-Utils says so rather than placing contours somewhere the image never
-was. See the [multi-frame documentation](https://rt-utils.readthedocs.io/en/latest/concepts/multi-frame.html).
-
-## Adding an ROI from coordinates
-If the geometry is already known in patient space, the contours can be given
-directly instead of being derived from a mask. Each contour is a list of
-`[x, y, z]` points in millimetres, and is attached to the slice nearest its own
-position.
-```Python
-from rt_utils import RTStructBuilder
-
-rtstruct = RTStructBuilder.create_new(dicom_series_path="./testlocation")
-
-rtstruct.add_roi_from_coordinates(
-  coordinates=[
-    [
-      # One contour, on one slice
-      [-20.0, -170.0, -559.0],
-      [30.0, -170.0, -559.0],
-      [30.0, -110.0, -559.0],
-      [-20.0, -110.0, -559.0],
-    ],
-    [
-      # Another contour, on the next slice
-      [-20.0, -170.0, -562.4],
-      [30.0, -170.0, -562.4],
-      [30.0, -110.0, -562.4],
-      [-20.0, -110.0, -562.4],
-    ],
-  ],
-  name="RT-Utils ROI from coordinates!",
-)
-
-rtstruct.save('new-rt-struct')
-```
-
-## Adding to existing RT Structs
-```Python
-from rt_utils import RTStructBuilder
-import matplotlib.pyplot as plt
-
-# Load existing RT Struct. Requires the series path and existing RT Struct path
-rtstruct = RTStructBuilder.create_from(
-  dicom_series_path="./testlocation", 
-  rt_struct_path="./testlocation/rt-struct.dcm"
-)
-
-# Add ROI. This is the same as the above example.
-rtstruct.add_roi(
-  mask=MASK_FROM_ML_MODEL, 
-  color=[255, 0, 255], 
-  name="RT-Utils ROI!"
-)
-
-rtstruct.save('new-rt-struct')
-```
-
-## Creation Results
-<p align="center">
-  <img src="https://raw.githubusercontent.com/qurit/rt-utils/main/src/contour.png" width="1000"/>
-</p>
-<p align="center">
-  The results of a generated ROI with a dummy mask, as viewed in Slicer.
-</p>
-
-<p align="center">
-  <img src="https://raw.githubusercontent.com/qurit/RT-Utils/main/src/liver-contour.png" width="1000"/>
-</p>
-<p align="center">
-  The results of a generated ROI with a liver segmentation model, as viewed in Slicer. (Note the underlying patient data has been hidden)
-</p>
-
-## Loading an existing RT Struct contour as a mask
-```Python
-from rt_utils import RTStructBuilder
-import matplotlib.pyplot as plt
-
-# Load existing RT Struct. Requires the series path and existing RT Struct path
-rtstruct = RTStructBuilder.create_from(
-  dicom_series_path="./testlocation", 
-  rt_struct_path="./testlocation/rt-struct.dcm"
-)
-
-# View all of the ROI names from within the image
-print(rtstruct.get_roi_names())
-
-# Loading the 3D Mask from within the RT Struct
-mask_3d = rtstruct.get_roi_mask_by_name("ROI NAME")
-
-# Display one slice of the region
-first_mask_slice = mask_3d[:, :, 0]
-plt.imshow(first_mask_slice)
-plt.show()
-```
-
-## Loading Results
-<p align="center">
-  <img src="https://raw.githubusercontent.com/qurit/rt-utils/main/src/loaded-mask.png" height="300"/>
-</p>
-<p align="center">
-  The results of a loading an exisiting ROI as a mask, as viewed in Python.
-</p>
-
-## Merging two existing RT Structs
-To be able to merge two RT Structs it is important that both RT Structs have to belong to the same image series,
-e.g. if there is one set for the organs at risk and one set for the target volume(s).
-```Python
-from rt_utils import RTStructMerger
-
-# Load existing RT Structs and corresponding image series and merge them into one RTStruct
-merged_rt_struct = RTStructMerger.merge_rtstructs(
-  dicom_series_path="./testlocation",
-  rt_struct_path1="./testlocation/rt-struct1.dcm",
-  rt_struct_path2="./testlocation/rt-struct2.dcm"
-  )
-merged_rt_struct.save('merged-rt-struct')
-```
-
-## Additional Parameters
-The add_roi method of our RTStruct class has a multitude of optional parameters available. Below is a comprehensive list of all these parameters and what they do.
-- <b>color</b>: This parameter can either be a colour string such as '#ffffff' or a RGB value as a list such as '[255, 255, 255]'. This parameter will dictate the colour of your ROI when viewed in a viewing program. If no colour is provided, RT Utils will pick from our internal colour palette based on the ROI Number of the ROI.
-- <b>name</b>: A str value that defaults to none. Used to set the name of the ROI within the RT Struct. If the name is none, RT Utils will set a name of ROI-{ROI Number}.
-- <b>description</b>: A str value that sets the description of the ROI within the RT Struct. If no value is provided, the description is just left blank.
-- <b>use_pin_hole</b>: A boolean value that defaults to false. If set to true, lines will be erased through your mask such that each separate region within your image can be encapsulated via a single contour instead of contours nested within one another. Use this if your RT Struct viewer of choice does not support nested contours / contours with holes.
-- <b>approximate_contours</b>: A boolean value that defaults to True which defines whether or not approximations are made when extracting contours from the input mask. Setting this to false will lead to much larger contour data within your RT Struct so only use this if as much precision as possible is required.
-- <b>roi_generation_algorithm</b>: An enum value that defaults to 0 which defines what ROI generation algorithm will be used. 0=\'AUTOMATIC\', 1=\'SEMIAUTOMATIC\', or 2=\'MANUAL\'.
-
-## 🚀 New features
-- nifti to rtstruct conversion has been added.
-- conversion from DICOM to NIFTI for PET and corresponding RT-struct file has been added as an example usage with no issues of shift or mismatch between the masks.
+Worth reading before your first `add_roi`: [Mask layout](https://rt-utils.readthedocs.io/en/latest/concepts/mask-layout.html). If something already looks wrong, start at [Troubleshooting](https://rt-utils.readthedocs.io/en/latest/guide/troubleshooting.html).
 
 ## Examples
-You can find the comparison between RT-utils and other conversion techniques in this public repository: https://github.com/qurit/dicom_nifti_conversion_project.
 
-The real-world example in the JOSS paper under review was generated using the code provided in the [RTUTILS_read_world_example_for_PET.ipynb](https://github.com/qurit/rt-utils/blob/development/RTUTILS_read_world_example_for_PET.ipynb).
+A comparison between RT-Utils and other conversion techniques is in [this repository](https://github.com/qurit/dicom_nifti_conversion_project).
+
+The real-world example from the JOSS paper was generated with [RTUTILS_read_world_example_for_PET.ipynb](https://github.com/qurit/rt-utils/blob/main/RTUTILS_read_world_example_for_PET.ipynb).
 
 ## Contributing
-We welcome contributions to this project! Please review our [CONTRIBUTING guidelines](./CONTRIBUTING.md) for more details.
 
+Contributions are welcome. Please review our [CONTRIBUTING guidelines](./CONTRIBUTING.md), and see [the changelog](https://rt-utils.readthedocs.io/en/latest/changelog.html) for what has changed recently.
 
 ## How to Cite
 
@@ -308,7 +110,6 @@ If you are incorporating RT-Utils into your projects, kindly include the followi
 
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.07361/status.svg)](https://doi.org/10.21105/joss.07361)
 
-For citation please use: 
 Shrestha, A., A. Watkins, F. Yousefirizi, A. Rahmim, C. Uribe, "RT-utils: A minimal python library for RT-struct manipulation." Journal of Open Source Software, Vol. 10 (No. 107), pp. 7361, (2025). doi:10.21105/joss.07361.
-  
-Read the full paper: Asim Shrestha, Adam Watkins, Fereshteh Yousefirizi, Arman Rahmim, and Carlos Uribe [RT-utils: A Minimal Python Library for RT-struct Manipulation](https://joss.theoj.org/papers/10.21105/joss.07361)
+
+Read the full paper: [RT-utils: A Minimal Python Library for RT-struct Manipulation](https://joss.theoj.org/papers/10.21105/joss.07361).
